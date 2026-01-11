@@ -1,0 +1,136 @@
+[
+  {
+    "type": "accidental",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "bass",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "root",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "chord",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "bass",
+          "named": true
+        },
+        {
+          "type": "quality",
+          "named": true
+        },
+        {
+          "type": "root",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "quality",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "root",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "accidental",
+          "named": true
+        },
+        {
+          "type": "note",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "source_file",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "chord",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "#",
+    "named": false
+  },
+  {
+    "type": "+",
+    "named": false
+  },
+  {
+    "type": "/",
+    "named": false
+  },
+  {
+    "type": "7",
+    "named": false
+  },
+  {
+    "type": "M7",
+    "named": false
+  },
+  {
+    "type": "aug",
+    "named": false
+  },
+  {
+    "type": "b",
+    "named": false
+  },
+  {
+    "type": "dim",
+    "named": false
+  },
+  {
+    "type": "m",
+    "named": false
+  },
+  {
+    "type": "maj7",
+    "named": false
+  },
+  {
+    "type": "note",
+    "named": true
+  },
+  {
+    "type": "sus2",
+    "named": false
+  },
+  {
+    "type": "sus4",
+    "named": false
+  }
+]

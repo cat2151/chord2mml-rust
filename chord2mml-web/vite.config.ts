@@ -1,13 +1,19 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  base: '/chord2mml-rust/',
+  base: process.env.VITE_BASE_PATH || '/',
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
   },
   server: {
     port: 3000,
-    open: true,
+    open: false,
+    fs: {
+      allow: ['..']
+    }
   },
+  optimizeDeps: {
+    exclude: ['tonejs-mml-to-json']
+  }
 });
