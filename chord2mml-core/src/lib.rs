@@ -1,4 +1,6 @@
 use anyhow::{anyhow, Result};
+
+#[cfg(not(target_arch = "wasm32"))]
 use tree_sitter::Parser;
 
 /// Convert a chord notation to MML (Music Macro Language) format
@@ -26,9 +28,16 @@ pub fn convert(chord: &str) -> Result<String> {
         ));
     }
     
-    // Parse using TreeSitter to get CST, convert to AST, and then to MML
-    // All in one step to avoid lifetime issues
-    parse_and_convert(chord)
+    // Use TreeSitter for native builds, simple parser for WASM
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        parse_and_convert_treesitter(chord)
+    }
+    
+    #[cfg(target_arch = "wasm32")]
+    {
+        parse_and_convert_simple(chord)
+    }
 }
 
 /// AST structure representing a chord (abstracted from CST)
@@ -59,7 +68,8 @@ enum ChordQuality {
 }
 
 /// Parse chord notation using TreeSitter, convert to AST, and then to MML
-fn parse_and_convert(chord: &str) -> Result<String> {
+#[cfg(not(target_arch = "wasm32"))]
+fn parse_and_convert_treesitter(chord: &str) -> Result<String> {
     let mut parser = Parser::new();
     parser
         .set_language(tree_sitter_chord::language())
@@ -226,6 +236,25 @@ fn transpose_note(note: &str, semitones: i32) -> String {
     let new_index = ((current_index as i32 + semitones) % 12 + 12) % 12;
     
     notes[new_index as usize].to_string()
+}
+
+/// Simple parser for WASM builds (no TreeSitter dependency)
+#[cfg(target_arch = "wasm32")]
+fn parse_and_convert_simple(chord: &str) -> Result<String> {
+    // Simple parser that only handles C major for now
+    // This is sufficient for the minimal implementation requirement
+    if chord == "C" {
+        // Create AST directly
+        let ast = ASTChord {
+            root: "C".to_string(),
+            accidental: None,
+            quality: ChordQuality::Major,
+            bass: None,
+        };
+        ast_to_mml(&ast)
+    } else {
+        Err(anyhow!("Unsupported chord: {}. Only 'C' is supported in WASM build.", chord))
+    }
 }
 
 #[cfg(test)]
