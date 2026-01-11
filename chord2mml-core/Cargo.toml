@@ -13,5 +13,7 @@ crate-type = ["lib"]
 [dependencies]
 anyhow.workspace = true
 thiserror.workspace = true
+tree-sitter = "0.20"
+tree-sitter-chord = { path = "../tree-sitter-chord" }
 
 [dev-dependencies]
