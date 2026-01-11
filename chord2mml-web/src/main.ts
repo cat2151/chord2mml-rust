@@ -3,6 +3,21 @@ import init, { convert_chord } from '../public/wasm/chord2mml_wasm.js';
 import { initWasm, mml2json } from 'tonejs-mml-to-json';
 import * as Tone from 'tone';
 
+// Type definition for tonejs-mml-to-json output
+interface MMLNote {
+    time: number;
+    duration: number;
+    name: string;
+}
+
+interface MMLTrack {
+    notes: MMLNote[];
+}
+
+interface MMLJson {
+    tracks: MMLTrack[];
+}
+
 // Audio sequencer using tonejs-mml-to-json and Tone.js
 interface AudioSequencer {
     play(mml: string): Promise<void>;
@@ -28,7 +43,7 @@ class ToneJSSequencer implements AudioSequencer {
 
         try {
             // Convert MML to JSON using tonejs-mml-to-json
-            const json = mml2json(mml);
+            const json = mml2json(mml) as MMLJson;
             
             // Play the JSON sequence using Tone.js
             const now = Tone.now();
@@ -36,7 +51,7 @@ class ToneJSSequencer implements AudioSequencer {
             if (json.tracks && json.tracks.length > 0) {
                 const track = json.tracks[0];
                 if (track.notes && Array.isArray(track.notes)) {
-                    track.notes.forEach((note: any) => {
+                    track.notes.forEach((note: MMLNote) => {
                         const time = now + (note.time || 0);
                         const duration = note.duration || 0.5;
                         const noteName = note.name || 'C4';

@@ -229,8 +229,10 @@ fn transpose_note(note: &str, semitones: i32) -> String {
     // Simple note names in chromatic order (C, C#, D, D#, E, F, F#, G, G#, A, A#, B)
     let notes = ["c", "c+", "d", "d+", "e", "f", "f+", "g", "g+", "a", "a+", "b"];
     
-    // Find the current note index
-    let current_index = notes.iter().position(|&n| n == note).unwrap_or(0);
+    // Find the current note index - if not found, this is a programming error
+    // as notes should only come from our own note_to_mml function
+    let current_index = notes.iter().position(|&n| n == note)
+        .expect("Internal error: invalid note passed to transpose_note");
     
     // Calculate new index with wrapping
     let new_index = ((current_index as i32 + semitones) % 12 + 12) % 12;
