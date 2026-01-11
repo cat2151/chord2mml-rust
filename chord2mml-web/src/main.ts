@@ -135,7 +135,8 @@ async function initialize() {
                     await audioSequencer.play(mml);
                     showStatus('再生中...', 'success');
                 } catch (error) {
-                    showStatus(`再生エラー: ${error}`, 'error');
+                    const errorMessage = error instanceof Error ? error.message : String(error);
+                    showStatus(`再生エラー: ${errorMessage}`, 'error');
                 }
             }
         });

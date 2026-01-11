@@ -4,7 +4,7 @@ description = "chord grammar for the tree-sitter parsing library"
 version = "0.0.1"
 keywords = ["incremental", "parsing", "chord"]
 categories = ["parsing", "text-editors"]
-repository = "https://github.com/tree-sitter/tree-sitter-chord"
+repository = "https://github.com/cat2151/chord2mml-rust"
 edition = "2018"
 license = "MIT"
 
