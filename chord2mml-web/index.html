@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>chord2mml-rust</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .info {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 25px;
+            border-radius: 4px;
+        }
+
+        .info p {
+            margin: 5px 0;
+            line-height: 1.6;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+            font-size: 1.1em;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            resize: vertical;
+            min-height: 100px;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .output-section {
+            margin-top: 25px;
+        }
+
+        .output {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            min-height: 60px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            border: 2px solid #e0e0e0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .error {
+            color: #d32f2f;
+            background: #ffebee;
+            border-color: #ef5350;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-right: 10px;
+            margin-top: 15px;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .controls {
+            margin-top: 15px;
+        }
+
+        .status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .status.show {
+            display: block;
+        }
+
+        .status.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #4caf50;
+        }
+
+        .status.error {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ef5350;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            color: white;
+            font-size: 14px;
+        }
+
+        .footer a {
+            color: white;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 chord2mml-rust</h1>
+        <p class="subtitle">コード進行をMMLに変換して音を鳴らします</p>
+
+        <div class="info">
+            <p><strong>使い方:</strong></p>
+            <p>1. テキストエリアにコード名を入力（例: C）</p>
+            <p>2. 自動的にMMLに変換されます（例: c;e;g）</p>
+            <p>3. 「再生」ボタンで和音を鳴らします</p>
+        </div>
+
+        <div>
+            <label for="chordInput">コード入力:</label>
+            <textarea 
+                id="chordInput" 
+                placeholder="C"
+                rows="3"
+            >C</textarea>
+        </div>
+
+        <div class="output-section">
+            <label>MML出力:</label>
+            <div id="output" class="output">読み込み中...</div>
+        </div>
+
+        <div class="controls">
+            <button id="playButton">▶️ 再生</button>
+            <button id="stopButton">⏹️ 停止</button>
+        </div>
+
+        <div id="status" class="status"></div>
+    </div>
+
+    <div class="footer">
+        <p>
+            Powered by Rust + WASM + TypeScript | 
+            <a href="https://github.com/cat2151/chord2mml-rust" target="_blank">GitHub</a>
+        </p>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

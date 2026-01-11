@@ -1,0 +1,24 @@
+[workspace]
+members = [
+    "chord2mml-core",
+    "chord2mml-wasm",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+authors = ["cat2151"]
+repository = "https://github.com/cat2151/chord2mml-rust"
+
+[workspace.dependencies]
+# Core dependencies
+anyhow = "1.0"
+thiserror = "1.0"
+
+# WASM dependencies
+wasm-bindgen = "0.2"
+wasm-bindgen-test = "0.3"
+js-sys = "0.3"
+web-sys = "0.3"

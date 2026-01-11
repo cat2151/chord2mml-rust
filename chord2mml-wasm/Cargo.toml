@@ -1,0 +1,25 @@
+[package]
+name = "chord2mml-wasm"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "WASM bindings for chord2mml-core"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+chord2mml-core = { path = "../chord2mml-core" }
+wasm-bindgen.workspace = true
+js-sys.workspace = true
+web-sys = { workspace = true, features = ["console"] }
+
+[dev-dependencies]
+wasm-bindgen-test.workspace = true
+
+[profile.release]
+opt-level = "z"     # Optimize for size
+lto = true          # Enable Link Time Optimization
+codegen-units = 1   # Reduce parallel code generation for better optimization
