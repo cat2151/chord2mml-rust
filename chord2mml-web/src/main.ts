@@ -2,9 +2,8 @@
 import init, { convert_chord } from '../public/wasm/chord2mml_wasm.js';
 
 // Simple audio sequencer using Web Audio API.
-// Note: tonejs-mml-to-json and tonejs-json-sequencer are declared in package.json
-// for potential future use in Phase 3; they are intentionally not integrated here,
-// which uses a minimal Web Audio API implementation for the basic demo.
+// Note: tonejs-mml-to-json and tonejs-json-sequencer will be added and integrated
+// in Phase 3; the current implementation uses a minimal Web Audio API approach for the basic demo.
 
 interface AudioSequencer {
     play(mml: string): void;
