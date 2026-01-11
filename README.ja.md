@@ -7,6 +7,13 @@
 
 コード進行をMML（Music Macro Language）に変換するライブラリ・アプリケーション。Rustで書かれています。
 
+## 注意
+- WIP
+- 破壊的変更を頻繁に行う
+- AI自動運転で、userの作業負荷を最小化して進めていくつもり
+- そのためのAI自動運転装置を開発するつもり（というよりAI自動運転装置の開発用のリポジトリとして利用するつもり）
+- 以下はだいたいAI生成、間違いを含む可能性が高い、userの意図と違うものを含む可能性が高い
+
 ## 概要
 
 このプロジェクトは、[chord2mml](https://github.com/cat2151/chord2mml)で Peggy.js + JavaScript で作っていたものを、Rust + WASM + TypeScript として新たに作り直したものです。
