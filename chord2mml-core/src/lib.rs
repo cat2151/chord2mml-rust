@@ -13,7 +13,16 @@ pub fn convert(chord: &str) -> Result<String> {
     let chord = chord.trim();
     
     if chord.is_empty() {
-        return Err(anyhow!("Empty chord input"));
+        return Err(anyhow!(
+            "Empty chord input. Please provide a chord notation (e.g., 'C', 'Dm', 'G7')."
+        ));
+    }
+    
+    // Validate input length to prevent potential issues
+    if chord.len() > 100 {
+        return Err(anyhow!(
+            "Chord notation too long (max 100 characters)."
+        ));
     }
     
     // Parse the chord notation
@@ -36,6 +45,7 @@ struct ParsedChord {
 #[derive(Debug, Clone, PartialEq)]
 enum ChordQuality {
     Major,
+    // The following variants are placeholders for Phase 2 implementation
     Minor,
     Diminished,
     Augmented,
@@ -68,7 +78,22 @@ fn chord_to_mml(parsed: &ParsedChord) -> Result<String> {
             // C major: C, E, G (ド, ミ, ソ)
             Ok("c;e;g".to_string())
         }
-        _ => Err(anyhow!("Conversion not implemented for chord: {:?}", parsed)),
+        _ => {
+            let quality_name = match parsed.quality {
+                ChordQuality::Major => "major",
+                ChordQuality::Minor => "minor",
+                ChordQuality::Diminished => "diminished",
+                ChordQuality::Augmented => "augmented",
+                ChordQuality::Dominant7 => "7",
+                ChordQuality::Major7 => "maj7",
+                ChordQuality::Minor7 => "m7",
+            };
+            Err(anyhow!(
+                "Conversion not implemented for chord: {}{}", 
+                parsed.root, 
+                quality_name
+            ))
+        }
     }
 }
 

@@ -1,9 +1,10 @@
 // Main TypeScript entry point for chord2mml-web
 import init, { convert_chord } from '../public/wasm/chord2mml_wasm.js';
 
-// Simple audio sequencer using Web Audio API
-// Note: tonejs-mml-to-json and tonejs-json-sequencer are listed as dependencies
-// but not yet integrated. This is a minimal implementation for the basic demo.
+// Simple audio sequencer using Web Audio API.
+// Note: tonejs-mml-to-json and tonejs-json-sequencer are declared in package.json
+// for potential future use in Phase 3; they are intentionally not integrated here,
+// which uses a minimal Web Audio API implementation for the basic demo.
 
 interface AudioSequencer {
     play(mml: string): void;
@@ -36,7 +37,8 @@ class SimpleAudioSequencer implements AudioSequencer {
             'a': 440.00,  // A4
             'b': 493.88,  // B4
         };
-        return noteMap[note.toLowerCase()] || 440;
+        const normalizedNote = note.toLowerCase().trim();
+        return noteMap[normalizedNote] || 440;
     }
 
     play(mml: string): void {
@@ -46,6 +48,10 @@ class SimpleAudioSequencer implements AudioSequencer {
         const notes = mml.split(';').map(n => n.trim()).filter(n => n.length > 0);
         
         const now = ctx.currentTime;
+        const duration = 2.0;
+        
+        // Clear old oscillators before creating new ones
+        this.oscillators = [];
         
         notes.forEach(note => {
             const oscillator = ctx.createOscillator();
@@ -55,21 +61,24 @@ class SimpleAudioSequencer implements AudioSequencer {
             oscillator.frequency.value = this.noteToFrequency(note);
             
             gainNode.gain.setValueAtTime(0.3, now);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 2);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, now + duration);
             
             oscillator.connect(gainNode);
             gainNode.connect(ctx.destination);
             
             oscillator.start(now);
-            oscillator.stop(now + 2);
+            oscillator.stop(now + duration);
+            
+            // Clean up when oscillator ends
+            oscillator.onended = () => {
+                const index = this.oscillators.indexOf(oscillator);
+                if (index > -1) {
+                    this.oscillators.splice(index, 1);
+                }
+            };
             
             this.oscillators.push(oscillator);
         });
-
-        // Clean up oscillators after they stop
-        setTimeout(() => {
-            this.oscillators = [];
-        }, 2100);
     }
 
     stop(): void {

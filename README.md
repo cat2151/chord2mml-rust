@@ -9,11 +9,11 @@ A library and application for converting chord progressions to MML (Music Macro 
 
 ## Overview
 
-This project is a rewrite of [chord2mml](https://github.com/cat2151/chord2mml) (originally built with Peggy.js + JavaScript) using Rust + Tree-sitter + WASM + TypeScript.
+This project is a rewrite of [chord2mml](https://github.com/cat2151/chord2mml) (originally built with Peggy.js + JavaScript) using Rust + WASM + TypeScript. The current implementation uses a simple string-matching parser, with Tree-sitter integration planned for future versions.
 
 ### Key Features
 
-- **Rust + Tree-sitter**: Fast and robust parser core
+- **Rust Parser Core**: Simple and fast string-matching parser (Tree-sitter-based parser planned for Phase 3)
 - **Library Crate**: Usable directly from Rust native applications
 - **WASM Support**: Runs in browsers
 - **TypeScript Integration**: Web application support

@@ -9,11 +9,11 @@
 
 ## 概要
 
-このプロジェクトは、[chord2mml](https://github.com/cat2151/chord2mml)で Peggy.js + JavaScript で作っていたものを、Rust + Tree-sitter + WASM + TypeScript として新たに作り直したものです。
+このプロジェクトは、[chord2mml](https://github.com/cat2151/chord2mml)で Peggy.js + JavaScript で作っていたものを、Rust + WASM + TypeScript として新たに作り直したものです。
 
 ### 主な特徴
 
-- **Rust + Tree-sitter**: 高速で堅牢なパーサーコア
+- **Rustパーサーコア**: シンプルで高速な文字列マッチングパーサー（将来的にTree-sitterベースに移行予定）
 - **ライブラリクレート**: Rustのネイティブアプリケーションから直接利用可能
 - **WASM対応**: ブラウザ上でも動作
 - **TypeScript統合**: Webアプリケーションとしての利用
@@ -22,7 +22,7 @@
 
 ```
 chord2mml-rust/
-├── chord2mml-core/     # Rust + Tree-sitterによる変換コアライブラリ
+├── chord2mml-core/     # Rustによる変換コアライブラリ
 ├── chord2mml-wasm/     # WASM バインディング
 └── chord2mml-web/      # TypeScript + Webアプリケーション
 ```
@@ -30,7 +30,7 @@ chord2mml-rust/
 ### コンポーネント
 
 1. **chord2mml-core**: コード進行をパースしてMMLに変換するRustライブラリ
-   - Tree-sitterによる構文解析
+   - シンプルな文字列マッチングによる構文解析（Phase 3でTree-sitter導入予定）
    - ネイティブアプリケーションから利用可能
 
 2. **chord2mml-wasm**: WASMバインディング
@@ -39,7 +39,7 @@ chord2mml-rust/
 
 3. **chord2mml-web**: ブラウザアプリケーション
    - TypeScriptで実装
-   - tonejs-mml-to-json と tonejs-json-sequencer を利用して音を再生
+   - Web Audio APIによる直接的な音声再生（Phase 2以降でtonejs系ライブラリ統合予定）
    - textareaでコード進行を入力し、リアルタイムで変換・再生
 
 ## デモ
@@ -103,7 +103,7 @@ npm run dev  # 開発サーバー起動
 - [x] 基本的なコード変換機能（C → c;e;g）
 - [x] WASMバインディング
 - [x] Webアプリケーションの基本機能
-- [x] tonejs-mml-to-json と tonejs-json-sequencer の統合
+- [x] Web Audio APIによる基本的な音声再生
 
 ### Phase 2: 元のchord2mmlテストの移植
 
@@ -111,7 +111,7 @@ npm run dev  # 開発サーバー起動
 以下の和音を網羅的にサポートします：
 
 #### メジャー系コード
-- [ ] C (ド・ミ・ソ)
+- [x] C (ド・ミ・ソ)
 - [ ] C6 (ド・ミ・ソ・ラ)
 - [ ] CM7, Cmaj7 (ド・ミ・ソ・シ)
 - [ ] Cadd9 (ド・ミ・ソ・レ)
@@ -159,7 +159,8 @@ npm run dev  # 開発サーバー起動
 ### Phase 3: 高度な機能
 
 - [ ] より複雑なコード進行のサポート
-- [ ] Tree-sitterグラマーの最適化
+- [ ] Tree-sitterの導入とグラマーの実装
+- [ ] tonejs-mml-to-json と tonejs-json-sequencer の統合
 - [ ] パフォーマンス改善
 - [ ] エラーハンドリングの強化
 - [ ] ドキュメント整備
@@ -170,7 +171,7 @@ npm run dev  # 開発サーバー起動
 
 | 項目 | chord2mml (旧) | chord2mml-rust (新) |
 |------|---------------|-------------------|
-| パーサー | Peggy.js | Tree-sitter |
+| パーサー | Peggy.js | 文字列マッチング（Tree-sitterは今後導入予定） |
 | 言語 | JavaScript/TypeScript | Rust + TypeScript |
 | 実行環境 | ブラウザ専用 | ネイティブ + WASM |
 | ライブラリ利用 | 困難 | 容易（Rustクレート） |
@@ -191,11 +192,15 @@ npm run dev  # 開発サーバー起動
 ## 技術スタック
 
 - **Rust**: 1.70以降
-- **Tree-sitter**: 構文解析
 - **wasm-pack**: WASMビルドツール
 - **TypeScript**: Webアプリケーション
-- **tonejs-mml-to-json**: MML解析
-- **tonejs-json-sequencer**: 音声再生
+- **Web Audio API**: 音声再生
+
+### 将来的な導入予定
+
+- **Tree-sitter**: より堅牢な構文解析（Phase 3）
+- **tonejs-mml-to-json**: MML解析の高度化（Phase 3）
+- **tonejs-json-sequencer**: より高機能な音声再生（Phase 3）
 
 ## テスト
 
