@@ -1,9 +1,9 @@
 // Main TypeScript entry point for chord2mml-web
 import init, { convert_chord } from '../public/wasm/chord2mml_wasm.js';
 
-// Import audio libraries
-// Note: These would need to be properly installed via npm
-// For now, we'll create a simple mock implementation
+// Simple audio sequencer using Web Audio API
+// Note: tonejs-mml-to-json and tonejs-json-sequencer are listed as dependencies
+// but not yet integrated. This is a minimal implementation for the basic demo.
 
 interface AudioSequencer {
     play(mml: string): void;
