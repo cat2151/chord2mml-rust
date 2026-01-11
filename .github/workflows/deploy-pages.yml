@@ -49,7 +49,7 @@ jobs:
       - name: Build web app
         run: |
           cd chord2mml-web
-          npm run build:web
+          VITE_BASE_PATH=/chord2mml-rust/ npm run build:web
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
