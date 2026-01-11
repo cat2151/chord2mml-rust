@@ -10,6 +10,9 @@ description = "WASM bindings for chord2mml-core"
 [lib]
 crate-type = ["cdylib", "rlib"]
 
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
 [dependencies]
 chord2mml-core = { path = "../chord2mml-core" }
 wasm-bindgen.workspace = true
