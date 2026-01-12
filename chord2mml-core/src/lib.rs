@@ -135,9 +135,28 @@ fn parse_chord(chord: &str) -> Result<ASTChord> {
     let bass = if index < chars.len() && chars[index] == '/' {
         index += 1;
         if index < chars.len() {
-            Some(chars[index..].iter().collect())
+            // Validate bass note (must be a valid note name)
+            let bass_note = chars[index];
+            if !matches!(bass_note, 'C' | 'D' | 'E' | 'F' | 'G' | 'A' | 'B') {
+                return Err(anyhow!("Invalid bass note: {}. Expected C, D, E, F, G, A, or B", bass_note));
+            }
+            index += 1;
+            
+            // Check for accidental on bass note
+            let mut bass_str = bass_note.to_string();
+            if index < chars.len() && matches!(chars[index], '#' | 'b') {
+                bass_str.push(chars[index]);
+                index += 1;
+            }
+            
+            // Ensure no trailing characters
+            if index < chars.len() {
+                return Err(anyhow!("Unexpected characters after bass note: {}", chars[index..].iter().collect::<String>()));
+            }
+            
+            Some(bass_str)
         } else {
-            None
+            return Err(anyhow!("Missing bass note after '/'"));
         }
     } else {
         None
@@ -159,14 +178,14 @@ fn ast_to_mml(ast: &ASTChord) -> Result<String> {
     match ast.quality {
         ChordQuality::Major => {
             // Major chord: root, major third, perfect fifth
-            let third = transpose_note(&root, 4); // Major third = 4 semitones
-            let fifth = transpose_note(&root, 7); // Perfect fifth = 7 semitones
+            let third = transpose_note(&root, 4)?; // Major third = 4 semitones
+            let fifth = transpose_note(&root, 7)?; // Perfect fifth = 7 semitones
             Ok(format!("{};{};{}", root, third, fifth))
         }
         ChordQuality::Minor => {
             // Minor chord: root, minor third, perfect fifth
-            let third = transpose_note(&root, 3); // Minor third = 3 semitones
-            let fifth = transpose_note(&root, 7); // Perfect fifth = 7 semitones
+            let third = transpose_note(&root, 3)?; // Minor third = 3 semitones
+            let fifth = transpose_note(&root, 7)?; // Perfect fifth = 7 semitones
             Ok(format!("{};{};{}", root, third, fifth))
         }
         _ => Err(anyhow!("Chord quality not yet implemented: {:?}", ast.quality)),
@@ -186,19 +205,18 @@ fn note_to_mml(note: &str, accidental: &Option<Accidental>) -> String {
 }
 
 /// Transpose a note by semitones
-fn transpose_note(note: &str, semitones: i32) -> String {
+fn transpose_note(note: &str, semitones: i32) -> Result<String> {
     // Simple note names in chromatic order (C, C#, D, D#, E, F, F#, G, G#, A, A#, B)
     let notes = ["c", "c+", "d", "d+", "e", "f", "f+", "g", "g+", "a", "a+", "b"];
     
-    // Find the current note index - if not found, this is a programming error
-    // as notes should only come from our own note_to_mml function
+    // Find the current note index
     let current_index = notes.iter().position(|&n| n == note)
-        .unwrap_or_else(|| panic!("Internal error: invalid note '{}' passed to transpose_note", note));
+        .ok_or_else(|| anyhow!("Invalid note '{}' for transposition", note))?;
     
     // Calculate new index with wrapping
     let new_index = ((current_index as i32 + semitones) % 12 + 12) % 12;
     
-    notes[new_index as usize].to_string()
+    Ok(notes[new_index as usize].to_string())
 }
 
 #[cfg(test)]
@@ -250,8 +268,8 @@ mod tests {
 
     #[test]
     fn test_transpose_note() {
-        assert_eq!(transpose_note("c", 0), "c");
-        assert_eq!(transpose_note("c", 4), "e"); // Major third
-        assert_eq!(transpose_note("c", 7), "g"); // Perfect fifth
+        assert_eq!(transpose_note("c", 0).unwrap(), "c");
+        assert_eq!(transpose_note("c", 4).unwrap(), "e"); // Major third
+        assert_eq!(transpose_note("c", 7).unwrap(), "g"); // Perfect fifth
     }
 }
