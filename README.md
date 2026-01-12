@@ -115,22 +115,24 @@ npm run dev  # Start development server
 
 Port tests from the original [chord2mml](https://github.com/cat2151/chord2mml) repository and comprehensively support the following chords:
 
+**Current Implementation Status**: Major and minor chords are fully implemented. Other chord types are only recognized by the parser, but MML conversion is not yet implemented.
+
 #### Major Chords
 - [x] C (C E G)
 - [ ] C6 (C E G A)
-- [ ] CM7, Cmaj7 (C E G B)
+- [ ] CM7, Cmaj7 (C E G B) ※Parser only, MML conversion not implemented
 - [ ] Cadd9 (C E G D)
 - [ ] C69 (C E G A D)
 
 #### Minor Chords
-- [ ] Cm (C Eb G)
+- [x] Cm (C Eb G)
 - [ ] Cm6 (C Eb G A)
 - [ ] Cm7 (C Eb G Bb)
 - [ ] CmM7, Cm(maj7) (C Eb G B)
 - [ ] Cm7-5, Cm7(♭5) (C Eb Gb Bb)
 
 #### Seventh Chords
-- [ ] C7 (C E G Bb)
+- [ ] C7 (C E G Bb) ※Parser only, MML conversion not implemented
 - [ ] C7sus4 (C F G Bb)
 - [ ] C7-5, C7(♭5) (C E Gb Bb)
 - [ ] C7+5, C7(#5), Caug7 (C E G# Bb)
@@ -138,17 +140,17 @@ Port tests from the original [chord2mml](https://github.com/cat2151/chord2mml) r
 - [ ] C7+9, C7(#9) (C E G Bb D#)
 
 #### Diminished & Augmented Chords
-- [ ] Cdim, Cdim7 (C Eb Gb A)
-- [ ] Caug, C+, C(#5) (C E G#)
+- [ ] Cdim, Cdim7 (C Eb Gb A) ※Parser only, MML conversion not implemented
+- [ ] Caug, C+, C(#5) (C E G#) ※Parser only, MML conversion not implemented
 
 #### Suspended Chords
-- [ ] Csus4 (C F G)
-- [ ] Csus2 (C D G)
+- [ ] Csus4 (C F G) ※Parser only, MML conversion not implemented
+- [ ] Csus2 (C D G) ※Parser only, MML conversion not implemented
 
 #### Inversions and Bass Designations
-- [ ] C/E (First Inversion: E G C)
-- [ ] C/G (Second Inversion: G C E)
-- [ ] C/D (On-chord: D C E G)
+- [ ] C/E (First Inversion: E G C) ※Parser only, MML conversion not implemented
+- [ ] C/G (Second Inversion: G C E) ※Parser only, MML conversion not implemented
+- [ ] C/D (On-chord: D C E G) ※Parser only, MML conversion not implemented
 
 #### Other Chords
 - [ ] 9th, 11th, 13th Chords
@@ -158,7 +160,7 @@ Port tests from the original [chord2mml](https://github.com/cat2151/chord2mml) r
 #### Feature Enhancements
 - [ ] Octave specification
 - [ ] Rhythm and note length specification
-- [ ] Continuous input of multiple chords
+- [x] Continuous input of multiple chords (chord progressions)
 - [ ] Automatic generation of chord progression patterns
 
 ### Phase 3: Advanced Features
