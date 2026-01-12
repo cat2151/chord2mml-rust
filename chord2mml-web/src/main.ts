@@ -1,81 +1,93 @@
 // Main TypeScript entry point for chord2mml-web
 import init, { convert_chord } from '../public/wasm/chord2mml_wasm.js';
-import { initWasm, mml2json } from 'tonejs-mml-to-json';
-import * as Tone from 'tone';
 
-// Type definition for tonejs-mml-to-json output
-interface MMLNote {
-    time: number;
-    duration: number;
-    name: string;
-}
-
-interface MMLTrack {
-    notes: MMLNote[];
-}
-
-interface MMLJson {
-    tracks: MMLTrack[];
-}
-
-// Audio sequencer using tonejs-mml-to-json and Tone.js
+// Simple audio sequencer using Web Audio API
 interface AudioSequencer {
     play(mml: string): Promise<void>;
     stop(): void;
 }
 
-class ToneJSSequencer implements AudioSequencer {
-    private synth: Tone.PolySynth | null = null;
+class SimpleAudioSequencer implements AudioSequencer {
+    private audioContext: AudioContext | null = null;
+    private oscillators: OscillatorNode[] = [];
 
-    constructor() {
-        // Initialize Tone.js synth
-        this.synth = new Tone.PolySynth(Tone.Synth).toDestination();
+    private getAudioContext(): AudioContext {
+        if (!this.audioContext) {
+            this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        }
+        return this.audioContext;
     }
 
     async play(mml: string): Promise<void> {
-        if (!this.synth) return;
+        const audioContext = this.getAudioContext();
 
         // Stop any currently playing notes
         this.stop();
 
-        // Ensure audio context is started (required for user interaction)
-        await Tone.start();
+        // Parse simple MML format (e.g., "c;e;g")
+        const notes = mml.split(';').map(n => n.trim()).filter(n => n.length > 0);
+        
+        // Note frequencies (middle octave, C4=261.63Hz)
+        const noteFrequencies: { [key: string]: number } = {
+            'c': 261.63, 'c+': 277.18, 'd': 293.66, 'd+': 311.13,
+            'e': 329.63, 'f': 349.23, 'f+': 369.99, 'g': 392.00,
+            'g+': 415.30, 'a': 440.00, 'a+': 466.16, 'b': 493.88,
+            'c-': 493.88, 'd-': 277.18, 'e-': 311.13, 'f-': 329.63,
+            'g-': 369.99, 'a-': 415.30, 'b-': 466.16
+        };
 
-        try {
-            // Convert MML to JSON using tonejs-mml-to-json
-            const json = mml2json(mml) as MMLJson;
-            
-            // Play the JSON sequence using Tone.js
-            const now = Tone.now();
-            
-            if (json.tracks && json.tracks.length > 0) {
-                const track = json.tracks[0];
-                if (track.notes && Array.isArray(track.notes)) {
-                    track.notes.forEach((note: MMLNote) => {
-                        const time = now + (note.time || 0);
-                        const duration = note.duration || 0.5;
-                        const noteName = note.name || 'C4';
-                        
-                        this.synth!.triggerAttackRelease(noteName, duration, time);
-                    });
-                }
+        const now = audioContext.currentTime;
+        const duration = 1.0; // 1 second
+
+        // Play each note simultaneously (chord)
+        notes.forEach((note) => {
+            const freq = noteFrequencies[note.toLowerCase()];
+            if (freq) {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(freq, now);
+                
+                gainNode.gain.setValueAtTime(0.2, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + duration);
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.start(now);
+                oscillator.stop(now + duration);
+                
+                // Clean up oscillator when it ends
+                oscillator.onended = () => {
+                    const index = this.oscillators.indexOf(oscillator);
+                    if (index > -1) {
+                        this.oscillators.splice(index, 1);
+                    }
+                };
+                
+                this.oscillators.push(oscillator);
             }
-        } catch (error) {
-            console.error('Error playing MML:', error);
-            throw error;
-        }
+        });
     }
 
     stop(): void {
-        if (this.synth) {
-            this.synth.releaseAll();
-        }
+        this.oscillators.forEach(osc => {
+            try {
+                osc.stop();
+            } catch (e) {
+                // Oscillator might already be stopped; ignore only InvalidStateError
+                if (!(e instanceof DOMException && e.name === 'InvalidStateError')) {
+                    console.error('Error while stopping oscillator:', e);
+                }
+            }
+        });
+        this.oscillators = [];
     }
 }
 
 // Application state
 let wasmInitialized = false;
-let mmlToJsonInitialized = false;
 let audioSequencer: AudioSequencer;
 
 // Get DOM elements
@@ -116,12 +128,8 @@ async function initialize() {
         await init();
         wasmInitialized = true;
         
-        // Initialize WASM module for tonejs-mml-to-json
-        await initWasm();
-        mmlToJsonInitialized = true;
-        
         // Initialize audio sequencer
-        audioSequencer = new ToneJSSequencer();
+        audioSequencer = new SimpleAudioSequencer();
         
         // Set up event listeners
         chordInput.addEventListener('input', () => {
@@ -130,7 +138,7 @@ async function initialize() {
 
         playButton.addEventListener('click', async () => {
             const mml = output.textContent;
-            if (mml && !output.classList.contains('error') && mmlToJsonInitialized) {
+            if (mml && !output.classList.contains('error')) {
                 try {
                     await audioSequencer.play(mml);
                     showStatus('再生中...', 'success');

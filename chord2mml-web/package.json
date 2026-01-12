@@ -16,8 +16,6 @@
   "author": "cat2151",
   "license": "MIT",
   "dependencies": {
-    "tonejs-mml-to-json": "github:cat2151/tonejs-mml-to-json",
-    "tone": "^15.1.0"
   },
   "devDependencies": {
     "typescript": "^5.3.0",
