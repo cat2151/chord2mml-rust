@@ -1,51 +1,72 @@
-Last updated: 2026-01-12
+Last updated: 2026-01-13
 
 # Development Status
 
 ## 現在のIssues
-- [Issue #3](../issue-notes/3.md): スケジュール実行中のWindows GNUクロスコンパイルチェックが失敗しています。
-- ビルドエラーを調査し、Windowsとの依存関係の互換性を確認する必要があります。
-- 関連するワークフロー実行ログ ([https://github.com/cat2151/chord2mml-rust/actions/runs/20896714774](https://github.com/cat2151/chord2mml-rust/actions/runs/20896714774)) を参照し、原因究明と対応が必要です。
+- コアパーサーをTree-sitterベースに移行し、手動パーサーを削除する作業([Issue #17](../issue-notes/17.md), [Issue #18](../issue-notes/18.md))が進行中です。
+- MML出力の文法準拠のため、各コードをシングルクォートで囲む変更([Issue #19](../issue-notes/19.md))が必要です。
+- README.ja.mdに、現在扱っているコードのロードマップを整理し、LLMによるハルシネーション([Issue #21](../issue-notes/21.md), [Issue #22](../issue-notes/22.md))を削除します。
 
 ## 次の一手候補
-1. Windows GNUクロスコンパイル失敗 [Issue #3](../issue-notes/3.md) の詳細調査
-   - 最初の小さな一歩: 失敗したワークフローのログを詳細に分析し、エラーメッセージとスタックトレースを特定する。
+1. [Issue #17](../issue-notes/17.md) 手動パーサーを削除し、Tree-sitterベースの実装へ移行する
+   - 最初の小さな一歩: `chord2mml-core/src/parser.rs` から、手動パーサーのコードブロックを完全に削除する。
+   - Agent実行プロンプ:
+     ```
+     対象ファイル: chord2mml-core/src/parser.rs, chord2mml-core/Cargo.toml
+
+     実行内容:
+     `chord2mml-core/src/parser.rs` から、`#[cfg(not(feature = "tree-sitter"))]` で囲まれた `parse_to_ast_manual` 関数および、`parse_chord_manual`, `validate_bass_note`, `parse_quality_manual` 関数とその関連コード（手動パーサー部分）を完全に削除してください。
+     また、`parse_to_ast` 関数から手動パーサーへの条件分岐を削除し、Tree-sitterパーサーのみを使用するように修正してください。
+     `chord2mml-core/Cargo.toml` から `default = []` フィーチャーを削除し、`tree-sitter` フィーチャーをデフォルトで有効にするか、`tree-sitter` フィーチャーなしではコンパイルできないように修正してください。
+
+     確認事項:
+     手動パーサー関連コードの削除によって、`chord2mml-core` クレートがTree-sitterフィーチャーなしではコンパイルされないことを確認してください。
+     `chord2mml-wasm` クレートのビルドに失敗しないことを確認してください。（WASMは`tree-sitter`フィーチャーを有効にできないため、`chord2mml-core`が`default`フィーチャーに依存しないように変更する必要があります。）
+     `chord2mml-wasm/Cargo.toml` が `chord2mml-core` の `tree-sitter` フィーチャーを有効にしていないことを確認してください。
+
+     期待する出力:
+     修正された `chord2mml-core/src/parser.rs` と `chord2mml-core/Cargo.toml` の内容。
+     ```
+
+2. [Issue #19](../issue-notes/19.md) 出力されたchordそれぞれをシングルクォートで囲むようにする
+   - 最初の小さな一歩: `chord2mml-core/src/mml.rs` の `chord_to_mml` 関数内で、MML文字列の各コードの生成時にシングルクォートを追加する。
    - Agent実行プロンプト:
      ```
-     対象ファイル: なし（ワークフロー実行ログ）
+     対象ファイル: chord2mml-core/src/mml.rs
 
-     実行内容: `https://github.com/cat2151/chord2mml-rust/actions/runs/20896714774` のワークフロー実行ログから、Windows GNUクロスコンパイルが失敗した際の具体的なエラーメッセージ、スタックトレース、および失敗したステップを抽出し、markdown形式で報告してください。
+     実行内容:
+     `chord2mml-core/src/mml.rs` 内の `chord_to_mml` 関数を修正し、各コードがMML文字列として出力される際に、そのコード全体をシングルクォート `'` で囲むように変更してください。
+     例えば、`c;e;g` だったものが `'c;e;g'` となるように修正してください。
+     `generate_mml_from_ast` 関数も、この変更に合わせて適切にMML文字列を結合するように調整してください。
 
-     確認事項: ログの完全性と関連性の確認。特に、`rust-windows-check.yml` ワークフローの実行結果とエラー出力に焦点を当ててください。
+     確認事項:
+     既存のテストがパスすることを確認してください。
+     CLIツール (`chord2mml-cli`) で変換した際に、MML出力がシングルクォートで囲まれていることを確認してください。
 
-     期待する出力: ログから特定されたエラーの要約、関連するコードスニペット（もしあれば）、および次の調査ステップの提案を含むmarkdownレポート。
+     期待する出力:
+     修正された `chord2mml-core/src/mml.rs` の内容。
      ```
 
-2. Windows環境での依存関係の互換性確認とツールチェイン調査 [Issue #3](../issue-notes/3.md)
-   - 最初の小さな一歩: 現在のプロジェクトの`Cargo.toml`と`Cargo.lock`を分析し、特にWindows GNUターゲットに関連する依存関係を特定する。
+3. [Issue #21](../issue-notes/21.md) chord2mmlリポジトリで扱っているchordを一通り実装するためのロードマップをREADME.ja.mdにlistする
+   - 最初の小さな一歩: `README.ja.md` の「ロードマップ」セクションで、各コードタイプの実装状況（MML変換の有無）を正確に反映したチェックボックスリストに更新する。
    - Agent実行プロンプト:
      ```
-     対象ファイル: `Cargo.toml`, `Cargo.lock`, `.github/actions-tmp/.github/workflows/rust-windows-check.yml`
+     対象ファイル: README.ja.md
 
-     実行内容: プロジェクトのRust依存関係（`Cargo.toml`, `Cargo.lock`）と、Windows GNUクロスコンパイル環境（`.github/actions-tmp/.github/workflows/rust-windows-check.yml` に関連する設定やツールチェイン）を分析し、潜在的な互換性の問題や、特定のクレートがWindows GNUターゲットで問題を引き起こす可能性がないか調査してください。
+     実行内容:
+     `README.ja.md` ファイルの「ロードマップ」セクションにある「Phase 2: 元のchord2mmlテストの移植」の内容を更新してください。
+     特に「現在の実装状況」を、`chord2mml-core/src/parser.rs` と `chord2mml-core/src/mml.rs` の現在の実装を反映した、より正確な記述に修正してください。
+     また、各コードタイプのリスト（メジャー系、マイナー系、セブンス系など）について、現時点でMML変換が実装されているものと未実装のものを明確に区別し、未実装のものは`[ ]`チェックボックスで示すように変更してください。
+     「ハイフンは区切り文字だけに使うのが違いである」という点については、必要に応じて追記を検討してください。ただし、この点は主にパーサーの挙動に関わるため、MML変換のロードマップ部分では簡潔に触れる程度で十分です。
 
-     確認事項: `.github/actions-tmp/.github/workflows/rust-windows-check.yml` で使用されているRustツールチェイン（例: `toolchain: stable-x86_64-pc-windows-gnu`）と、`Cargo.toml` のfeatureフラグやプラットフォーム固有の依存関係の整合性。
+     確認事項:
+     既存のMML変換が実装されているコードタイプ（例: C, Cm）が「[x]」とマークされていること。
+     Tree-sitterパーサーが認識するがMML変換が未実装のコードタイプ（例: CM7, Cdim, Csus4, C/E）が「[ ]」とマークされていること。
+     [Issue #22](../issue-notes/22.md)で言及されているLLMのハルシネーション（「README.ja.mdの計画に書いてあるが、chord2mmlリポジトリで扱っていない要素」）に該当する部分がないか確認し、削除または修正してください。
+     更新されたロードマップが、プロジェクトの現状と今後の方向性を正確に反映していることを確認してください。
 
-     期待する出力: Windows GNU環境で問題を引き起こす可能性のある依存関係のリスト、およびそれらのクレートの代替案や修正策に関する提案をmarkdown形式で出力してください。
-     ```
-
-3. `rust-windows-check.yml` ワークフローの構成と実行環境の検証 [Issue #3](../issue-notes/3.md)
-   - 最初の小さな一歩: `.github/actions-tmp/.github/workflows/rust-windows-check.yml` の内容を確認し、Windows GNUクロスコンパイルに必要な設定（ターゲットの追加、リンカー設定など）が適切に行われているかをレビューする。
-   - Agent実行プロンプト:
-     ```
-     対象ファイル: `.github/actions-tmp/.github/workflows/rust-windows-check.yml`, `Cargo.toml`
-
-     実行内容: `.github/actions-tmp/.github/workflows/rust-windows-check.yml` の内容を分析し、RustプロジェクトのWindows GNUクロスコンパイルに必要なセットアップ（例: `rustup target add x86_64-pc-windows-gnu`、環境変数の設定、リンカーパス）が適切に構成されているかを確認してください。また、`Cargo.toml` の設定とワークフローの整合性も確認してください。
-
-     確認事項: ワークフロー内で使用されているアクションのバージョン、指定されているRustツールチェイン、およびクロスコンパイル固有のコマンド（例: `cargo build --target=x86_64-pc-windows-gnu`）の正確性。
-
-     期待する出力: `.github/actions-tmp/.github/workflows/rust-windows-check.yml` の現在の構成に関するレビュー結果、問題点があればその指摘、および改善案をmarkdown形式で出力してください。
-     ```
+     期待する出力:
+     更新された `README.ja.md` の内容。
 
 ---
-Generated at: 2026-01-12 07:01:49 JST
+Generated at: 2026-01-13 07:02:03 JST

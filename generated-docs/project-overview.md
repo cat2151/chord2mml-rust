@@ -1,46 +1,45 @@
-Last updated: 2026-01-12
+Last updated: 2026-01-13
 
 # Project Overview
 
 ## プロジェクト概要
-- コード進行をMML形式（Music Macro Language）に変換し、Webブラウザで音を鳴らせるアプリケーションです。
-- Rust言語で開発された高速な変換コアと、WebAssemblyによるブラウザ対応が特徴です。
-- 開発者はRustライブラリとしても利用でき、将来的にはより高度な構文解析機能が導入されます。
+- コード進行を音楽マクロ言語（MML）に変換するRust製の堅牢なライブラリおよびCLIツールです。
+- Tree-sitterによる正確な構文解析とCSTからASTへの変換パイプラインを核に構築されています。
+- 開発者がコード進行からMMLを効率的に生成し、ネイティブアプリケーションやWebフロントエンドで利用できるように設計されています。
 
 ## 技術スタック
 - フロントエンド:
-    - **TypeScript**: Webアプリケーション（`chord2mml-web`）の開発に使用される、JavaScriptに静的型付けを追加した言語。コードの堅牢性と保守性を向上させます。
-    - **JavaScript**: WebAssembly（WASM）モジュールのロードと連携、Web Audio APIの操作、およびTree-sitterパーサーのNode.jsバインディングのラッパーとして使用されます。
-    - **Web Audio API**: ブラウザ上で直接音声を生成・加工・再生するためのAPI。現在のWebアプリケーションでの音声再生に利用されています。
+    - **TypeScript**: Webインターフェース開発に使用されるJavaScriptのスーパーセットで、型安全な開発を可能にします。
+    - **HTML**: Webページの構造を定義するためのマークアップ言語です。
+    - **Vite**: 高速な開発体験を提供する、次世代のフロントエンドビルドツールです。
+    - **WASM (WebAssembly)** (将来的な導入予定): RustコードをWebブラウザで高速に実行するためのバイナリ形式です。
 - 音楽・オーディオ:
-    - **Web Audio API**: 現在、WebアプリケーションでMMLを音声に変換し、ブラウザで再生するために使用されています。
-    - **tonejs-mml-to-json (将来導入予定)**: MMLをJSON形式に解析するためのライブラリ。より高度なMML処理を目指しています。
-    - **tonejs-json-sequencer (将来導入予定)**: JSON形式のシーケンスデータを基に音楽を再生するためのライブラリ。Web Audio APIと連携し、より表現豊かな演奏を可能にします。
+    - **MML (Music Macro Language)**: 音楽を表現するためのテキストベースのマクロ言語で、このプロジェクトの変換ターゲットです。
+    - **Tone.js 関連ライブラリ** (将来的な導入予定): `tonejs-mml-to-json` (MML解析) と `tonejs-json-sequencer` (音声再生) は、MMLの高度な処理と音声出力機能の統合を目的としています。
 - 開発ツール:
-    - **wasm-pack**: Rustで書かれたコードをWebAssemblyにコンパイルし、Webアプリケーションから利用可能な形式にパッケージ化するためのツール。
-    - **Node.js**: Webアプリケーションの開発環境（パッケージ管理、ビルドスクリプト実行）や、Tree-sitterパーサーのNode.jsバインディングのテスト環境として使用されます。
-    - **npm**: Node.jsのパッケージマネージャー。Webアプリケーションの依存関係の管理とスクリプト実行に利用されます。
-    - **Vite**: 高速な開発サーバーとバンドル機能を提供するフロントエンドビルドツール。Webアプリケーションのビルドに使用されます。
-    - **Tree-sitter (パーサーコアとして将来導入予定)**: コードの構文解析を行うためのパーサー生成フレームワーク。より堅牢で複雑なコード進行の解析を実現するために、将来的にRustコアに導入される予定です。関連ファイルは既にプロジェクト内に存在します。
+    - **Node.js**: JavaScript実行環境で、特にTree-sitterグラマーのビルドツール (`tree-sitter-cli`) の実行に必要です。
+    - **CodeQL**: セキュリティ脆弱性分析ツールで、コードベースの品質維持に貢献します。
 - テスト:
-    - **Cargo Test**: Rustコードのユニットテストを実行するためのRust標準テストツール。`chord2mml-core`や`chord2mml-wasm`のテストに使用されます。
-    - **wasm-pack test --node**: WebAssemblyモジュールのNode.js環境での統合テストを実行するためのコマンド。
-    - **npm test**: Webアプリケーション（`chord2mml-web`）のテストを実行するためのスクリプト。
+    - **Cargo test**: Rustに標準搭載されているテストフレームワークで、ユニットテストや統合テストの実行に使用されます。
 - ビルドツール:
-    - **Cargo**: Rustプロジェクトのビルドシステムおよびパッケージマネージャー。Rustライブラリ (`chord2mml-core`) やWASMバインディング (`chord2mml-wasm`) のビルドに使用されます。
-    - **wasm-pack**: RustコードをWebAssemblyにコンパイルする際の主要なビルドツール。
-    - **Vite**: Webアプリケーション (`chord2mml-web`) の開発と本番ビルドを行うためのツール。
+    - **Rust Cargo**: Rustプロジェクトのビルド、依存関係管理、テスト実行などを一元的に行うツールです。
+    - **tree-sitter-cli**: Tree-sitterグラマーをコンパイルし、パーサーを生成するためのコマンドラインツールです。
 - 言語機能:
-    - **Rust**: 高性能でメモリ安全なシステムプログラミング言語。プロジェクトのコアロジックを担い、強力な型システムと所有権システムにより、高い信頼性と実行速度を提供します。
-    - **TypeScript**: JavaScriptに静的型付けを追加することで、大規模なWebアプリケーション開発におけるコードの品質と保守性を向上させる言語。
-- 自動化・CI/CD: 該当なし (提供情報に基づくと、具体的なCI/CDパイプラインや自動化ツールに関する記述はありません。)
-- 開発標準: 該当なし (提供情報に基づくと、具体的なコード品質ツールや統一ルールに関する記述はありません。)
+    - **Rust**: システムプログラミング言語で、パフォーマンスと安全性に優れ、本プロジェクトのコアロジックに使用されています。
+    - **Tree-sitter**: 高速で堅牢な構文解析エンジンで、コード記法のCST（具象構文木）を生成します。
+    - **JavaScript**: Tree-sitterグラマーの定義やNode.jsバインディング、Webフロントエンドの一部で使用されます。
+- 自動化・CI/CD:
+    - (特になし)
+- 開発標準:
+    - **MIT License**: ソフトウェアの利用、改変、再配布に関するオープンソースライセンスです。
 
 ## ファイル階層ツリー
 ```
 📄 .gitignore
 📄 Cargo.lock
 📄 Cargo.toml
+📖 EXAMPLES.md
+📖 IMPLEMENTATION.md
 📄 LICENSE
 📖 README.ja.md
 📖 README.md
@@ -63,10 +62,21 @@ Last updated: 2026-01-12
     📁 tree_sitter/
       📄 parser.h
 📄 _config.yml
+📁 chord2mml-cli/
+  📄 Cargo.toml
+  📖 README.md
+  📁 src/
+    📄 main.rs
 📁 chord2mml-core/
   📄 Cargo.toml
+  📁 examples/
+    📄 basic.rs
   📁 src/
+    📄 ast.rs
     📄 lib.rs
+    📄 mml.rs
+    📄 note.rs
+    📄 parser.rs
 📁 chord2mml-wasm/
   📄 Cargo.toml
   📁 src/
@@ -81,7 +91,18 @@ Last updated: 2026-01-12
   📘 vite.config.ts
 📁 generated-docs/
 📁 issue-notes/
+  📖 11.md
+  📖 13.md
+  📖 15.md
+  📖 17.md
+  📖 19.md
   📖 2.md
+  📖 20.md
+  📖 21.md
+  📖 22.md
+  📖 5.md
+  📖 7.md
+  📖 9.md
 📁 tree-sitter-chord/
   📄 Cargo.toml
   📄 binding.gyp
@@ -103,73 +124,100 @@ Last updated: 2026-01-12
 ```
 
 ## ファイル詳細説明
--   **README.ja.md / README.md**: プロジェクトの概要、使い方、アーキテクチャ、技術スタックなどの全体像を説明するドキュメントで、日本語版と英語版が用意されています。
--   **Cargo.toml**: 各Rustクレート（プロジェクトのサブコンポーネント）の依存関係、メタデータ、ビルド設定を定義するファイルです。
--   **Cargo.lock**: `Cargo.toml`に基づいて解決された、プロジェクトが使用する正確な依存関係のバージョンを記録するファイル。
--   **LICENSE**: プロジェクトのライセンス情報（MIT License）を記載しています。
--   **_config.yml**: GitHub Pagesなどのウェブサイト設定に関連するファイルである可能性があります。
--   **_codeql_detected_source_root/**: CodeQLによって自動検出されたソースルートを示すディレクトリ。`tree-sitter-chord`と関連するTree-sitterパーサーのソースコードが含まれている可能性があります。
--   **_codeql_detected_source_root/bindings/node/index.js**: Tree-sitterパーサーのNode.jsバインディングをロードするためのJavaScriptラッパー。
--   **_codeql_detected_source_root/grammar.js**: Tree-sitterパーサーの構文をJavaScriptで定義したファイル。
--   **chord2mml-core/**: コード進行をMMLに変換するRustで書かれたコアロジックを格納するディレクトリです。
-    -   **chord2mml-core/Cargo.toml**: `chord2mml-core`クレートの依存関係とメタデータ。
-    -   **chord2mml-core/src/lib.rs**: コード進行をパースしてMMLに変換する主要なRustライブラリのコードが含まれています。
--   **chord2mml-wasm/**: `chord2mml-core`の機能をWebAssembly（WASM）としてビルドするためのコードを格納するディレクトリです。
-    -   **chord2mml-wasm/Cargo.toml**: `chord2mml-wasm`クレートの依存関係とメタデータ。
-    -   **chord2mml-wasm/src/lib.rs**: Rustコア機能をWebアプリケーションから呼び出せるようにするためのWASMバインディングロジックを実装しています。
--   **chord2mml-web/**: ブラウザ上で動作するWebアプリケーションのソースコードを格納するディレクトリです。
-    -   **chord2mml-web/README.md**: Webアプリケーションに関する詳細な情報。
-    -   **chord2mml-web/index.html**: WebアプリケーションのエントリーポイントとなるHTMLファイル。ユーザーインターフェースの骨格を定義します。
-    -   **chord2mml-web/package.json**: Webアプリケーションの依存関係、ビルドスクリプト、メタデータを定義するNode.jsパッケージ設定ファイル。
-    -   **chord2mml-web/src/main.ts**: Webアプリケーションのメインスクリプト。WASMモジュールのロード、ユーザー入力の処理、MML変換結果の表示、Web Audio APIによる音声再生を制御します。
-    -   **chord2mml-web/tsconfig.json**: TypeScriptコンパイラの設定ファイル。
-    -   **chord2mml-web/vite.config.ts**: Viteビルドツールの設定ファイル。Webアプリケーションの開発サーバーや本番ビルドの設定を定義します。
--   **generated-docs/**: プロジェクトから自動生成されたドキュメント（例：Rustの`cargo doc`で生成されるAPIドキュメント）が格納される可能性があるディレクトリです。
--   **issue-notes/2.md**: 特定のIssueに関連する開発者向けのメモや詳細情報を記録したファイル。
--   **tree-sitter-chord/**: コード進行を解析するためのTree-sitterパーサーに関連するファイルを格納するディレクトリです。これは将来的なパーサーの移行のために用意されています。
-    -   **tree-sitter-chord/Cargo.toml**: `tree-sitter-chord`クレート（Tree-sitterパーサーのRustバインディング）の依存関係。
-    -   **tree-sitter-chord/binding.gyp**: Node.jsネイティブモジュールのビルド設定ファイル。
-    -   **tree-sitter-chord/bindings/node/binding.cc**: Tree-sitterパーサーのNode.jsネイティブバインディングのC++実装。
-    -   **tree-sitter-chord/bindings/node/index.js**: Node.js環境でTree-sitterパーサーをロード・利用するためのJavaScriptラッパー。
-    -   **tree-sitter-chord/bindings/rust/build.rs**: RustクレートがCライブラリをビルドするためのスクリプト。
-    -   **tree-sitter-chord/bindings/rust/lib.rs**: Tree-sitterパーサーのRustバインディングライブラリ。
-    -   **tree-sitter-chord/grammar.js**: Tree-sitterパーサーの構文定義をJavaScriptで記述したファイル。
-    -   **tree-sitter-chord/src/grammar.json**: Tree-sitterパーサーの構文定義をJSON形式で表現したファイル。
-    -   **tree-sitter-chord/src/node-types.json**: Tree-sitterパーサーが生成するASTノードの型定義。
-    -   **tree-sitter-chord/src/parser.c**: Tree-sitterのCLIツールによって生成されたC言語のパーサー実装。
-    -   **tree-sitter-chord/src/tree_sitter/parser.h**: Tree-sitterパーサーのC言語ヘッダーファイル。
+-   `.gitignore`: Gitのバージョン管理から除外するファイルやディレクトリを指定します。
+-   `Cargo.lock`: Rustプロジェクトの依存関係の正確なバージョンを記録し、ビルドの一貫性を保証します。
+-   `Cargo.toml`: Rustプロジェクトのマニフェストファイルで、プロジェクトのメタデータ、依存関係、ビルド設定を定義します。
+-   `EXAMPLES.md`: プロジェクトの様々な使用例やコードスニペットを説明するドキュメントです。
+-   `IMPLEMENTATION.md`: プロジェクトの実装の詳細や技術的な決定事項を記述するドキュメントです。
+-   `LICENSE`: プロジェクトのライセンス情報（MIT License）が記載されています。
+-   `README.ja.md`: プロジェクトの概要、使い方、機能などを日本語で説明する主要なドキュメントです。
+-   `README.md`: プロジェクトの概要、使い方、機能などを英語で説明する主要なドキュメントです。
+-   `_codeql_detected_source_root/`: CodeQLによるコード解析の対象として検出されたルートディレクトリです。
+    -   `_codeql_detected_source_root/Cargo.toml`: CodeQL解析用のCargo設定ファイルです。
+    -   `_codeql_detected_source_root/binding.gyp`: Node.jsネイティブモジュールをビルドするための設定ファイルです。
+    -   `_codeql_detected_source_root/bindings/node/binding.cc`: Tree-sitterパーサーのNode.jsバインディングのC++実装です。
+    -   `_codeql_detected_source_root/bindings/node/index.js`: Tree-sitterパーサーのNode.jsバインディングのエントリーポイントです。
+    -   `_codeql_detected_source_root/bindings/rust/build.rs`: Tree-sitterパーサーのRustバインディングのビルドスクリプトです。
+    -   `_codeql_detected_source_root/bindings/rust/lib.rs`: Tree-sitterパーサーのRustバインディングのライブラリコードです。
+    -   `_codeql_detected_source_root/grammar.js`: コード記法の構文ルールを定義するTree-sitterグラマーのJavaScriptファイルです。
+    -   `_codeql_detected_source_root/package.json`: Node.jsプロジェクトのメタデータと依存関係を記述するファイルです。
+    -   `_codeql_detected_source_root/src/grammar.json`: Tree-sitterグラマーのJSON形式の定義ファイルです。
+    -   `_codeql_detected_source_root/src/node-types.json`: Tree-sitterパーサーが生成する構文ノードの型定義ファイルです。
+    -   `_codeql_detected_source_root/src/parser.c`: Tree-sitterグラマーから自動生成されたC言語のパーサーコードです。
+    -   `_codeql_detected_source_root/src/tree_sitter/parser.h`: Tree-sitterパーサーのC言語ヘッダーファイルです。
+-   `_config.yml`: Jekyllなどの静的サイトジェネレーターの設定ファイルで、GitHub Pagesなどで利用されることがあります。
+-   `chord2mml-cli/`: コマンドラインインターフェース（CLI）アプリケーション関連のファイル群を格納するディレクトリです。
+    -   `chord2mml-cli/Cargo.toml`: CLIアプリケーションのCargo設定ファイルです。
+    -   `chord2mml-cli/README.md`: CLIツールの使い方や機能に関する説明ドキュメントです。
+    -   `chord2mml-cli/src/main.rs`: CLIアプリケーションのエントリーポイントとなるRustソースファイルで、ユーザーからの入力を処理し、コアライブラリを呼び出します。
+-   `chord2mml-core/`: コード進行からMMLへの変換を行う主要なロジックを含むRustライブラリのファイル群を格納するディレクトリです。
+    -   `chord2mml-core/Cargo.toml`: コアライブラリのCargo設定ファイルです。
+    -   `chord2mml-core/examples/basic.rs`: コアライブラリの基本的な使用方法を示すRustのサンプルコードです。
+    -   `chord2mml-core/src/ast.rs`: 抽象構文木（AST）のデータ構造を定義するRustファイルです。
+    -   `chord2mml-core/src/lib.rs`: コアライブラリの主要な機能（パーサー、AST変換、MML生成）を統合するメインファイルです。
+    -   `chord2mml-core/src/mml.rs`: ASTからMML文字列を生成するためのロジックを含むRustファイルです。
+    -   `chord2mml-core/src/note.rs`: 音楽的なノートや音程に関する定義を含むRustファイルです。
+    -   `chord2mml-core/src/parser.rs`: Tree-sitterパーサーを利用してCST（具象構文木）をASTに変換するロジックを含むRustファイルです。
+-   `chord2mml-wasm/`: WebAssembly (WASM) 対応を目的としたサブプロジェクトのファイル群を格納するディレクトリです。（WIP）
+    -   `chord2mml-wasm/Cargo.toml`: WASMビルド用のCargo設定ファイルです。
+    -   `chord2mml-wasm/src/lib.rs`: WASMモジュールとして公開されるRustコードです。
+-   `chord2mml-web/`: Webインターフェースアプリケーションのファイル群を格納するディレクトリです。
+    -   `chord2mml-web/README.md`: Webインターフェースの説明ドキュメントです。
+    -   `chord2mml-web/index.html`: WebアプリケーションのメインHTMLファイルです。
+    -   `chord2mml-web/package.json`: WebアプリケーションのNode.jsプロジェクト設定ファイルです。
+    -   `chord2mml-web/src/main.ts`: Webアプリケーションの主要なTypeScriptコードで、WASMモジュールのロード、UI操作、MML変換処理を扱います。
+    -   `chord2mml-web/tsconfig.json`: TypeScriptコンパイラの設定ファイルです。
+    -   `chord2mml-web/vite.config.ts`: Viteビルドツールの設定ファイルです。
+-   `generated-docs/`: 自動生成されたドキュメントを格納するためのディレクトリです。
+-   `issue-notes/`: 開発中に発生した課題や検討事項をメモとして残しているディレクトリです。
+-   `tree-sitter-chord/`: Tree-sitterグラマーの定義とその関連ファイルを格納するディレクトリです。
+    -   `tree-sitter-chord/Cargo.toml`: Tree-sitterグラマーのRustバインディング用のCargo設定ファイルです。
+    -   `tree-sitter-chord/binding.gyp`: Node.jsネイティブモジュールビルド設定ファイルです。
+    -   `tree-sitter-chord/bindings/node/binding.cc`: Node.jsバインディングのC++実装です。
+    -   `tree-sitter-chord/bindings/node/index.js`: Tree-sitterパーサーのNode.jsバインディングのエントリーポイントです。
+    -   `tree-sitter-chord/bindings/rust/build.rs`: Rustバインディングのビルドスクリプトです。
+    -   `tree-sitter-chord/bindings/rust/lib.rs`: Rustバインディングのライブラリコードです。
+    -   `tree-sitter-chord/grammar.js`: Tree-sitterグラマーのJavaScript定義ファイルです。
+    -   `tree-sitter-chord/package.json`: Node.jsプロジェクトのメタデータと依存関係を記述するファイルです。
+    -   `tree-sitter-chord/src/grammar.json`: Tree-sitterグラマーのJSON形式の定義ファイルです。
+    -   `tree-sitter-chord/src/node-types.json`: Tree-sitterパーサーが生成するノードの型定義ファイルです。
+    -   `tree-sitter-chord/src/parser.c`: Tree-sitterグラマーから自動生成されたC言語パーサーコードです。
+    -   `tree-sitter-chord/src/tree_sitter/parser.h`: Tree-sitterパーサーのC言語ヘッダーファイルです。
 
 ## 関数詳細説明
--   **catch** ( `_codeql_detected_source_root/bindings/node/index.js`, `tree-sitter-chord/bindings/node/index.js` )
-    -   **役割**: Tree-sitterパーサーのNode.jsバインディングをロードする際に発生したエラーを捕捉し、適切に処理する機能の一部です。
-    -   **機能**: 通常、try-catchブロック内で使用され、指定されたモジュールのロード失敗などの例外を捕らえ、エラーメッセージを出力するなどの処理を行います。
--   **if** ( `_codeql_detected_source_root/bindings/node/index.js`, `tree-sitter-chord/bindings/node/index.js` )
-    -   **役割**: 条件分岐を行い、特定の条件に基づいて異なるモジュールをロードするかどうかを判断する機能です。
-    -   **機能**: 例えば、デバッグビルドとリリースビルドのどちらのTree-sitterバインディングをロードするかを決定する際に用いられます。
--   **showStatus** ( `chord2mml-web/src/main.ts` )
-    -   **役割**: Webアプリケーションのユーザーインターフェース上で、現在の処理状況やメッセージを表示するための関数です。
-    -   **機能**: 主に、ユーザーへのフィードバック（例: 「WASMモジュールをロード中...」）を提供するために使用されます。
--   **updateOutput** ( `chord2mml-web/src/main.ts` )
-    -   **役割**: WebアプリケーションのUI上のMML出力エリアを更新する関数です。
-    -   **機能**: コード進行の変換結果であるMML文字列を、ユーザーインターフェースの指定された要素に表示します。
--   **initialize** ( `chord2mml-web/src/main.ts` )
-    -   **役割**: WebアプリケーションやWASMモジュールの初期化処理を実行する関数です。
-    -   **機能**: WASMモジュールのロード、イベントリスナーの設定、初期状態のUI更新など、アプリケーションが動作を開始するために必要な準備を行います。
--   **constructor** ( `chord2mml-web/src/main.ts` )
-    -   **役割**: クラスインスタンスが生成される際に呼び出される特殊な関数です。
-    -   **機能**: クラスのプロパティを初期化したり、インスタンス固有のセットアップを行ったりします。Web Audio APIやTone.js関連ライブラリのインスタンス初期化の一部である可能性があります。
--   **play** ( `chord2mml-web/src/main.ts` )
-    -   **役割**: 生成されたMMLに基づいて音声を再生する関数です。
-    -   **機能**: Web Audio APIや将来的に導入されるTone.js系のライブラリを利用し、MMLを解析して音符を生成し、ブラウザ上で実際に音を鳴らします。
+-   `catch` (`_codeql_detected_source_root/bindings/node/index.js`, `tree-sitter-chord/bindings/node/index.js`):
+    -   役割: モジュールロード時のエラーを捕捉し、適切なエラーハンドリングを行うために使用されます。
+    -   引数: (おそらく `error`: エラーオブジェクト)
+    -   戻り値: なし
+-   `if` (`_codeql_detected_source_root/bindings/node/index.js`, `tree-sitter-chord/bindings/node/index.js`):
+    -   役割: モジュールロードの際に、環境やビルド設定（例: デバッグ/リリース）に基づいて異なるパスを条件分岐するために使用されます。
+    -   引数: (おそらく `condition`: 評価される条件式)
+    -   戻り値: なし
+-   `showStatus` (`chord2mml-web/src/main.ts`):
+    -   役割: Webユーザーインターフェース上に、アプリケーションの現在の状態や処理メッセージを表示します。
+    -   引数: (おそらく `message`: 表示するステータスメッセージの文字列)
+    -   戻り値: なし
+-   `updateOutput` (`chord2mml-web/src/main.ts`):
+    -   役割: Web UI上の出力エリアを更新し、変換されたMMLやその他の結果を表示します。
+    -   引数: (おそらく `mmlOutput`: 表示するMML文字列または関連データ)
+    -   戻り値: なし
+-   `initialize` (`chord2mml-web/src/main.ts`):
+    -   役割: Webアプリケーションの初期設定を行います。これには、WebAssemblyモジュールのロードやイベントリスナーの登録などが含まれる可能性があります。
+    -   引数: なし
+    -   戻り値: (おそらく `Promise<void>`: 非同期処理の完了を示す)
+-   `play` (`chord2mml-web/src/main.ts`):
+    -   役割: 生成されたMMLデータに基づき、音楽を再生する機能を提供します。
+    -   引数: (おそらく `mmlData`: 再生するMMLデータ)
+    -   戻り値: なし
 
 ## 関数呼び出し階層ツリー
 ```
 - catch (_codeql_detected_source_root/bindings/node/index.js)
+  - showStatus (chord2mml-web/src/main.ts)
+    - updateOutput ()
+      - initialize ()
+      - play ()
 - if (_codeql_detected_source_root/bindings/node/index.js)
-- showStatus (chord2mml-web/src/main.ts)
-  - updateOutput ()
-  - initialize ()
-  - constructor (undefined)
 
 ---
-Generated at: 2026-01-12 07:02:11 JST
+Generated at: 2026-01-13 07:02:15 JST

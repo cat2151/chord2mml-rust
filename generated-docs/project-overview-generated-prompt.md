@@ -1,4 +1,4 @@
-Last updated: 2026-01-12
+Last updated: 2026-01-13
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -79,53 +79,100 @@ Last updated: 2026-01-12
 
 ## 概要
 
-このプロジェクトは、[chord2mml](https://github.com/cat2151/chord2mml)で Peggy.js + JavaScript で作っていたものを、Rust + WASM + TypeScript として新たに作り直したものです。
+このプロジェクトは、[chord2mml](https://github.com/cat2151/chord2mml)で Peggy.js + JavaScript で作っていたものを、**Rust + Tree-sitter** として新たに作り直したものです。
 
 ### 主な特徴
 
-- **Rustパーサーコア**: シンプルで高速な文字列マッチングパーサー（将来的にTree-sitterベースに移行予定）
+- **Tree-sitterパーサー**: 堅牢で正確な構文解析
+- **CST→AST変換**: Tree-sitterが生成するCST（具象構文木）をAST（抽象構文木）に変換
+- **純粋なRustネイティブアプリケーション**: text to text の変換に特化
+- **CLIツール**: コマンドラインから直接利用可能
 - **ライブラリクレート**: Rustのネイティブアプリケーションから直接利用可能
-- **WASM対応**: ブラウザ上でも動作
-- **TypeScript統合**: Webアプリケーションとしての利用
 
 ## アーキテクチャ
 
 ```
 chord2mml-rust/
-├── chord2mml-core/     # Rustによる変換コアライブラリ
-├── chord2mml-wasm/     # WASM バインディング
-└── chord2mml-web/      # TypeScript + Webアプリケーション
+├── tree-sitter-chord/   # Tree-sitterグラマー定義
+├── chord2mml-core/      # Rustによる変換コアライブラリ（CST→AST→MML）
+└── chord2mml-cli/       # コマンドラインインターフェース
+```
+
+### データフロー
+
+```
+入力テキスト (例: "C-F-G-C")
+    ↓
+Tree-sitterパーサー
+    ↓
+CST (Concrete Syntax Tree)
+    ↓
+AST変換
+    ↓
+AST (Abstract Syntax Tree)
+    ↓
+MML生成
+    ↓
+出力MML (例: "c;e;g f;a;c g;b;d c;e;g")
 ```
 
 ### コンポーネント
 
-1. **chord2mml-core**: コード進行をパースしてMMLに変換するRustライブラリ
-   - シンプルな文字列マッチングによる構文解析（Phase 3でTree-sitter導入予定）
+1. **tree-sitter-chord**: Tree-sitterグラマー定義
+   - コード記法の構文定義（C、Dm、G7など）
+   - コード進行のサポート（C-F-G-Cなど）
+
+2. **chord2mml-core**: コード進行をパースしてMMLに変換するRustライブラリ
+   - Tree-sitterによる構文解析
+   - CST（具象構文木）からAST（抽象構文木）への変換
+   - ASTからMMLへの変換
    - ネイティブアプリケーションから利用可能
 
-2. **chord2mml-wasm**: WASMバインディング
-   - Rust CoreをWebAssemblyにコンパイル
-   - JavaScriptからの呼び出しインターフェース
-
-3. **chord2mml-web**: ブラウザアプリケーション
-   - TypeScriptで実装
-   - Web Audio APIによる直接的な音声再生（Phase 2以降でtonejs系ライブラリ統合予定）
-   - textareaでコード進行を入力し、リアルタイムで変換・再生
+3. **chord2mml-cli**: コマンドラインツール
+   - text to text の変換インターフェース
+   - 標準入力/引数からの入力サポート
 
 ## デモ
 
-Webアプリケーションでは、textareaに「C」を入力すると「c;e;g」に変換され、
-ドミソの和音が鳴ります。
+### CLIツール
 
-試してみる: [https://cat2151.github.io/chord2mml-rust/](https://cat2151.github.io/chord2mml-rust/)
+```bash
+# 単一のコード
+$ chord2mml "C"
+c;e;g
+
+# コード進行
+$ chord2mml "C-F-G-C"
+c;e;g f;a;c g;b;d c;e;g
+
+# マイナーコード
+$ chord2mml "Dm"
+d;f;a
+
+# 混合進行
+$ chord2mml "C-Dm-G-C"
+c;e;g d;f;a g;b;d c;e;g
+```
 
 ## 使い方
 
-### Webアプリケーション
+### CLIツール
 
-1. ブラウザで https://cat2151.github.io/chord2mml-rust/ を開く
-2. textareaにコード進行を入力（例: `C`, `Dm`, `G7`）
-3. 自動的にMMLに変換され、音が鳴ります
+```bash
+# ビルド
+cd chord2mml-cli
+cargo build --release
+
+# 実行（引数から）
+chord2mml "C-F-G-C"
+
+# 実行（標準入力から）
+echo "C-F-G-C" | chord2mml
+
+# インタラクティブモード
+chord2mml
+# コード記法を入力してEnter
+```
 
 ### Rustライブラリとして
 
@@ -133,15 +180,21 @@ Webアプリケーションでは、textareaに「C」を入力すると「c;e;g
 use chord2mml_core::convert;
 
 fn main() {
+    // 単一のコード
     let chord = "C";
-    let mml = convert(chord);
+    let mml = convert(chord).unwrap();
     println!("MML: {}", mml); // "c;e;g"
+    
+    // コード進行
+    let progression = "C-F-G-C";
+    let mml = convert(progression).unwrap();
+    println!("MML: {}", mml); // "c;e;g f;a;c g;b;d c;e;g"
 }
 ```
 
 ### ビルド方法
 
-#### Rustライブラリ
+#### Rustライブラリとコア
 
 ```bash
 cd chord2mml-core
@@ -149,53 +202,55 @@ cargo build --release
 cargo test
 ```
 
-#### WASM
+#### CLIツール
 
 ```bash
-cd chord2mml-wasm
-wasm-pack build --target web
+cd chord2mml-cli
+cargo build --release
+# バイナリは ../target/release/chord2mml に生成されます
 ```
 
-#### Webアプリケーション
+#### 例の実行
 
 ```bash
-cd chord2mml-web
-npm install
-npm run build
-npm run dev  # 開発サーバー起動
+cd chord2mml-core
+cargo run --example basic
 ```
 
 ## ロードマップ
 
-### Phase 1: 基本機能の実装 ✅
+### Phase 1: Tree-sitterベースの基本実装 ✅
 
-- [x] プロジェクト構造の構築
+- [x] Tree-sitterグラマーの定義
 - [x] 基本的なコード変換機能（C → c;e;g）
-- [x] WASMバインディング
-- [x] Webアプリケーションの基本機能
-- [x] Web Audio APIによる基本的な音声再生
+- [x] コード進行のサポート（C-F-G-C）
+- [x] CST→AST→MML変換パイプライン
+- [x] CLIツールの実装
+- [x] 包括的なテストの追加
 
 ### Phase 2: 元のchord2mmlテストの移植
 
 元の[chord2mml](https://github.com/cat2151/chord2mml)リポジトリにあるテストを移植し、
 以下の和音を網羅的にサポートします：
 
+**現在の実装状況**: メジャーコードとマイナーコードは完全に実装済み。その他のコードタイプはパーサーでの認識のみ対応しており、MML変換は未実装です。
+
 #### メジャー系コード
 - [x] C (ド・ミ・ソ)
 - [ ] C6 (ド・ミ・ソ・ラ)
-- [ ] CM7, Cmaj7 (ド・ミ・ソ・シ)
+- [ ] CM7, Cmaj7 (ド・ミ・ソ・シ) ※パーサーのみ対応、MML変換未実装
 - [ ] Cadd9 (ド・ミ・ソ・レ)
 - [ ] C69 (ド・ミ・ソ・ラ・レ)
 
 #### マイナー系コード
-- [ ] Cm (ド・ミ♭・ソ)
+- [x] Cm (ド・ミ♭・ソ)
 - [ ] Cm6 (ド・ミ♭・ソ・ラ)
 - [ ] Cm7 (ド・ミ♭・ソ・シ♭)
 - [ ] CmM7, Cm(maj7) (ド・ミ♭・ソ・シ)
 - [ ] Cm7-5, Cm7(♭5) (ド・ミ♭・ソ♭・シ♭)
 
 #### セブンス系コード
-- [ ] C7 (ド・ミ・ソ・シ♭)
+- [ ] C7 (ド・ミ・ソ・シ♭) ※パーサーのみ対応、MML変換未実装
 - [ ] C7sus4 (ド・ファ・ソ・シ♭)
 - [ ] C7-5, C7(♭5) (ド・ミ・ソ♭・シ♭)
 - [ ] C7+5, C7(#5), Caug7 (ド・ミ・ソ#・シ♭)
@@ -203,17 +258,17 @@ npm run dev  # 開発サーバー起動
 - [ ] C7+9, C7(#9) (ド・ミ・ソ・シ♭・レ#)
 
 #### ディミニッシュ・オーギュメント系
-- [ ] Cdim, Cdim7 (ド・ミ♭・ソ♭・ラ)
-- [ ] Caug, C+, C(#5) (ド・ミ・ソ#)
+- [ ] Cdim, Cdim7 (ド・ミ♭・ソ♭・ラ) ※パーサーのみ対応、MML変換未実装
+- [ ] Caug, C+, C(#5) (ド・ミ・ソ#) ※パーサーのみ対応、MML変換未実装
 
 #### サスペンド系
-- [ ] Csus4 (ド・ファ・ソ)
-- [ ] Csus2 (ド・レ・ソ)
+- [ ] Csus4 (ド・ファ・ソ) ※パーサーのみ対応、MML変換未実装
+- [ ] Csus2 (ド・レ・ソ) ※パーサーのみ対応、MML変換未実装
 
 #### 転回形とベース指定
-- [ ] C/E (第一転回形: ミ・ソ・ド)
-- [ ] C/G (第二転回形: ソ・ド・ミ)
-- [ ] C/D (オンコード: レ・ド・ミ・ソ)
+- [ ] C/E (第一転回形: ミ・ソ・ド) ※パーサーのみ対応、MML変換未実装
+- [ ] C/G (第二転回形: ソ・ド・ミ) ※パーサーのみ対応、MML変換未実装
+- [ ] C/D (オンコード: レ・ド・ミ・ソ) ※パーサーのみ対応、MML変換未実装
 
 #### その他の和音
 - [ ] 9th, 11th, 13th コード
@@ -223,14 +278,15 @@ npm run dev  # 開発サーバー起動
 #### 機能拡張
 - [ ] オクターブ指定
 - [ ] リズム・音長指定
-- [ ] 複数コードの連続入力
+- [x] 複数コードの連続入力（コード進行）
 - [ ] コード進行パターンの自動生成
 
-### Phase 3: 高度な機能
+### Phase 3: 高度な機能と統合
 
 - [ ] より複雑なコード進行のサポート
-- [ ] Tree-sitterの導入とグラマーの実装
-- [ ] tonejs-mml-to-json と tonejs-json-sequencer の統合
+- [ ] すべてのコードタイプの実装完了
+- [ ] WASM対応の再実装（必要に応じて）
+- [ ] tonejs-mml-to-json と tonejs-json-sequencer の統合（音声再生機能）
 - [ ] パフォーマンス改善
 - [ ] エラーハンドリングの強化
 - [ ] ドキュメント整備
@@ -241,9 +297,10 @@ npm run dev  # 開発サーバー起動
 
 | 項目 | chord2mml (旧) | chord2mml-rust (新) |
 |------|---------------|-------------------|
-| パーサー | Peggy.js | 文字列マッチング（Tree-sitterは今後導入予定） |
-| 言語 | JavaScript/TypeScript | Rust + TypeScript |
-| 実行環境 | ブラウザ専用 | ネイティブ + WASM |
+| パーサー | Peggy.js | Tree-sitter |
+| 言語 | JavaScript/TypeScript | Rust |
+| 実行環境 | ブラウザ専用 | ネイティブ（CLI） |
+| 変換フロー | PEG → AST → MML | Tree-sitter → CST → AST → MML |
 | ライブラリ利用 | 困難 | 容易（Rustクレート） |
 
 ### 設計思想
@@ -256,21 +313,19 @@ npm run dev  # 開発サーバー起動
 ## 対象プラットフォーム
 
 - **Rust ライブラリ**: すべてのRustサポート環境
-- **WASM**: モダンブラウザ（Chrome, Firefox, Safari, Edge）
-- **Webアプリ**: モダンブラウザ
+- **CLIツール**: Linux, macOS, Windows
 
 ## 技術スタック
 
 - **Rust**: 1.70以降
-- **wasm-pack**: WASMビルドツール
-- **TypeScript**: Webアプリケーション
-- **Web Audio API**: 音声再生
+- **Tree-sitter**: 構文解析エンジン
+- **tree-sitter-cli**: グラマー生成ツール
 
 ### 将来的な導入予定
 
-- **Tree-sitter**: より堅牢な構文解析（Phase 3）
-- **tonejs-mml-to-json**: MML解析の高度化（Phase 3）
-- **tonejs-json-sequencer**: より高機能な音声再生（Phase 3）
+- **WASM**: ブラウザでの実行サポート（必要に応じて）
+- **tonejs-mml-to-json**: MML解析の高度化
+- **tonejs-json-sequencer**: より高機能な音声再生
 
 ## テスト
 
@@ -279,20 +334,19 @@ npm run dev  # 開発サーバー起動
 cd chord2mml-core
 cargo test
 
-# WASM統合テスト
-cd chord2mml-wasm
-wasm-pack test --node
+# 全体のテスト
+cargo test --all
 
-# Webアプリのテスト
-cd chord2mml-web
-npm test
+# 例の実行
+cd chord2mml-core
+cargo run --example basic
 ```
 
 ## ビルド要件
 
 - Rust 1.70以降
-- Node.js 18以降
-- wasm-pack
+- Node.js 18以降（tree-sitter-cli用）
+- tree-sitter-cli（グラマー生成用）
 
 ## ライセンス
 
@@ -314,8 +368,9 @@ cat2151
 
 ## 参考リンク
 
-- [プロジェクトページ](https://cat2151.github.io/chord2mml-rust/)
-- [元のchord2mmlデモ](https://cat2151.github.io/chord2mml/dist/)
+- [元のchord2mml](https://github.com/cat2151/chord2mml) - オリジナルのJavaScript版
+- [Tree-sitter](https://tree-sitter.github.io/tree-sitter/) - 構文解析ライブラリ
+- [EXAMPLES.md](EXAMPLES.md) - より詳しい使用例とアーキテクチャ説明
 
 
 依存関係:
@@ -325,6 +380,8 @@ cat2151
 📄 .gitignore
 📄 Cargo.lock
 📄 Cargo.toml
+📖 EXAMPLES.md
+📖 IMPLEMENTATION.md
 📄 LICENSE
 📖 README.ja.md
 📖 README.md
@@ -347,10 +404,21 @@ cat2151
     📁 tree_sitter/
       📄 parser.h
 📄 _config.yml
+📁 chord2mml-cli/
+  📄 Cargo.toml
+  📖 README.md
+  📁 src/
+    📄 main.rs
 📁 chord2mml-core/
   📄 Cargo.toml
+  📁 examples/
+    📄 basic.rs
   📁 src/
+    📄 ast.rs
     📄 lib.rs
+    📄 mml.rs
+    📄 note.rs
+    📄 parser.rs
 📁 chord2mml-wasm/
   📄 Cargo.toml
   📁 src/
@@ -365,7 +433,18 @@ cat2151
   📘 vite.config.ts
 📁 generated-docs/
 📁 issue-notes/
+  📖 11.md
+  📖 13.md
+  📖 15.md
+  📖 17.md
+  📖 19.md
   📖 2.md
+  📖 20.md
+  📖 21.md
+  📖 22.md
+  📖 5.md
+  📖 7.md
+  📖 9.md
 📁 tree-sitter-chord/
   📄 Cargo.toml
   📄 binding.gyp
@@ -390,7 +469,7 @@ cat2151
   - 関数: catch, if
   - インポート: ../../build/Release/tree_sitter_chord_binding, ../../build/Debug/tree_sitter_chord_binding, ../../src/node-types.json
 
-**_codeql_detected_source_root/grammar.js** (51行, 968バイト)
+**_codeql_detected_source_root/grammar.js** (61行, 1243バイト)
   - 関数: なし
   - インポート: なし
 
@@ -398,9 +477,9 @@ cat2151
   - 関数: なし
   - インポート: なし
 
-**chord2mml-web/src/main.ts** (164行, 4859バイト)
-  - 関数: showStatus, updateOutput, initialize, constructor, if, catch, play
-  - インポート: ../public/wasm/chord2mml_wasm.js, tonejs-mml-to-json, tone
+**chord2mml-web/src/main.ts** (172行, 5758バイト)
+  - 関数: showStatus, updateOutput, initialize, if, catch, play
+  - インポート: ../public/wasm/chord2mml_wasm.js
 
 **chord2mml-web/vite.config.ts** (20行, 320バイト)
   - 関数: なし
@@ -410,20 +489,22 @@ cat2151
   - 関数: catch, if
   - インポート: ../../build/Release/tree_sitter_chord_binding, ../../build/Debug/tree_sitter_chord_binding, ../../src/node-types.json
 
-**tree-sitter-chord/grammar.js** (51行, 968バイト)
+**tree-sitter-chord/grammar.js** (61行, 1243バイト)
   - 関数: なし
   - インポート: なし
 
 ## 関数呼び出し階層
 - catch (_codeql_detected_source_root/bindings/node/index.js)
+  - showStatus (chord2mml-web/src/main.ts)
+    - updateOutput ()
+      - initialize ()
+      - play ()
 - if (_codeql_detected_source_root/bindings/node/index.js)
-- showStatus (chord2mml-web/src/main.ts)
-  - updateOutput ()
-  - initialize ()
-  - constructor (undefined)
 
 
 ## プロジェクト構造（ファイル一覧）
+EXAMPLES.md
+IMPLEMENTATION.md
 README.ja.md
 README.md
 _codeql_detected_source_root/bindings/node/index.js
@@ -431,18 +512,27 @@ _codeql_detected_source_root/grammar.js
 _codeql_detected_source_root/package.json
 _codeql_detected_source_root/src/grammar.json
 _codeql_detected_source_root/src/node-types.json
+chord2mml-cli/README.md
 chord2mml-web/README.md
 chord2mml-web/index.html
 chord2mml-web/package.json
 chord2mml-web/src/main.ts
 chord2mml-web/tsconfig.json
 chord2mml-web/vite.config.ts
+issue-notes/11.md
+issue-notes/13.md
+issue-notes/15.md
+issue-notes/17.md
+issue-notes/19.md
 issue-notes/2.md
+issue-notes/20.md
+issue-notes/21.md
+issue-notes/22.md
+issue-notes/5.md
+issue-notes/7.md
+issue-notes/9.md
 tree-sitter-chord/bindings/node/index.js
 tree-sitter-chord/grammar.js
-tree-sitter-chord/package.json
-tree-sitter-chord/src/grammar.json
-tree-sitter-chord/src/node-types.json
 
 上記の情報を基に、プロンプトで指定された形式でプロジェクト概要を生成してください。
 特に以下の点を重視してください：
@@ -454,4 +544,4 @@ tree-sitter-chord/src/node-types.json
 
 
 ---
-Generated at: 2026-01-12 07:01:37 JST
+Generated at: 2026-01-13 07:01:40 JST

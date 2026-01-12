@@ -1,4 +1,4 @@
-Last updated: 2026-01-12
+Last updated: 2026-01-13
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -202,13 +202,23 @@ Last updated: 2026-01-12
 - .gitignore
 - Cargo.lock
 - Cargo.toml
+- EXAMPLES.md
+- IMPLEMENTATION.md
 - LICENSE
 - README.ja.md
 - README.md
 - _codeql_detected_source_root
 - _config.yml
+- chord2mml-cli/Cargo.toml
+- chord2mml-cli/README.md
+- chord2mml-cli/src/main.rs
 - chord2mml-core/Cargo.toml
+- chord2mml-core/examples/basic.rs
+- chord2mml-core/src/ast.rs
 - chord2mml-core/src/lib.rs
+- chord2mml-core/src/mml.rs
+- chord2mml-core/src/note.rs
+- chord2mml-core/src/parser.rs
 - chord2mml-wasm/Cargo.toml
 - chord2mml-wasm/src/lib.rs
 - chord2mml-web/README.md
@@ -218,7 +228,18 @@ Last updated: 2026-01-12
 - chord2mml-web/tsconfig.json
 - chord2mml-web/vite.config.ts
 - generated-docs/project-overview-generated-prompt.md
+- issue-notes/11.md
+- issue-notes/13.md
+- issue-notes/15.md
+- issue-notes/17.md
+- issue-notes/19.md
 - issue-notes/2.md
+- issue-notes/20.md
+- issue-notes/21.md
+- issue-notes/22.md
+- issue-notes/5.md
+- issue-notes/7.md
+- issue-notes/9.md
 - tree-sitter-chord/Cargo.toml
 - tree-sitter-chord/binding.gyp
 - tree-sitter-chord/bindings/node/binding.cc
@@ -231,110 +252,1793 @@ Last updated: 2026-01-12
 - tree-sitter-chord/src/node-types.json
 - tree-sitter-chord/src/parser.c
 - tree-sitter-chord/src/tree_sitter/parser.h
+- tree-sitter-chord/tree-sitter-chord
 
 ## 現在のオープンIssues
-## [Issue #3](../issue-notes/3.md): Windows GNU cross-compilation check failed
-Windows GNU cross-compilation check failed in scheduled run.
+## [Issue #22](../issue-notes/22.md): 「README.ja.mdの計画に書いてあるが、chord2mmlリポジトリで扱っていない要素」は、LLMが勝手にハルシネーションしたものなので、READMEから削除する
+[issue-notes/22.md](https://github.com/cat2151/chord2mml-rust/blob/main/issue-notes/22.md)
 
-Please investigate the build errors and ensure all dependencies are compatible with Windows.
+...
+ラベル: 
+--- issue-notes/22.md の内容 ---
 
-Workflow run: https://github.com/cat2151/chord2mml-rust/actions/runs/20896714774...
-ラベル: bug, windows-build
---- issue-notes/3.md の内容 ---
+```markdown
+# issue 「README.ja.mdの計画に書いてあるが、chord2mmlリポジトリで扱っていない要素」は、LLMが勝手にハルシネーションしたものなので、削除する #22
+[issues #22](https://github.com/cat2151/chord2mml-rust/issues/22)
+
+
+
+```
+
+## [Issue #21](../issue-notes/21.md): chord2mmlリポジトリで扱っているchordを一通り実装するためのロードマップをREADME.ja.mdにlistする。ただしハイフンは区切り文字だけに使うのが違いである
+[issue-notes/21.md](https://github.com/cat2151/chord2mml-rust/blob/main/issue-notes/21.md)
+
+...
+ラベル: 
+--- issue-notes/21.md の内容 ---
+
+```markdown
+# issue chord2mmlリポジトリで扱っているchordを一通り実装するためのロードマップをREADME.ja.mdにlistする。ただしハイフンは区切り文字だけに使うのが違いである #21
+[issues #21](https://github.com/cat2151/chord2mml-rust/issues/21)
+
+
+
+```
+
+## [Issue #20](../issue-notes/20.md): textareaに入力があったら即座にplay開始する。処理が高速なので待つ必要もない。playボタンも明示的な演奏用にとっておく
+[issue-notes/20.md](https://github.com/cat2151/chord2mml-rust/blob/main/issue-notes/20.md)
+
+...
+ラベル: 
+--- issue-notes/20.md の内容 ---
+
+```markdown
+# issue textareaに入力があったら即座にplay開始する。処理が高速なので待つ必要もない。playボタンも明示的な演奏用にとっておく #20
+[issues #20](https://github.com/cat2151/chord2mml-rust/issues/20)
+
+
+
+```
+
+## [Issue #19](../issue-notes/19.md): 出力されたchordそれぞれをシングルクォートで囲むようにする。mmlabcの文法に従うということ
+[issue-notes/19.md](https://github.com/cat2151/chord2mml-rust/blob/main/issue-notes/19.md)
+
+...
+ラベル: 
+--- issue-notes/19.md の内容 ---
+
+```markdown
+# issue 出力されたchordそれぞれをシングルクォートで囲むようにする。mmlabcの文法に従うということ #19
+[issues #19](https://github.com/cat2151/chord2mml-rust/issues/19)
+
+
+
+```
+
+## [Issue #18](../issue-notes/18.md): [WIP] Remove manual parser and implement Tree-sitter
+- [ ] Remove manual parser code from `chord2mml-core/src/parser.rs`
+- [ ] Make tree-sitter a required dependency (not optional) in `chord2mml-core/Cargo.toml`
+- [ ] Remove feature flag conditionals and make tree-sitter the default parser
+- [ ] Update documentation to reflect tree-sitter as the only ...
+ラベル: 
+--- issue-notes/18.md の内容 ---
 
 ```markdown
 
 ```
 
+## [Issue #17](../issue-notes/17.md): 手動パーサーを削除し、Tree-sitterを利用したものを実装する。方法は https://deepwiki.com/cat2151/tonejs-mml-to-json/5.1-parser-implementation を参照のこと
+[issue-notes/17.md](https://github.com/cat2151/chord2mml-rust/blob/main/issue-notes/17.md)
+
+...
+ラベル: good first issue
+--- issue-notes/17.md の内容 ---
+
+```markdown
+# issue 手動パーサーを削除し、Tree-sitterを利用したものを実装する。方法は https://deepwiki.com/cat2151/tonejs-mml-to-json/5.1-parser-implementation を参照のこと #17
+[issues #17](https://github.com/cat2151/chord2mml-rust/issues/17)
+
+
+
+```
+
 ## ドキュメントで言及されているファイルの内容
-### .github/actions-tmp/issue-notes/3.md
+### .github/actions-tmp/README.ja.md
 ```md
 {% raw %}
-# issue GitHub Actions「issue note生成」を共通ワークフロー化する #3
-[issues #3](https://github.com/cat2151/github-actions/issues/3)
+# GitHub Actions 共通ワークフロー集
 
-- 前提
-  - userは、translateのworkflowを共通ワークフロー化し、動くようにしたので、共通ワークフロー化の知識がある
-  - よって、今回は、promptでplanさせ、そのplanをuserがレビューし、planの改善を指示できるので、ハルシネーションのリスクを下げることができる
+このリポジトリは、**複数プロジェクトで使い回せるGitHub Actions共通ワークフロー集**です
 
-- prompt
+<p align="left">
+  <a href="README.ja.md"><img src="https://img.shields.io/badge/🇯🇵-Japanese-red.svg" alt="Japanese"></a>
+  <a href="README.md"><img src="https://img.shields.io/badge/🇺🇸-English-blue.svg" alt="English"></a>
+</p>
+
+# 3行で説明
+- 🚀 プロジェクトごとのGitHub Actions管理をもっと楽に
+- 🔗 共通化されたワークフローで、どのプロジェクトからも呼ぶだけでOK
+- ✅ メンテは一括、プロジェクト開発に集中できます
+
+## Quick Links
+| 項目 | リンク |
+|------|--------|
+| 📖 プロジェクト概要 | [generated-docs/project-overview.md](generated-docs/project-overview.md) |
+| 📖 コールグラフ | [generated-docs/callgraph.html](https://cat2151.github.io/github-actions/generated-docs/callgraph.html) |
+| 📊 開発状況 | [generated-docs/development-status.md](generated-docs/development-status.md) |
+
+# notes
+- まだ共通化の作業中です
+- まだワークフロー内容を改善中です
+
+※README.md は README.ja.md を元にGeminiの翻訳でGitHub Actionsで自動生成しています
+
+{% endraw %}
+```
+
+### README.ja.md
+```md
+{% raw %}
+# chord2mml-rust
+
+<p align="left">
+  <a href="README.ja.md"><img src="https://img.shields.io/badge/🇯🇵-Japanese-red.svg" alt="Japanese"></a>
+  <a href="README.md"><img src="https://img.shields.io/badge/🇺🇸-English-blue.svg" alt="English"></a>
+</p>
+
+コード進行をMML（Music Macro Language）に変換するライブラリ・アプリケーション。Rustで書かれています。
+
+## 注意
+- WIP
+- 破壊的変更を頻繁に行う
+- AI自動運転で、userの作業負荷を最小化して進めていくつもり
+- そのためのAI自動運転装置を開発するつもり（というよりAI自動運転装置の開発用のリポジトリとして利用するつもり）
+- 以下はだいたいAI生成、間違いを含む可能性が高い、userの意図と違うものを含む可能性が高い
+
+## 概要
+
+このプロジェクトは、[chord2mml](https://github.com/cat2151/chord2mml)で Peggy.js + JavaScript で作っていたものを、**Rust + Tree-sitter** として新たに作り直したものです。
+
+### 主な特徴
+
+- **Tree-sitterパーサー**: 堅牢で正確な構文解析
+- **CST→AST変換**: Tree-sitterが生成するCST（具象構文木）をAST（抽象構文木）に変換
+- **純粋なRustネイティブアプリケーション**: text to text の変換に特化
+- **CLIツール**: コマンドラインから直接利用可能
+- **ライブラリクレート**: Rustのネイティブアプリケーションから直接利用可能
+
+## アーキテクチャ
+
+```
+chord2mml-rust/
+├── tree-sitter-chord/   # Tree-sitterグラマー定義
+├── chord2mml-core/      # Rustによる変換コアライブラリ（CST→AST→MML）
+└── chord2mml-cli/       # コマンドラインインターフェース
+```
+
+### データフロー
+
+```
+入力テキスト (例: "C-F-G-C")
+    ↓
+Tree-sitterパーサー
+    ↓
+CST (Concrete Syntax Tree)
+    ↓
+AST変換
+    ↓
+AST (Abstract Syntax Tree)
+    ↓
+MML生成
+    ↓
+出力MML (例: "c;e;g f;a;c g;b;d c;e;g")
+```
+
+### コンポーネント
+
+1. **tree-sitter-chord**: Tree-sitterグラマー定義
+   - コード記法の構文定義（C、Dm、G7など）
+   - コード進行のサポート（C-F-G-Cなど）
+
+2. **chord2mml-core**: コード進行をパースしてMMLに変換するRustライブラリ
+   - Tree-sitterによる構文解析
+   - CST（具象構文木）からAST（抽象構文木）への変換
+   - ASTからMMLへの変換
+   - ネイティブアプリケーションから利用可能
+
+3. **chord2mml-cli**: コマンドラインツール
+   - text to text の変換インターフェース
+   - 標準入力/引数からの入力サポート
+
+## デモ
+
+### CLIツール
+
+```bash
+# 単一のコード
+$ chord2mml "C"
+c;e;g
+
+# コード進行
+$ chord2mml "C-F-G-C"
+c;e;g f;a;c g;b;d c;e;g
+
+# マイナーコード
+$ chord2mml "Dm"
+d;f;a
+
+# 混合進行
+$ chord2mml "C-Dm-G-C"
+c;e;g d;f;a g;b;d c;e;g
+```
+
+## 使い方
+
+### CLIツール
+
+```bash
+# ビルド
+cd chord2mml-cli
+cargo build --release
+
+# 実行（引数から）
+chord2mml "C-F-G-C"
+
+# 実行（標準入力から）
+echo "C-F-G-C" | chord2mml
+
+# インタラクティブモード
+chord2mml
+# コード記法を入力してEnter
+```
+
+### Rustライブラリとして
+
+```rust
+use chord2mml_core::convert;
+
+fn main() {
+    // 単一のコード
+    let chord = "C";
+    let mml = convert(chord).unwrap();
+    println!("MML: {}", mml); // "c;e;g"
+    
+    // コード進行
+    let progression = "C-F-G-C";
+    let mml = convert(progression).unwrap();
+    println!("MML: {}", mml); // "c;e;g f;a;c g;b;d c;e;g"
+}
+```
+
+### ビルド方法
+
+#### Rustライブラリとコア
+
+```bash
+cd chord2mml-core
+cargo build --release
+cargo test
+```
+
+#### CLIツール
+
+```bash
+cd chord2mml-cli
+cargo build --release
+# バイナリは ../target/release/chord2mml に生成されます
+```
+
+#### 例の実行
+
+```bash
+cd chord2mml-core
+cargo run --example basic
+```
+
+## ロードマップ
+
+### Phase 1: Tree-sitterベースの基本実装 ✅
+
+- [x] Tree-sitterグラマーの定義
+- [x] 基本的なコード変換機能（C → c;e;g）
+- [x] コード進行のサポート（C-F-G-C）
+- [x] CST→AST→MML変換パイプライン
+- [x] CLIツールの実装
+- [x] 包括的なテストの追加
+
+### Phase 2: 元のchord2mmlテストの移植
+
+元の[chord2mml](https://github.com/cat2151/chord2mml)リポジトリにあるテストを移植し、
+以下の和音を網羅的にサポートします：
+
+**現在の実装状況**: メジャーコードとマイナーコードは完全に実装済み。その他のコードタイプはパーサーでの認識のみ対応しており、MML変換は未実装です。
+
+#### メジャー系コード
+- [x] C (ド・ミ・ソ)
+- [ ] C6 (ド・ミ・ソ・ラ)
+- [ ] CM7, Cmaj7 (ド・ミ・ソ・シ) ※パーサーのみ対応、MML変換未実装
+- [ ] Cadd9 (ド・ミ・ソ・レ)
+- [ ] C69 (ド・ミ・ソ・ラ・レ)
+
+#### マイナー系コード
+- [x] Cm (ド・ミ♭・ソ)
+- [ ] Cm6 (ド・ミ♭・ソ・ラ)
+- [ ] Cm7 (ド・ミ♭・ソ・シ♭)
+- [ ] CmM7, Cm(maj7) (ド・ミ♭・ソ・シ)
+- [ ] Cm7-5, Cm7(♭5) (ド・ミ♭・ソ♭・シ♭)
+
+#### セブンス系コード
+- [ ] C7 (ド・ミ・ソ・シ♭) ※パーサーのみ対応、MML変換未実装
+- [ ] C7sus4 (ド・ファ・ソ・シ♭)
+- [ ] C7-5, C7(♭5) (ド・ミ・ソ♭・シ♭)
+- [ ] C7+5, C7(#5), Caug7 (ド・ミ・ソ#・シ♭)
+- [ ] C7-9, C7(♭9) (ド・ミ・ソ・シ♭・レ♭)
+- [ ] C7+9, C7(#9) (ド・ミ・ソ・シ♭・レ#)
+
+#### ディミニッシュ・オーギュメント系
+- [ ] Cdim, Cdim7 (ド・ミ♭・ソ♭・ラ) ※パーサーのみ対応、MML変換未実装
+- [ ] Caug, C+, C(#5) (ド・ミ・ソ#) ※パーサーのみ対応、MML変換未実装
+
+#### サスペンド系
+- [ ] Csus4 (ド・ファ・ソ) ※パーサーのみ対応、MML変換未実装
+- [ ] Csus2 (ド・レ・ソ) ※パーサーのみ対応、MML変換未実装
+
+#### 転回形とベース指定
+- [ ] C/E (第一転回形: ミ・ソ・ド) ※パーサーのみ対応、MML変換未実装
+- [ ] C/G (第二転回形: ソ・ド・ミ) ※パーサーのみ対応、MML変換未実装
+- [ ] C/D (オンコード: レ・ド・ミ・ソ) ※パーサーのみ対応、MML変換未実装
+
+#### その他の和音
+- [ ] 9th, 11th, 13th コード
+- [ ] テンションノート
+- [ ] 複雑な変化記号の組み合わせ
+
+#### 機能拡張
+- [ ] オクターブ指定
+- [ ] リズム・音長指定
+- [x] 複数コードの連続入力（コード進行）
+- [ ] コード進行パターンの自動生成
+
+### Phase 3: 高度な機能と統合
+
+- [ ] より複雑なコード進行のサポート
+- [ ] すべてのコードタイプの実装完了
+- [ ] WASM対応の再実装（必要に応じて）
+- [ ] tonejs-mml-to-json と tonejs-json-sequencer の統合（音声再生機能）
+- [ ] パフォーマンス改善
+- [ ] エラーハンドリングの強化
+- [ ] ドキュメント整備
+
+## 開発方針
+
+### 元のchord2mmlとの違い
+
+| 項目 | chord2mml (旧) | chord2mml-rust (新) |
+|------|---------------|-------------------|
+| パーサー | Peggy.js | Tree-sitter |
+| 言語 | JavaScript/TypeScript | Rust |
+| 実行環境 | ブラウザ専用 | ネイティブ（CLI） |
+| 変換フロー | PEG → AST → MML | Tree-sitter → CST → AST → MML |
+| ライブラリ利用 | 困難 | 容易（Rustクレート） |
+
+### 設計思想
+
+1. **シンプルさ**: 複雑さを避け、メンテナンス性を重視
+2. **型安全性**: Rustの強力な型システムを活用
+3. **テスト駆動**: 包括的なテストカバレッジ
+4. **パフォーマンス**: Rustの高速性を活かした変換
+
+## 対象プラットフォーム
+
+- **Rust ライブラリ**: すべてのRustサポート環境
+- **CLIツール**: Linux, macOS, Windows
+
+## 技術スタック
+
+- **Rust**: 1.70以降
+- **Tree-sitter**: 構文解析エンジン
+- **tree-sitter-cli**: グラマー生成ツール
+
+### 将来的な導入予定
+
+- **WASM**: ブラウザでの実行サポート（必要に応じて）
+- **tonejs-mml-to-json**: MML解析の高度化
+- **tonejs-json-sequencer**: より高機能な音声再生
+
+## テスト
+
+```bash
+# Rustコアのテスト
+cd chord2mml-core
+cargo test
+
+# 全体のテスト
+cargo test --all
+
+# 例の実行
+cd chord2mml-core
+cargo run --example basic
+```
+
+## ビルド要件
+
+- Rust 1.70以降
+- Node.js 18以降（tree-sitter-cli用）
+- tree-sitter-cli（グラマー生成用）
+
+## ライセンス
+
+MIT License
+
+## 関連プロジェクト
+
+- [chord2mml](https://github.com/cat2151/chord2mml) - オリジナルのJavaScript版
+- [tonejs-mml-to-json](https://github.com/cat2151/tonejs-mml-to-json) - MML解析ライブラリ
+- [tonejs-json-sequencer](https://github.com/cat2151/tonejs-json-sequencer) - 音声再生ライブラリ
+
+## 貢献
+
+Issue や Pull Request を歓迎します。
+
+## 作者
+
+cat2151
+
+## 参考リンク
+
+- [元のchord2mml](https://github.com/cat2151/chord2mml) - オリジナルのJavaScript版
+- [Tree-sitter](https://tree-sitter.github.io/tree-sitter/) - 構文解析ライブラリ
+- [EXAMPLES.md](EXAMPLES.md) - より詳しい使用例とアーキテクチャ説明
+
+{% endraw %}
+```
+
+### .github/actions-tmp/issue-notes/17.md
+```md
+{% raw %}
+# issue development-status が生成したmdに誤りがある。issue-note へのlinkがURL誤りで、404となってしまう #17
+[issues #17](https://github.com/cat2151/github-actions/issues/17)
+
+# 事例
+- 生成したmdのURL：
+    - https://github.com/cat2151/github-actions/blob/main/generated-docs/development-status.md
+- そのmdをGitHub上でdecodeして閲覧したときのURL、404である：
+    - https://github.com/cat2151/github-actions/blob/main/generated-docs/issue-notes/16.md
+- そのmdに実際に含まれるURL：
+    - issue-notes/16.md
+- あるべきURL：
+    - https://github.com/cat2151/github-actions/blob/main/issue-notes/16.md
+- あるべきURLがmdにどう含まれているべきか：
+    - ../issue-notes/16.md
+
+# どうする？
+- 案
+    - promptを修正する
+    - promptの場所は：
+        - .github_automation/project_summary/scripts/development/DevelopmentStatusGenerator.cjs
+    - 備考、cjs内にpromptがハードコーディングされており、promptをメンテしづらいので別途対処する : [issues #18](https://github.com/cat2151/github-actions/issues/18)
+
+# 結果
+- agentにpromptを投げた
+    - ※promptは、development-statusで生成したもの
+- レビューした
+    - agentがフルパスで実装した、ことがわかった
+- userが分析し、 ../ のほうが適切と判断した
+    - ※「事例」コーナーを、あわせて修正した
+- そのように指示してagentに修正させた
+- testする
+
+# 結果
+- test green
+- closeする
+
+{% endraw %}
+```
+
+### issue-notes/17.md
+```md
+{% raw %}
+# issue 手動パーサーを削除し、Tree-sitterを利用したものを実装する。方法は https://deepwiki.com/cat2151/tonejs-mml-to-json/5.1-parser-implementation を参照のこと #17
+[issues #17](https://github.com/cat2151/chord2mml-rust/issues/17)
+
+
+
+{% endraw %}
+```
+
+### .github/actions-tmp/issue-notes/18.md
+```md
+{% raw %}
+# issue DevelopmentStatusGenerator.cjs 内に、Geminiに与えるpromptがハードコーディングされてしまっている #18
+[issues #18](https://github.com/cat2151/github-actions/issues/18)
+
+# 何が困るの？
+- project把握しづらい。どこにpromptが書いてあるのか、把握しづらい。
+- prompts/ にほかのpromptがあるため、方針がブレていると、読みづらい。
+- 備忘、いくらテンプレートリテラルとプレースホルダーで密結合しているからとはいえ、ハードコーディングはNG。
+    - それらはreplaceを使う等で楽に切り出しできるので。
+
+# 問題のcjsの場所は？
+- ファイルパス : .github_automation/project_summary/scripts/development/DevelopmentStatusGenerator.cjs
+- 関数 : generateDevelopmentStatus
+
+# 結果
+- Geminiに生成させたpromptを、agentに投げて、リファクタリングさせてみた
+- ハルシネーションした。使い物にならなかった
+- 人力でやる
+
+# 結果
+- test green
+
+# closeとする
+
+
+{% endraw %}
+```
+
+### .github/actions-tmp/issue-notes/19.md
+```md
+{% raw %}
+# issue project-summary の development-status 生成時、issue-notes/ 配下のmdファイルの内容を参照させる #19
+[issues #19](https://github.com/cat2151/github-actions/issues/19)
+
+# 何が困るの？
+- issue解決に向けての次の一手の内容が実態に即していないことが多い。
+
+# 対策案
+- issue-notes/ 配下のmdファイルの内容を参照させる
+
+# 備考
+- さらにmd内に書かれているfileも、project内をcjsに検索させて添付させると、よりGeminiの生成品質が向上する可能性がある。
+    - [issues #20](https://github.com/cat2151/github-actions/issues/20)
+- さらにproject overviewでGeminiがまとめたmdも、Geminiに与えると、よりGeminiの生成品質が向上する可能性がある。
+    - [issues #21](https://github.com/cat2151/github-actions/issues/21)
+- さらに、Geminiに与えたpromptをfileにしてcommit pushしておくと、デバッグに役立つ可能性がある。
+    - [issues #22](https://github.com/cat2151/github-actions/issues/22)
+
+# close条件
+- issues #22 がcloseされること。
+- commitされたpromptを確認し、issue-notes/ 配下のmdファイルがpromptに添付されていること、が確認できること。
+
+# 状況
+- 課題、実装したがtestができていない
+- 対策、issues #22 が実装されれば、testができる
+- 対策、issues #22 のcloseを待つ
+
+# 状況
+- issues #22 がcloseされた
+- testできるようになった
+- commitされたpromptを確認した。issue-notes/ 配下のmdファイルがpromptに添付されていること、が確認できた
+
+# closeする
+
+{% endraw %}
+```
+
+### issue-notes/19.md
+```md
+{% raw %}
+# issue 出力されたchordそれぞれをシングルクォートで囲むようにする。mmlabcの文法に従うということ #19
+[issues #19](https://github.com/cat2151/chord2mml-rust/issues/19)
+
+
+
+{% endraw %}
+```
+
+### .github/actions-tmp/issue-notes/2.md
+```md
+{% raw %}
+# issue GitHub Actions「関数コールグラフhtmlビジュアライズ生成」を共通ワークフロー化する #2
+[issues #2](https://github.com/cat2151/github-actions/issues/2)
+
+
+# prompt
 ```
 あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
-このymlはまだ共通ワークフロー化されず、
-呼び出し元からコピーされたままの状態です。
-このymlファイル名のまま、
-中身を共通ワークフロー化してください。
-呼び出し元ymlは別途書きますので気にしないでください。
+このymlファイルを、以下の2つのファイルに分割してください。
+1. 共通ワークフロー       cat2151/github-actions/.github/workflows/callgraph_enhanced.yml
+2. 呼び出し元ワークフロー cat2151/github-actions/.github/workflows/call-callgraph_enhanced.yml
 まずplanしてください
 ```
 
-- plan 生成結果
+# 結果
+- indent
+    - linter？がindentのエラーを出しているがyml内容は見た感じOK
+    - テキストエディタとagentの相性問題と判断する
+    - 別のテキストエディタでsaveしなおし、テキストエディタをreload
+    - indentのエラーは解消した
+- LLMレビュー
+    - agent以外の複数のLLMにレビューさせる
+    - prompt
 ```
-共通ワークフロー化のためのplanは以下の通りです。
+あなたはGitHub Actionsと共通ワークフローのスペシャリストです。
+以下の2つのファイルをレビューしてください。最優先で、エラーが発生するかどうかだけレビューしてください。エラー以外の改善事項のチェックをするかわりに、エラー発生有無チェックに最大限注力してください。
 
-1. 目的
-現在の issue-note.yml を「共通ワークフロー」として再設計し、他リポジトリや他ワークフローから workflow_call で呼び出せるようにする。
-2. 主な変更点
-on: トリガーを workflow_call に変更（直接イベントで起動しない）。
-必要な入力（inputs）やシークレット（secrets）を workflow_call セクションで定義。
-github.event.issue などのイベント依存部分を、inputs経由で受け取る形に修正。
-既存の処理（issueノート生成、コミット、issue body更新）はそのまま活かすが、パラメータ化する。
-3. 具体的な修正内容
-on: issues: → on: workflow_call: に変更。
-inputs で必要な値（例: issue_title, issue_number, issue_body, issue_url など）を受け取る。
-スクリプト内の ${{ github.event.issue.xxx }} を ${{ inputs.xxx }} に置換。
-github-script ステップも同様にinputsを参照。
-必要に応じて secrets も workflow_call で受け取れるようにする。
-4. ファイル名・配置
-ファイル名はそのまま issue-note.yml。
-配置場所は workflows でOK（共通ワークフローとしてもこの場所で良い）。
-5. 呼び出し元への影響
-呼び出し元ワークフローで uses: <repo>/.github/workflows/issue-note.yml@main のように参照し、inputsを渡す形になる。
-このplanで進めます。次に、実際の共通ワークフロー化のためのyml修正案を作成しますか？
+--- 共通ワークフロー
+
+# GitHub Actions Reusable Workflow for Call Graph Generation
+name: Generate Call Graph
+
+# TODO Windowsネイティブでのtestをしていた名残が残っているので、今後整理していく。今はWSL act でtestしており、Windowsネイティブ環境依存問題が解決した
+#  ChatGPTにレビューさせるとそこそこ有用そうな提案が得られたので、今後それをやる予定
+#  agentに自己チェックさせる手も、セカンドオピニオンとして選択肢に入れておく
+
+on:
+  workflow_call:
+
+jobs:
+  check-commits:
+    runs-on: ubuntu-latest
+    outputs:
+      should-run: ${{ steps.check.outputs.should-run }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 50 # 過去のコミットを取得
+
+      - name: Check for user commits in last 24 hours
+        id: check
+        run: |
+          node .github/scripts/callgraph_enhanced/check-commits.cjs
+
+  generate-callgraph:
+    needs: check-commits
+    if: needs.check-commits.outputs.should-run == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      security-events: write
+      actions: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set Git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Remove old CodeQL packages cache
+        run: rm -rf ~/.codeql/packages
+
+      - name: Check Node.js version
+        run: |
+          node .github/scripts/callgraph_enhanced/check-node-version.cjs
+
+      - name: Install CodeQL CLI
+        run: |
+          wget https://github.com/github/codeql-cli-binaries/releases/download/v2.22.1/codeql-linux64.zip
+          unzip codeql-linux64.zip
+          sudo mv codeql /opt/codeql
+          echo "/opt/codeql" >> $GITHUB_PATH
+
+      - name: Install CodeQL query packs
+        run: |
+          /opt/codeql/codeql pack install .github/codeql-queries
+
+      - name: Check CodeQL exists
+        run: |
+          node .github/scripts/callgraph_enhanced/check-codeql-exists.cjs
+
+      - name: Verify CodeQL Configuration
+        run: |
+          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs verify-config
+
+      - name: Remove existing CodeQL DB (if any)
+        run: |
+          rm -rf codeql-db
+
+      - name: Perform CodeQL Analysis
+        run: |
+          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs analyze
+
+      - name: Check CodeQL Analysis Results
+        run: |
+          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs check-results
+
+      - name: Debug CodeQL execution
+        run: |
+          node .github/scripts/callgraph_enhanced/analyze-codeql.cjs debug
+
+      - name: Wait for CodeQL results
+        run: |
+          node -e "setTimeout(()=>{}, 10000)"
+
+      - name: Find and process CodeQL results
+        run: |
+          node .github/scripts/callgraph_enhanced/find-process-results.cjs
+
+      - name: Generate HTML graph
+        run: |
+          node .github/scripts/callgraph_enhanced/generate-html-graph.cjs
+
+      - name: Copy files to generated-docs and commit results
+        run: |
+          node .github/scripts/callgraph_enhanced/copy-commit-results.cjs
+
+--- 呼び出し元
+# 呼び出し元ワークフロー: call-callgraph_enhanced.yml
+name: Call Call Graph Enhanced
+
+on:
+  schedule:
+    # 毎日午前5時(JST) = UTC 20:00前日
+    - cron: '0 20 * * *'
+  workflow_dispatch:
+
+jobs:
+  call-callgraph-enhanced:
+    # uses: cat2151/github-actions/.github/workflows/callgraph_enhanced.yml
+    uses: ./.github/workflows/callgraph_enhanced.yml # ローカルでのテスト用
 ```
 
-- userがplanレビューし、OKを出した
-- agentに生成結果ymlをレビューさせた、OKとなった
-  - userはこのレビューは認知負荷が高いのでskipとする（単純な細かい間違い探し作業になるので、それはagentに任せた）
--  エラー。呼び出し元ymlのエラーがあり修正。共通ワークフローのエラー指摘があり、共通ワークフロー側の修正が必要となった
-```
-原因の分析：
+# レビュー結果OKと判断する
+- レビュー結果を人力でレビューした形になった
 
-呼び出し元（tonejs-mml-to-jsonのissue-note.yml）は、reusable workflow（cat2151/github-actions/.github/workflows/issue-note.yml@main）をusesで呼び出し、inputsをwithで渡しています。
-共通ワークフロー（reusable workflow）は inputs を workflow_call で受け取り、各ステップで ${{ inputs.xxx }} で参照しています。
-しかし、エラーが発生したのは actions/github-script@v7 の script 内です。
-エラーの本質的な原因：
-
-actions/github-script の script: で ${{ inputs.issue_number }} のような式を直接 JavaScript テンプレートリテラル内で使っていますが、これはサポートされていません。
-script: の中は JavaScript であり、YAMLの ${{ ... }} は展開されません（または意図通りに展開されません）。
-そのため、inputs 変数は script 内の JavaScript で未定義となり、ReferenceError になります。
-正しい書き方：
-
-actions/github-script の script: でワークフローの inputs を使いたい場合は、with: で input を environment 変数や script の引数として渡し、JavaScript で process.env から取得するか、github-script の input 機能を使う必要があります。
-例（修正版）：
-
-このように、inputs の値を env で渡し、script 内では process.env で参照してください。
-
-まとめ：
-
-actions/github-script の script 内で ${{ inputs.xxx }} を直接使うと ReferenceError になる
-env: で値を渡し、process.env で参照するのが正しい
-修正が必要です。修正版のワークフローが必要な場合はお知らせください。
-```
-
+# test
+- #4 同様にローカル WSL + act でtestする
+- エラー。userのtest設計ミス。
+  - scriptの挙動 : src/ がある前提
+  - 今回の共通ワークフローのリポジトリ : src/ がない
+  - 今回testで実現したいこと
+    - 仮のソースでよいので、関数コールグラフを生成させる
+  - 対策
+    - src/ にダミーを配置する
 - test green
+  - ただしcommit pushはしてないので、html内容が0件NG、といったケースの検知はできない
+  - もしそうなったら別issueとしよう
+
+# test green
+
+# commit用に、yml 呼び出し元 uses をlocal用から本番用に書き換える
+
+# closeとする
+- もしhtml内容が0件NG、などになったら、別issueとするつもり
+
+{% endraw %}
+```
+
+### issue-notes/2.md
+```md
+{% raw %}
+# issue TreeSitterと各種ライブラリを利用した最低限の構成に完全に作り直す #2
+[issues #2](https://github.com/cat2151/chord2mml-rust/issues/2)
+
+
+
+{% endraw %}
+```
+
+### .github/actions-tmp/issue-notes/20.md
+```md
+{% raw %}
+# issue project-summary の development-status 生成時、issue-notes/ 配下のmdにファイル名が書いてあれば、そのファイル内容もpromptに添付、を試す #20
+[issues #20](https://github.com/cat2151/github-actions/issues/20)
+
+# 何が困るの？
+- Geminiに次の一手を生成させるとき、cjsの内容も添付したほうが、生成品質が改善できる可能性がある。
+
+# 案
+## outputのimage
+- promptが言及するfilename、について、そのfileの内容もすべてpromptに含める。
+    - 軸は、projectのfilename一覧である。
+        - 一覧それぞれのfilenameについて、promptで言及されているものをfile内容埋め込み、とする。
+- 方向性
+    - シンプルで明確なルール、曖昧さのないルールで、メンテを楽にすることを優先する
+    - 余分なファイルが出てしまうが割り切ってOKとし、欠落リスクを減らせることを優先する
+- 備考
+    - 曖昧でメンテが必要な「documentからのfilename抽出」をやめ、
+        - かわりに、逆に、「今のprojectにあるfileすべてのうち、promptで言及されているもの」を軸とする
+## 実現方法の案
+- project全体について、filenameと、filepath配列（複数ありうる）、のmapを取得する。そういう関数Aをまず実装する。
+    - filepathは、agentが扱えるよう、github上のworkの絶対pathではなく、projectRootからの相対パス表記とする。
+- そして、そのfilenameにmatchするfilepath配列について、filepathとファイル内容を記したmarkdown文字列を返却、という関数Bを実装する。
+- さらに、Geminiにわたすpromptについて、前述の関数Aのfilenameそれぞれについて、prompt内を検索し、filenameが存在する場合は、そのfilenameについて、関数Bを用いてmarkdown文字列を取得する。そうして得られたmarkdown文字列群を返却する、という関数Cを実装する。
+- さらに、promptの末尾に書いてあるプレースホルダー「`${file_contents}`」を、関数Cの結果で置き換える、という関数Dを実装する。
+- 実際には、Geminiにわたすpromptのプレースホルダー展開は、2回にわたる必要がある。1回目でissues-note内容をpromptに埋め込む。2回目でそのpromptに対して関数Dを適用する。
+## 備忘
+- 上記は、agentにplanさせてレビューし、context不足と感じたら上記をメンテ、というサイクルで書いた。
+
+# どうする？
+- 上記をagentに投げる。documentやtestについてのplanもしてくるかもしれないがそこは時間の都合で省略して実施させるつもり。
+- 投げた、実装させた、レビューして人力リファクタリングした
+- testする
+
+# 結果
+- バグ
+    - この20.mdにあるプレースホルダーが置換されてしまっている
+    - issue-notesで言及されていないfileまで添付されてしまっている
+- 分析
+    - この20.mdにあるプレースホルダーが置換されてしまっている
+        - 原因
+            - 20.mdにあるプレースホルダーまで置換対象としてしまっていたため。
+            - prompt全体のプレースホルダーを置換対象としてしまっていたため。
+            - issue-notesを埋め込んだあとでの、プレースホルダー処理だったので、
+                - 20.md が置換対象となってしまったため。
+        - 対策案
+            - プレースホルダーはすべて、「行頭と行末で囲まれている」ときだけ置換対象とする。
+                - つまり文中やcode中のプレースホルダーは置換対象外とする。
+            - さらに、2つ以上プレースホルダーが出たら想定外なので早期エラー終了させ、検知させる。
+    - issue-notesで言及されていないfileまで添付されてしまっている
+        - 原因
+            - promptに、既にprojectの全file listが書き込まれたあとなので、
+                - issue-noteで言及されていなくても、
+                - promptの全file listを対象に検索してしまっている
+        - 対策案の候補
+            - プレースホルダー置換の順番を変更し、全file listは最後に置換する
+            - file添付の対象を変更し、promptでなく、issue-notesとする
+                - これが範囲が絞られているので安全である、と考える
+        - 備忘
+            - 全fileの対象は、リモートリポジトリ側のfileなので、secretsの心配はないし、実際に検索して確認済み
+
+# どうする？
+- agent半分、人力が半分（agentがハルシネーションでソース破壊したので、関数切り分けしたり、リファクタリングしたり）。
+- で実装した。
+- testする
+
+# 結果
+- test green
+
+# closeとする
+
+{% endraw %}
+```
+
+### issue-notes/20.md
+```md
+{% raw %}
+# issue textareaに入力があったら即座にplay開始する。処理が高速なので待つ必要もない。playボタンも明示的な演奏用にとっておく #20
+[issues #20](https://github.com/cat2151/chord2mml-rust/issues/20)
+
+
+
+{% endraw %}
+```
+
+### .github/actions-tmp/issue-notes/21.md
+```md
+{% raw %}
+# issue project-summary の development-status 生成時、project-overviewが生成済みのproject-overview.mdもpromptに添付、を試す #21
+[issues #21](https://github.com/cat2151/github-actions/issues/21)
+
+# 何が困るの？
+- project-overview.mdがpromptに添付されていたほうが、Geminiの生成品質が改善できる可能性がある。
+    - メリットは、ファイル一覧、関数一覧、をGeminiにわたせること
+
+# 検討事項
+- 課題、その一覧に付記されている「ファイルや関数の要約」は、Geminiが「ファイル名や関数名を元に生成しただけ」で、「ファイル内容や関数内容を参照せずに生成した」可能性が高い
+    - 対策、project-overview.mdに依存しない。
+        - 方法、新規関数をagentに実装させる
+            - 新規関数で、ファイル一覧と関数一覧を生成する
+        - 根拠、そのほうが、シンプルに目的を達成できる可能性が高そう。
+        - 根拠、project-overview.mdだと、不具合として.github 配下のymlがlistに含まれておらず、ymlに関するissue、に関する生成、をするとき不具合の可能性がありそう。そういった、別機能の不具合に影響されがち。
+- 課題、早期に実施したほうが毎日好影響が出る可能性がある
+    - 対策、上記検討事項の対処は後回しにして、先に実装してみる
+    - agentに投げる
+- 課題、ProjectSummaryCoordinator をみたところ、並列処理されている
+    - なので、project-overview.mdを参照したいときに、まだ生成されていない、という可能性が高い
+    - 対策、前述の、新規関数で、ファイル一覧と関数一覧を生成させる
+
+# agentに投げるための整理
+- 編集対象ファイル
+    - prompt
+        - .github_automation/project_summary/prompts/development-status-prompt.md
+        - 編集内容
+            - projectのファイル一覧を埋め込む用の、プレースホルダーを追加する
+    - source
+        - .github_automation/project_summary/scripts/development/DevelopmentStatusGenerator.cjs
+        - 編集内容
+            - projectのファイル一覧を生成する関数、を実装し、
+            - それを前述のプレースホルダーに埋め込む
+
+# agentに投げて実装させた
+
+# test結果
+- 以下が不要
+    - .git/
+    - node_modules/
+
+# どうする？
+- agentに上記を変更させた
+- testする
+
+# 結果
+- test greenとなった
+
+# まとめ
+- issueのtitleからは仕様変更した。
+    - projectのfile一覧をpromptに含める、とした。
+    - そのほうがpromptとして、よい生成結果が期待できる、と判断した。
+- test greenとなった
+
+# closeとする
+
+{% endraw %}
+```
+
+### issue-notes/21.md
+```md
+{% raw %}
+# issue chord2mmlリポジトリで扱っているchordを一通り実装するためのロードマップをREADME.ja.mdにlistする。ただしハイフンは区切り文字だけに使うのが違いである #21
+[issues #21](https://github.com/cat2151/chord2mml-rust/issues/21)
+
+
+
+{% endraw %}
+```
+
+### .github/actions-tmp/issue-notes/22.md
+```md
+{% raw %}
+# issue project-summary の development-status 生成時、Geminiに与えたprompt、もcommit push、を試す #22
+[issues #22](https://github.com/cat2151/github-actions/issues/22)
+
+# 何が困るの？
+- 生成された development-status.md の妥当性がわかりづらいし、バグった場合の原因調査がしづらい
+
+# 対策案
+- Geminiに与えたpromptをfileにしてcommit pushしておくと、デバッグに役立つ可能性がある。
+
+# 方法案
+- Geminiに与えるprompt を生成時、それをfileにsaveし、commit push対象にする。
+- ひとまずgenerated-docs/ に保存する。落ち着いたら移動先を検討する。
+    - generated-docs/ 配下のまま、も有力な候補である。
+        - なぜなら、cjsによってgenerateされたdocなので。
+
+# 日次バッチでpromptを生成させ、agentに投げた
+- レビューした
+- 修正させた
+
+# 結果
+- エラー。pathのミス。呼び出し元側に保存したいのに、共通ワークフロー側に保存となってしまった。
+- 対策、ymlで引数を指定するようにした。
+- testする。
+
+# 結果
+- test green。呼び出し元側にcommitされていることを確認した。
+- 20Kbytesである
+    - Geminiにわたすサイズとしても許容範囲内と判断する
+        - token数から概算して100Kbytes～1Mbytes程度を想定
+
+# closeとする
+
+{% endraw %}
+```
+
+### issue-notes/22.md
+```md
+{% raw %}
+# issue 「README.ja.mdの計画に書いてあるが、chord2mmlリポジトリで扱っていない要素」は、LLMが勝手にハルシネーションしたものなので、削除する #22
+[issues #22](https://github.com/cat2151/chord2mml-rust/issues/22)
+
+
+
+{% endraw %}
+```
+
+### .github/actions-tmp/issue-notes/7.md
+```md
+{% raw %}
+# issue issue note生成できるかのtest用 #7
+[issues #7](https://github.com/cat2151/github-actions/issues/7)
+
+- 生成できた
 - closeとする
+
+{% endraw %}
+```
+
+### issue-notes/7.md
+```md
+{% raw %}
+# issue GitHub Pageが404である。ソースが src/ 配下のスタンダードな構成になっておらずわかりづらい #7
+[issues #7](https://github.com/cat2151/chord2mml-rust/issues/7)
+
+
+
+{% endraw %}
+```
+
+### .github/actions-tmp/issue-notes/8.md
+```md
+{% raw %}
+# issue 関数コールグラフhtmlビジュアライズ生成の対象ソースファイルを、呼び出し元ymlで指定できるようにする #8
+[issues #8](https://github.com/cat2151/github-actions/issues/8)
+
+# これまでの課題
+- 以下が決め打ちになっていた
+```
+  const allowedFiles = [
+    'src/main.js',
+    'src/mml2json.js',
+    'src/play.js'
+  ];
+```
+
+# 対策
+- 呼び出し元ymlで指定できるようにする
+
+# agent
+- agentにやらせることができれば楽なので、初手agentを試した
+- 失敗
+    - ハルシネーションしてscriptを大量破壊した
+- 分析
+    - 修正対象scriptはagentが生成したもの
+    - 低品質な生成結果でありソースが巨大
+    - ハルシネーションで破壊されやすいソース
+    - AIの生成したソースは、必ずしもAIフレンドリーではない
+
+# 人力リファクタリング
+- 低品質コードを、最低限agentが扱えて、ハルシネーションによる大量破壊を防止できる内容、にする
+- 手短にやる
+    - そもそもビジュアライズは、agentに雑に指示してやらせたもので、
+    - 今後別のビジュアライザを選ぶ可能性も高い
+    - 今ここで手間をかけすぎてコンコルド効果（サンクコストバイアス）を増やすのは、project群をトータルで俯瞰して見たとき、損
+- 対象
+    - allowedFiles のあるソース
+        - callgraph-utils.cjs
+            - たかだか300行未満のソースである
+            - この程度でハルシネーションされるのは予想外
+            - やむなし、リファクタリングでソース分割を進める
+
+# agentに修正させる
+## prompt
+```
+allowedFilesを引数で受け取るようにしたいです。
+ないならエラー。
+最終的に呼び出し元すべてに波及して修正したいです。
+
+呼び出し元をたどってエントリポイントも見つけて、
+エントリポイントにおいては、
+引数で受け取ったjsonファイル名 allowedFiles.js から
+jsonファイル allowedFiles.jsonの内容をreadして
+変数 allowedFilesに格納、
+後続処理に引き渡す、としたいです。
+
+まずplanしてください。
+planにおいては、修正対象のソースファイル名と関数名を、呼び出し元を遡ってすべて特定し、listしてください。
+```
+
+# 修正が順調にできた
+- コマンドライン引数から受け取る作りになっていなかったので、そこだけ指示して修正させた
+- yml側は人力で修正した
+
+# 他のリポジトリから呼び出した場合にバグらないよう修正する
+- 気付いた
+    - 共通ワークフローとして他のリポジトリから使った場合はバグるはず。
+        - ymlから、共通ワークフロー側リポジトリのcheckoutが漏れているので。
+- 他のyml同様に修正する
+- あわせて全体にymlをリファクタリングし、修正しやすくし、今後のyml読み書きの学びにしやすくする
+
+# local WSL + act : test green
+
+# closeとする
+- もし生成されたhtmlがNGの場合は、別issueとするつもり
+
+{% endraw %}
+```
+
+### .github/actions-tmp/issue-notes/9.md
+```md
+{% raw %}
+# issue 関数コールグラフhtmlビジュアライズが0件なので、原因を可視化する #9
+[issues #9](https://github.com/cat2151/github-actions/issues/9)
+
+# agentに修正させたり、人力で修正したりした
+- agentがハルシネーションし、いろいろ根の深いバグにつながる、エラー隠蔽などを仕込んでいたため、検知が遅れた
+- 詳しくはcommit logを参照のこと
+- WSL + actの環境を少し変更、act起動時のコマンドライン引数を変更し、generated-docsをmountする（ほかはデフォルト挙動であるcpだけにする）ことで、デバッグ情報をコンテナ外に出力できるようにし、デバッグを効率化した
+
+# test green
+
+# closeとする
+
+{% endraw %}
+```
+
+### issue-notes/9.md
+```md
+{% raw %}
+# issue Rust Tree-sitter WASM TypeScript の構成で根本的に作り直す #9
+[issues #9](https://github.com/cat2151/chord2mml-rust/issues/9)
+
+
+
+{% endraw %}
+```
+
+### Cargo.toml
+```toml
+{% raw %}
+[workspace]
+members = [
+    "chord2mml-core",
+    "chord2mml-cli",
+    "chord2mml-wasm",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+authors = ["cat2151"]
+repository = "https://github.com/cat2151/chord2mml-rust"
+
+[workspace.dependencies]
+# Core dependencies
+anyhow = "1.0"
+thiserror = "1.0"
+
+# WASM dependencies
+wasm-bindgen = "0.2"
+wasm-bindgen-test = "0.3"
+js-sys = "0.3"
+web-sys = "0.3"
+
+{% endraw %}
+```
+
+### chord2mml-cli/Cargo.toml
+```toml
+{% raw %}
+[package]
+name = "chord2mml-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "CLI application for converting chord notation to MML"
+
+[[bin]]
+name = "chord2mml"
+path = "src/main.rs"
+
+[dependencies]
+chord2mml-core = { path = "../chord2mml-core" }
+anyhow.workspace = true
+
+{% endraw %}
+```
+
+### chord2mml-core/Cargo.toml
+```toml
+{% raw %}
+[package]
+name = "chord2mml-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "Core library for converting chord notation to MML (Music Macro Language)"
+
+[lib]
+crate-type = ["lib"]
+
+[features]
+# Default: no features enabled.
+# Uses the manual parser, which is fully WASM-compatible and requires no native toolchain.
+default = []
+# Enable the Tree-sitter-based parser for native builds that need more robust parsing.
+# Not suitable for WASM targets (requires a C compiler and native Tree-sitter runtime).
+tree-sitter = ["dep:tree-sitter", "dep:tree-sitter-chord"]
+
+[dependencies]
+anyhow.workspace = true
+thiserror.workspace = true
+tree-sitter = { version = "0.20", optional = true }
+tree-sitter-chord = { path = "../tree-sitter-chord", optional = true }
+
+[dev-dependencies]
+
+{% endraw %}
+```
+
+### chord2mml-wasm/Cargo.toml
+```toml
+{% raw %}
+[package]
+name = "chord2mml-wasm"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "WASM bindings for chord2mml-core"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
+[dependencies]
+chord2mml-core = { path = "../chord2mml-core" }
+wasm-bindgen.workspace = true
+js-sys.workspace = true
+web-sys = { workspace = true, features = ["console"] }
+
+[dev-dependencies]
+wasm-bindgen-test.workspace = true
+
+[profile.release]
+opt-level = "z"     # Optimize for size
+lto = true          # Enable Link Time Optimization
+codegen-units = 1   # Reduce parallel code generation for better optimization
+
+{% endraw %}
+```
+
+### tree-sitter-chord/Cargo.toml
+```toml
+{% raw %}
+[package]
+name = "tree-sitter-chord"
+description = "chord grammar for the tree-sitter parsing library"
+version = "0.0.1"
+keywords = ["incremental", "parsing", "chord"]
+categories = ["parsing", "text-editors"]
+repository = "https://github.com/cat2151/chord2mml-rust"
+edition = "2018"
+license = "MIT"
+
+build = "bindings/rust/build.rs"
+include = [
+  "bindings/rust/*",
+  "grammar.js",
+  "queries/*",
+  "src/*",
+]
+
+[lib]
+path = "bindings/rust/lib.rs"
+
+[dependencies]
+tree-sitter = "~0.20.10"
+
+[build-dependencies]
+cc = "1.0"
+
+{% endraw %}
+```
+
+### chord2mml-core/src/parser.rs
+```rs
+{% raw %}
+//! Parser module for converting chord notation to AST
+//!
+//! This module handles parsing and conversion to AST.
+//! - With tree-sitter feature: uses Tree-sitter for robust parsing
+//! - Without tree-sitter feature: uses manual parsing for WASM compatibility
+
+use anyhow::{anyhow, Result};
+use crate::ast::{ASTChord, ASTRoot, Accidental, ChordQuality};
+
+#[cfg(feature = "tree-sitter")]
+use tree_sitter::Parser;
+
+/// Parse chord notation using TreeSitter or manual parser, convert to AST
+pub(crate) fn parse_to_ast(input: &str) -> Result<ASTRoot> {
+    #[cfg(feature = "tree-sitter")]
+    {
+        parse_to_ast_tree_sitter(input)
+    }
+    
+    #[cfg(not(feature = "tree-sitter"))]
+    {
+        parse_to_ast_manual(input)
+    }
+}
+
+/// Manual parser for chord notation (used when tree-sitter feature is disabled)
+#[cfg(not(feature = "tree-sitter"))]
+fn parse_to_ast_manual(input: &str) -> Result<ASTRoot> {
+    let input = input.trim();
+    
+    // Check for chord progression (contains hyphens)
+    if input.contains('-') {
+        let chord_strs: Vec<&str> = input.split('-').collect();
+        let mut chords = Vec::new();
+        
+        for chord_str in chord_strs {
+            let chord_str = chord_str.trim();
+            if !chord_str.is_empty() {
+                chords.push(parse_chord_manual(chord_str)?);
+            }
+        }
+        
+        if chords.is_empty() {
+            return Err(anyhow!("No valid chords found in progression"));
+        }
+        
+        Ok(ASTRoot::ChordProgression(chords))
+    } else {
+        // Single chord
+        let chord = parse_chord_manual(input)?;
+        Ok(ASTRoot::SingleChord(chord))
+    }
+}
+
+/// Parse a single chord string manually
+#[cfg(not(feature = "tree-sitter"))]
+fn parse_chord_manual(input: &str) -> Result<ASTChord> {
+    let chars: Vec<char> = input.chars().collect();
+    if chars.is_empty() {
+        return Err(anyhow!("Empty chord notation"));
+    }
+    
+    let mut index = 0;
+    
+    // Parse root note (A-G)
+    let root = chars[index];
+    if !matches!(root, 'A'..='G') {
+        if matches!(root, 'a'..='g') {
+            return Err(anyhow!(
+                "Invalid root note '{}': root note must be uppercase A-G",
+                root
+            ));
+        }
+        return Err(anyhow!("Invalid root note: {}", root));
+    }
+    index += 1;
+    
+    // Parse accidental (#, b) if present
+    let accidental = if index < chars.len() {
+        match chars[index] {
+            '#' => {
+                index += 1;
+                Some(Accidental::Sharp)
+            }
+            'b' => {
+                index += 1;
+                Some(Accidental::Flat)
+            }
+            _ => None,
+        }
+    } else {
+        None
+    };
+    
+    // Parse quality (m, maj7, M7, 7, dim, aug, +, sus4, sus2, etc.)
+    let quality = if index < chars.len() {
+        let remaining: String = chars[index..].iter().collect();
+        
+        // Check for slash chord (bass note) first
+        if let Some(slash_pos) = remaining.find('/') {
+            let quality_str = &remaining[..slash_pos];
+            let quality = parse_quality_manual(quality_str)?;
+            
+            // Parse bass note (everything after /)
+            let bass_str = &remaining[slash_pos + 1..];
+            let bass = if !bass_str.is_empty() {
+                // Validate bass note format (should be A-G with optional accidental)
+                validate_bass_note(bass_str)?;
+                Some(bass_str.to_string())
+            } else {
+                return Err(anyhow!("Empty bass note after '/' in slash chord"));
+            };
+            
+            return Ok(ASTChord {
+                root: root.to_string(),
+                accidental,
+                quality,
+                bass,
+            });
+        } else {
+            parse_quality_manual(&remaining)?
+        }
+    } else {
+        ChordQuality::Major
+    };
+    
+    Ok(ASTChord {
+        root: root.to_string(),
+        accidental,
+        quality,
+        bass: None,
+    })
+}
+
+/// Validate bass note format (A-G with optional accidental #, b)
+#[cfg(not(feature = "tree-sitter"))]
+fn validate_bass_note(bass_str: &str) -> Result<()> {
+    let chars: Vec<char> = bass_str.chars().collect();
+    
+    // First character must be A-G
+    if !matches!(chars[0], 'A'..='G') {
+        return Err(anyhow!("Invalid bass note '{}': must start with A-G", bass_str));
+    }
+    
+    // Optional second character must be # or b
+    if chars.len() > 1 && !matches!(chars[1], '#' | 'b') {
+        return Err(anyhow!("Invalid bass note '{}': accidental must be # or b", bass_str));
+    }
+    
+    // No more than 2 characters allowed
+    if chars.len() > 2 {
+        return Err(anyhow!("Invalid bass note '{}': too many characters", bass_str));
+    }
+    
+    Ok(())
+}
+
+/// Parse chord quality from string (shared by both parsers)
+fn parse_chord_quality(quality_str: &str) -> Result<ChordQuality> {
+    match quality_str {
+        "" => Ok(ChordQuality::Major),
+        "m" => Ok(ChordQuality::Minor),
+        "maj7" | "M7" => Ok(ChordQuality::Major7),
+        "7" => Ok(ChordQuality::Dominant7),
+        "dim" => Ok(ChordQuality::Diminished),
+        "aug" | "+" => Ok(ChordQuality::Augmented),
+        "sus4" => Ok(ChordQuality::Sus4),
+        "sus2" => Ok(ChordQuality::Sus2),
+        _ => Err(anyhow!("Unknown chord quality: {}", quality_str)),
+    }
+}
+
+/// Parse chord quality from string
+#[cfg(not(feature = "tree-sitter"))]
+fn parse_quality_manual(quality_str: &str) -> Result<ChordQuality> {
+    parse_chord_quality(quality_str)
+}
+
+/// Parse chord notation using TreeSitter, convert CST to AST
+#[cfg(feature = "tree-sitter")]
+fn parse_to_ast_tree_sitter(input: &str) -> Result<ASTRoot> {
+    let mut parser = Parser::new();
+    parser
+        .set_language(tree_sitter_chord::language())
+        .map_err(|e| anyhow!("Failed to set TreeSitter language: {}", e))?;
+    
+    let tree = parser
+        .parse(input, None)
+        .ok_or_else(|| anyhow!("Failed to parse chord notation"))?;
+    
+    let root_node = tree.root_node();
+    
+    // Check for parsing errors
+    if root_node.has_error() {
+        return Err(anyhow!("Syntax error in chord notation: {}", input));
+    }
+    
+    // Navigate to the first child (chord or chord_progression)
+    let first_child = if root_node.kind() == "source_file" {
+        root_node.child(0).ok_or_else(|| anyhow!("No content found in parse tree"))?
+    } else {
+        root_node
+    };
+    
+    // Convert CST to AST
+    match first_child.kind() {
+        "chord" => {
+            let chord = parse_chord_node(&first_child, input)?;
+            Ok(ASTRoot::SingleChord(chord))
+        }
+        "chord_progression" => {
+            let mut chords = Vec::new();
+            let mut cursor = first_child.walk();
+            
+            for child in first_child.children(&mut cursor) {
+                if child.kind() == "chord" {
+                    chords.push(parse_chord_node(&child, input)?);
+                }
+            }
+            
+            if chords.is_empty() {
+                return Err(anyhow!("No chords found in chord progression"));
+            }
+            
+            Ok(ASTRoot::ChordProgression(chords))
+        }
+        _ => Err(anyhow!("Unexpected node type: {}", first_child.kind())),
+    }
+}
+
+/// Parse a single chord node from the CST
+#[cfg(feature = "tree-sitter")]
+fn parse_chord_node(chord_node: &tree_sitter::Node, source: &str) -> Result<ASTChord> {
+    if chord_node.kind() != "chord" {
+        return Err(anyhow!("Expected chord node, got: {}", chord_node.kind()));
+    }
+    
+    // Extract root note
+    let root_node = chord_node
+        .child_by_field_name("root")
+        .or_else(|| chord_node.child(0))
+        .ok_or_else(|| anyhow!("No root node found"))?;
+    
+    let note_node = root_node.child_by_field_name("note")
+        .or_else(|| root_node.child(0))
+        .ok_or_else(|| anyhow!("No note found in root"))?;
+    
+    let note = note_node.utf8_text(source.as_bytes())
+        .map_err(|e| anyhow!("Failed to extract note text: {}", e))?
+        .to_string();
+    
+    let accidental = if let Some(acc_node) = root_node.child_by_field_name("accidental")
+        .or_else(|| root_node.child(1))
+    {
+        let acc_text = acc_node.utf8_text(source.as_bytes())
+            .map_err(|e| anyhow!("Failed to extract accidental text: {}", e))?;
+        match acc_text {
+            "#" => Some(Accidental::Sharp),
+            "b" => Some(Accidental::Flat),
+            _ => None,
+        }
+    } else {
+        None
+    };
+    
+    // Extract quality (optional)
+    let mut quality_node_opt = chord_node.child_by_field_name("quality");
+    if quality_node_opt.is_none() {
+        // Fallback: search all children for a quality node
+        let mut cursor = chord_node.walk();
+        for child in chord_node.children(&mut cursor) {
+            if child.kind() == "quality" {
+                quality_node_opt = Some(child);
+                break;
+            }
+        }
+    }
+
+    let quality = if let Some(quality_node) = quality_node_opt {
+        let quality_text = quality_node.utf8_text(source.as_bytes())
+            .map_err(|e| anyhow!("Failed to extract quality text: {}", e))?;
+
+        parse_quality_text(quality_text)?
+    } else {
+        // Default to major when no explicit quality is present
+        ChordQuality::Major
+    };
+    
+    // Extract bass (optional) 
+    let bass = if let Some(bass_node) = chord_node.child_by_field_name("bass") {
+        let bass_text = bass_node.utf8_text(source.as_bytes())
+            .map_err(|e| anyhow!("Failed to extract bass text: {}", e))?;
+        Some(bass_text.trim_start_matches('/').to_string())
+    } else {
+        None
+    };
+    
+    Ok(ASTChord {
+        root: note,
+        accidental,
+        quality,
+        bass,
+    })
+}
+
+/// Parse chord quality text into ChordQuality enum
+#[cfg(feature = "tree-sitter")]
+fn parse_quality_text(quality_text: &str) -> Result<ChordQuality> {
+    parse_chord_quality(quality_text)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // Tests for manual parser (without tree-sitter feature)
+    #[cfg(not(feature = "tree-sitter"))]
+    mod manual_parser_tests {
+        use super::*;
+
+        #[test]
+        fn test_parse_basic_major_chord() {
+            let result = parse_to_ast("C").unwrap();
+            match result {
+                ASTRoot::SingleChord(chord) => {
+                    assert_eq!(chord.root, "C");
+                    assert_eq!(chord.accidental, None);
+                    assert_eq!(chord.quality, ChordQuality::Major);
+                    assert_eq!(chord.bass, None);
+                }
+                _ => panic!("Expected SingleChord"),
+            }
+        }
+
+        #[test]
+        fn test_parse_chord_with_sharp() {
+            let result = parse_to_ast("C#").unwrap();
+            match result {
+                ASTRoot::SingleChord(chord) => {
+                    assert_eq!(chord.root, "C");
+                    assert_eq!(chord.accidental, Some(Accidental::Sharp));
+                    assert_eq!(chord.quality, ChordQuality::Major);
+                }
+                _ => panic!("Expected SingleChord"),
+            }
+        }
+
+        #[test]
+        fn test_parse_chord_with_flat() {
+            let result = parse_to_ast("Db").unwrap();
+            match result {
+                ASTRoot::SingleChord(chord) => {
+                    assert_eq!(chord.root, "D");
+                    assert_eq!(chord.accidental, Some(Accidental::Flat));
+                    assert_eq!(chord.quality, ChordQuality::Major);
+                }
+                _ => panic!("Expected SingleChord"),
+            }
+        }
+
+        #[test]
+        fn test_parse_minor_chord() {
+            let result = parse_to_ast("Dm").unwrap();
+            match result {
+                ASTRoot::SingleChord(chord) => {
+                    assert_eq!(chord.root, "D");
+                    assert_eq!(chord.quality, ChordQuality::Minor);
+                }
+                _ => panic!("Expected SingleChord"),
+            }
+        }
+
+        #[test]
+        fn test_parse_seventh_chord() {
+            let result = parse_to_ast("G7").unwrap();
+            match result {
+                ASTRoot::SingleChord(chord) => {
+                    assert_eq!(chord.root, "G");
+                    assert_eq!(chord.quality, ChordQuality::Dominant7);
+                }
+                _ => panic!("Expected SingleChord"),
+            }
+        }
+
+        #[test]
+        fn test_parse_major7_chord() {
+            let result = parse_to_ast("CM7").unwrap();
+            match result {
+                ASTRoot::SingleChord(chord) => {
+                    assert_eq!(chord.root, "C");
+                    assert_eq!(chord.quality, ChordQuality::Major7);
+                }
+                _ => panic!("Expected SingleChord"),
+            }
+        }
+
+        #[test]
+        fn test_parse_slash_chord() {
+            let result = parse_to_ast("C/E").unwrap();
+            match result {
+                ASTRoot::SingleChord(chord) => {
+                    assert_eq!(chord.root, "C");
+                    assert_eq!(chord.quality, ChordQuality::Major);
+                    assert_eq!(chord.bass, Some("E".to_string()));
+                }
+                _ => panic!("Expected SingleChord"),
+            }
+        }
+
+        #[test]
+        fn test_parse_slash_chord_with_accidental() {
+            let result = parse_to_ast("C/F#").unwrap();
+            match result {
+                ASTRoot::SingleChord(chord) => {
+                    assert_eq!(chord.root, "C");
+                    assert_eq!(chord.bass, Some("F#".to_string()));
+                }
+                _ => panic!("Expected SingleChord"),
+            }
+        }
+
+        #[test]
+        fn test_parse_chord_progression() {
+            let result = parse_to_ast("C-F-G-C").unwrap();
+            match result {
+                ASTRoot::ChordProgression(chords) => {
+                    assert_eq!(chords.len(), 4);
+                    assert_eq!(chords[0].root, "C");
+                    assert_eq!(chords[1].root, "F");
+                    assert_eq!(chords[2].root, "G");
+                    assert_eq!(chords[3].root, "C");
+                }
+                _ => panic!("Expected ChordProgression"),
+            }
+        }
+
+        #[test]
+        fn test_parse_lowercase_root_fails() {
+            let result = parse_to_ast("c");
+            assert!(result.is_err());
+            assert!(result.unwrap_err().to_string().contains("uppercase"));
+        }
+
+        #[test]
+        fn test_parse_invalid_root_note() {
+            let result = parse_to_ast("H");
+            assert!(result.is_err());
+        }
+
+        #[test]
+        fn test_parse_empty_bass_note_fails() {
+            let result = parse_to_ast("C/");
+            assert!(result.is_err());
+            assert!(result.unwrap_err().to_string().contains("Empty bass note"));
+        }
+
+        #[test]
+        fn test_parse_invalid_bass_note_fails() {
+            let result = parse_to_ast("C/xyz");
+            assert!(result.is_err());
+        }
+
+        #[test]
+        fn test_parse_unknown_quality_fails() {
+            let result = parse_to_ast("Cxyz");
+            assert!(result.is_err());
+            assert!(result.unwrap_err().to_string().contains("Unknown chord quality"));
+        }
+
+        #[test]
+        fn test_parse_sus4_chord() {
+            let result = parse_to_ast("Csus4").unwrap();
+            match result {
+                ASTRoot::SingleChord(chord) => {
+                    assert_eq!(chord.quality, ChordQuality::Sus4);
+                }
+                _ => panic!("Expected SingleChord"),
+            }
+        }
+
+        #[test]
+        fn test_parse_dim_chord() {
+            let result = parse_to_ast("Cdim").unwrap();
+            match result {
+                ASTRoot::SingleChord(chord) => {
+                    assert_eq!(chord.quality, ChordQuality::Diminished);
+                }
+                _ => panic!("Expected SingleChord"),
+            }
+        }
+
+        #[test]
+        fn test_parse_aug_chord() {
+            let result = parse_to_ast("Caug").unwrap();
+            match result {
+                ASTRoot::SingleChord(chord) => {
+                    assert_eq!(chord.quality, ChordQuality::Augmented);
+                }
+                _ => panic!("Expected SingleChord"),
+            }
+        }
+    }
+}
 
 {% endraw %}
 ```
 
 ## 最近の変更（過去7日間）
 ### コミット履歴:
-
+7aba882 Add issue note for #22 [auto]
+4edef66 Add issue note for #21 [auto]
+3f3fdbd Add issue note for #20 [auto]
+e59ece1 Add issue note for #19 [auto]
+1aac07f Auto-translate README.ja.md to README.md [auto]
+917f458 Update README implementation status to reflect actual chord support (#16)
+e94821f Add issue note for #17 [auto]
+be32b74 Implement Tree-sitter based parser with WASM-compatible fallback for browser deployment (#14)
+f47a1ce Add issue note for #15 [auto]
+24e01e3 Add issue note for #13 [auto]
 
 ### 変更されたファイル:
-
+README.ja.md
+README.md
+issue-notes/17.md
+issue-notes/19.md
+issue-notes/20.md
+issue-notes/21.md
+issue-notes/22.md
 
 
 ---
-Generated at: 2026-01-12 07:01:38 JST
+Generated at: 2026-01-13 07:01:40 JST
