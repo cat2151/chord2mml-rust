@@ -43,6 +43,21 @@
     }
   },
   {
+    "type": "chord_progression",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "chord",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "quality",
     "named": true,
     "fields": {}
@@ -77,6 +92,10 @@
         {
           "type": "chord",
           "named": true
+        },
+        {
+          "type": "chord_progression",
+          "named": true
         }
       ]
     }
@@ -87,6 +106,10 @@
   },
   {
     "type": "+",
+    "named": false
+  },
+  {
+    "type": "-",
     "named": false
   },
   {

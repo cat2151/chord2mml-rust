@@ -1,12 +1,22 @@
 // TreeSitter grammar for chord notation
 // Supports basic chord parsing: C, Dm, G7, etc.
+// Also supports chord progressions: C-F-G-C
 
 module.exports = grammar({
   name: 'chord',
 
   rules: {
-    // Entry point: a chord notation
-    source_file: $ => $.chord,
+    // Entry point: can be a single chord or a chord progression
+    source_file: $ => choice(
+      $.chord_progression,
+      $.chord
+    ),
+
+    // Chord progression: one or more chords separated by hyphens
+    chord_progression: $ => seq(
+      $.chord,
+      repeat1(seq('-', $.chord))
+    ),
 
     // A chord consists of: root + optional quality + optional bass
     chord: $ => seq(

@@ -1,0 +1,16 @@
+[package]
+name = "chord2mml-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "CLI application for converting chord notation to MML"
+
+[[bin]]
+name = "chord2mml"
+path = "src/main.rs"
+
+[dependencies]
+chord2mml-core = { path = "../chord2mml-core" }
+anyhow.workspace = true

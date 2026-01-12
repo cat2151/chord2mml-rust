@@ -3,7 +3,12 @@
   "version": "0.1.0",
   "description": "TreeSitter grammar for chord notation",
   "main": "bindings/node",
-  "keywords": ["tree-sitter", "parser", "chord", "music"],
+  "keywords": [
+    "tree-sitter",
+    "parser",
+    "chord",
+    "music"
+  ],
   "author": "cat2151",
   "license": "MIT",
   "dependencies": {
@@ -15,7 +20,9 @@
   "tree-sitter": [
     {
       "scope": "source.chord",
-      "file-types": ["chord"],
+      "file-types": [
+        "chord"
+      ],
       "highlights": "queries/highlights.scm"
     }
   ]

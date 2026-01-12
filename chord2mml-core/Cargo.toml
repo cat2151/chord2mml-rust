@@ -13,8 +13,6 @@ crate-type = ["lib"]
 [dependencies]
 anyhow.workspace = true
 thiserror.workspace = true
-
-[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 tree-sitter = "0.20"
 tree-sitter-chord = { path = "../tree-sitter-chord" }
 
