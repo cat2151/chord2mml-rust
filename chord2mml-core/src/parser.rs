@@ -124,9 +124,8 @@ fn parse_chord_manual(input: &str) -> Result<ASTChord> {
     })
 }
 
-/// Parse chord quality from string
-#[cfg(not(feature = "tree-sitter"))]
-fn parse_quality_manual(quality_str: &str) -> Result<ChordQuality> {
+/// Parse chord quality from string (shared by both parsers)
+fn parse_chord_quality(quality_str: &str) -> Result<ChordQuality> {
     match quality_str {
         "" => Ok(ChordQuality::Major),
         "m" => Ok(ChordQuality::Minor),
@@ -138,6 +137,12 @@ fn parse_quality_manual(quality_str: &str) -> Result<ChordQuality> {
         "sus2" => Ok(ChordQuality::Sus2),
         _ => Err(anyhow!("Unknown chord quality: {}", quality_str)),
     }
+}
+
+/// Parse chord quality from string
+#[cfg(not(feature = "tree-sitter"))]
+fn parse_quality_manual(quality_str: &str) -> Result<ChordQuality> {
+    parse_chord_quality(quality_str)
 }
 
 /// Parse chord notation using TreeSitter, convert CST to AST
@@ -270,14 +275,5 @@ fn parse_chord_node(chord_node: &tree_sitter::Node, source: &str) -> Result<ASTC
 /// Parse chord quality text into ChordQuality enum
 #[cfg(feature = "tree-sitter")]
 fn parse_quality_text(quality_text: &str) -> Result<ChordQuality> {
-    match quality_text {
-        "m" => Ok(ChordQuality::Minor),
-        "maj7" | "M7" => Ok(ChordQuality::Major7),
-        "7" => Ok(ChordQuality::Dominant7),
-        "dim" => Ok(ChordQuality::Diminished),
-        "aug" | "+" => Ok(ChordQuality::Augmented),
-        "sus4" => Ok(ChordQuality::Sus4),
-        "sus2" => Ok(ChordQuality::Sus2),
-        _ => Err(anyhow!("Unknown chord quality: {}", quality_text)),
-    }
+    parse_chord_quality(quality_text)
 }

@@ -11,12 +11,15 @@ class SimpleAudioSequencer implements AudioSequencer {
     private audioContext: AudioContext | null = null;
     private oscillators: OscillatorNode[] = [];
 
-    constructor() {
-        this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    private getAudioContext(): AudioContext {
+        if (!this.audioContext) {
+            this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        }
+        return this.audioContext;
     }
 
     async play(mml: string): Promise<void> {
-        if (!this.audioContext) return;
+        const audioContext = this.getAudioContext();
 
         // Stop any currently playing notes
         this.stop();
@@ -33,15 +36,15 @@ class SimpleAudioSequencer implements AudioSequencer {
             'g-': 369.99, 'a-': 415.30, 'b-': 466.16
         };
 
-        const now = this.audioContext.currentTime;
+        const now = audioContext.currentTime;
         const duration = 1.0; // 1 second
 
         // Play each note simultaneously (chord)
         notes.forEach((note) => {
             const freq = noteFrequencies[note.toLowerCase()];
             if (freq) {
-                const oscillator = this.audioContext!.createOscillator();
-                const gainNode = this.audioContext!.createGain();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
                 
                 oscillator.type = 'sine';
                 oscillator.frequency.setValueAtTime(freq, now);
@@ -50,7 +53,7 @@ class SimpleAudioSequencer implements AudioSequencer {
                 gainNode.gain.exponentialRampToValueAtTime(0.01, now + duration);
                 
                 oscillator.connect(gainNode);
-                gainNode.connect(this.audioContext!.destination);
+                gainNode.connect(audioContext.destination);
                 
                 oscillator.start(now);
                 oscillator.stop(now + duration);
