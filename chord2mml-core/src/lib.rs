@@ -271,6 +271,8 @@ fn note_to_mml(note: &str, accidental: &Option<Accidental>) -> String {
 /// # Panics
 /// 
 /// This function panics if the input note is not a valid MML note.
+/// For example, if an invalid note such as `"xyz"` or `"h"` is passed,
+/// this function will panic.
 /// This should never happen in normal operation as notes are only produced
 /// by the `note_to_mml` function, which guarantees valid output.
 /// A panic here indicates a programming error in the library itself.
@@ -281,7 +283,7 @@ fn transpose_note(note: &str, semitones: i32) -> String {
     // INVARIANT: notes should only come from our own note_to_mml function
     // which guarantees valid MML note format. If this fails, it's a bug in our code.
     let current_index = notes.iter().position(|&n| n == note)
-        .unwrap_or_else(|| panic!("Internal invariant violation: invalid note '{}' passed to transpose_note. This is a bug in chord2mml-core.", note));
+        .unwrap_or_else(|| panic!("Internal invariant violation: invalid note '{note}' passed to transpose_note. This is a bug in chord2mml-core."));
     
     // Calculate new index with wrapping
     let new_index = ((current_index as i32 + semitones) % 12 + 12) % 12;
