@@ -36,7 +36,7 @@ fn process_input(input: &str) -> Result<()> {
         }
         Err(e) => {
             eprintln!("Error: {}", e);
-            Err(e)
+            std::process::exit(1);
         }
     }
 }
