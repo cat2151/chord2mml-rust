@@ -136,9 +136,6 @@ fn parse_chord_manual(input: &str) -> Result<ASTChord> {
 #[cfg(not(feature = "tree-sitter"))]
 fn validate_bass_note(bass_str: &str) -> Result<()> {
     let chars: Vec<char> = bass_str.chars().collect();
-    if chars.is_empty() {
-        return Err(anyhow!("Empty bass note"));
-    }
     
     // First character must be A-G
     if !matches!(chars[0], 'A'..='G') {
