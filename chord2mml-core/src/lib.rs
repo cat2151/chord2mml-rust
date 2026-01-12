@@ -50,12 +50,14 @@ struct ASTChord {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+#[allow(dead_code)]
 enum Accidental {
     Sharp,
     Flat,
 }
 
 #[derive(Debug, Clone, PartialEq)]
+#[allow(dead_code)]
 enum ChordQuality {
     Major,
     Minor,
