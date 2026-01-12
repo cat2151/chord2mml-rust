@@ -7,7 +7,7 @@ use tree_sitter::Parser;
 use crate::ast::{ASTChord, ASTRoot, Accidental, ChordQuality};
 
 /// Parse chord notation using TreeSitter, convert CST to AST
-pub fn parse_to_ast(input: &str) -> Result<ASTRoot> {
+pub(crate) fn parse_to_ast(input: &str) -> Result<ASTRoot> {
     let mut parser = Parser::new();
     parser
         .set_language(tree_sitter_chord::language())
@@ -92,25 +92,26 @@ fn parse_chord_node(chord_node: &tree_sitter::Node, source: &str) -> Result<ASTC
     };
     
     // Extract quality (optional)
-    let quality = if let Some(quality_node) = chord_node.child_by_field_name("quality") {
-        let quality_text = quality_node.utf8_text(source.as_bytes())
-            .map_err(|e| anyhow!("Failed to extract quality text: {}", e))?;
-        
-        parse_quality_text(quality_text)?
-    } else {
-        // Check if there's a second child that's a quality
-        let mut found_quality = ChordQuality::Major;
+    let mut quality_node_opt = chord_node.child_by_field_name("quality");
+    if quality_node_opt.is_none() {
+        // Fallback: search all children for a quality node
         let mut cursor = chord_node.walk();
         for child in chord_node.children(&mut cursor) {
             if child.kind() == "quality" {
-                let quality_text = child.utf8_text(source.as_bytes())
-                    .map_err(|e| anyhow!("Failed to extract quality text: {}", e))?;
-                
-                found_quality = parse_quality_text(quality_text)?;
+                quality_node_opt = Some(child);
                 break;
             }
         }
-        found_quality
+    }
+
+    let quality = if let Some(quality_node) = quality_node_opt {
+        let quality_text = quality_node.utf8_text(source.as_bytes())
+            .map_err(|e| anyhow!("Failed to extract quality text: {}", e))?;
+
+        parse_quality_text(quality_text)?
+    } else {
+        // Default to major when no explicit quality is present
+        ChordQuality::Major
     };
     
     // Extract bass (optional) 

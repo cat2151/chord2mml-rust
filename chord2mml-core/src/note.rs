@@ -5,7 +5,7 @@
 use crate::ast::Accidental;
 
 /// Convert note name to MML format (lowercase with accidentals)
-pub fn note_to_mml(note: &str, accidental: &Option<Accidental>) -> String {
+pub(crate) fn note_to_mml(note: &str, accidental: &Option<Accidental>) -> String {
     let mut mml = note.to_lowercase();
     if let Some(acc) = accidental {
         match acc {
@@ -26,7 +26,7 @@ pub fn note_to_mml(note: &str, accidental: &Option<Accidental>) -> String {
 /// This should never happen in normal operation as notes are only produced
 /// by the `note_to_mml` function, which guarantees valid output.
 /// A panic here indicates a programming error in the library itself.
-pub fn transpose_note(note: &str, semitones: i32) -> String {
+pub(crate) fn transpose_note(note: &str, semitones: i32) -> String {
     // Simple note names in chromatic order (C, C#, D, D#, E, F, F#, G, G#, A, A#, B)
     let notes = ["c", "c+", "d", "d+", "e", "f", "f+", "g", "g+", "a", "a+", "b"];
     

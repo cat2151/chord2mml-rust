@@ -7,7 +7,7 @@ use crate::ast::{ASTChord, ASTRoot, ChordQuality};
 use crate::note::{note_to_mml, transpose_note};
 
 /// Convert AST to MML notes
-pub fn ast_to_mml(ast: &ASTRoot) -> Result<String> {
+pub(crate) fn ast_to_mml(ast: &ASTRoot) -> Result<String> {
     match ast {
         ASTRoot::SingleChord(chord) => chord_to_mml(chord),
         ASTRoot::ChordProgression(chords) => {
@@ -22,7 +22,7 @@ pub fn ast_to_mml(ast: &ASTRoot) -> Result<String> {
 }
 
 /// Convert a single chord to MML
-pub fn chord_to_mml(chord: &ASTChord) -> Result<String> {
+pub(crate) fn chord_to_mml(chord: &ASTChord) -> Result<String> {
     // Get the root note in MML format (lowercase)
     let root = note_to_mml(&chord.root, &chord.accidental);
     
