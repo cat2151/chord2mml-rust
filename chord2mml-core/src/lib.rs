@@ -50,14 +50,14 @@ struct ASTChord {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-#[allow(dead_code)]
+#[cfg_attr(target_arch = "wasm32", allow(dead_code))]
 enum Accidental {
     Sharp,
     Flat,
 }
 
 #[derive(Debug, Clone, PartialEq)]
-#[allow(dead_code)]
+#[cfg_attr(target_arch = "wasm32", allow(dead_code))]
 enum ChordQuality {
     Major,
     Minor,
