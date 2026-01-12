@@ -1,13 +1,148 @@
 //! Parser module for converting chord notation to AST
 //!
-//! This module handles Tree-sitter parsing and conversion from CST to AST.
+//! This module handles parsing and conversion to AST.
+//! - With tree-sitter feature: uses Tree-sitter for robust parsing
+//! - Without tree-sitter feature: uses manual parsing for WASM compatibility
 
 use anyhow::{anyhow, Result};
-use tree_sitter::Parser;
 use crate::ast::{ASTChord, ASTRoot, Accidental, ChordQuality};
 
-/// Parse chord notation using TreeSitter, convert CST to AST
+#[cfg(feature = "tree-sitter")]
+use tree_sitter::Parser;
+
+/// Parse chord notation using TreeSitter or manual parser, convert to AST
 pub(crate) fn parse_to_ast(input: &str) -> Result<ASTRoot> {
+    #[cfg(feature = "tree-sitter")]
+    {
+        parse_to_ast_tree_sitter(input)
+    }
+    
+    #[cfg(not(feature = "tree-sitter"))]
+    {
+        parse_to_ast_manual(input)
+    }
+}
+
+/// Manual parser for chord notation (used when tree-sitter feature is disabled)
+#[cfg(not(feature = "tree-sitter"))]
+fn parse_to_ast_manual(input: &str) -> Result<ASTRoot> {
+    let input = input.trim();
+    
+    // Check for chord progression (contains hyphens)
+    if input.contains('-') {
+        let chord_strs: Vec<&str> = input.split('-').collect();
+        let mut chords = Vec::new();
+        
+        for chord_str in chord_strs {
+            let chord_str = chord_str.trim();
+            if !chord_str.is_empty() {
+                chords.push(parse_chord_manual(chord_str)?);
+            }
+        }
+        
+        if chords.is_empty() {
+            return Err(anyhow!("No valid chords found in progression"));
+        }
+        
+        Ok(ASTRoot::ChordProgression(chords))
+    } else {
+        // Single chord
+        let chord = parse_chord_manual(input)?;
+        Ok(ASTRoot::SingleChord(chord))
+    }
+}
+
+/// Parse a single chord string manually
+#[cfg(not(feature = "tree-sitter"))]
+fn parse_chord_manual(input: &str) -> Result<ASTChord> {
+    let chars: Vec<char> = input.chars().collect();
+    if chars.is_empty() {
+        return Err(anyhow!("Empty chord notation"));
+    }
+    
+    let mut index = 0;
+    
+    // Parse root note (A-G)
+    let root = chars[index];
+    if !matches!(root, 'A'..='G') {
+        return Err(anyhow!("Invalid root note: {}", root));
+    }
+    index += 1;
+    
+    // Parse accidental (#, b) if present
+    let accidental = if index < chars.len() {
+        match chars[index] {
+            '#' => {
+                index += 1;
+                Some(Accidental::Sharp)
+            }
+            'b' => {
+                index += 1;
+                Some(Accidental::Flat)
+            }
+            _ => None,
+        }
+    } else {
+        None
+    };
+    
+    // Parse quality (m, maj7, M7, 7, dim, aug, +, sus4, sus2, etc.)
+    let quality = if index < chars.len() {
+        let remaining: String = chars[index..].iter().collect();
+        
+        // Check for slash chord (bass note) first
+        if let Some(slash_pos) = remaining.find('/') {
+            let quality_str = &remaining[..slash_pos];
+            let quality = parse_quality_manual(quality_str)?;
+            
+            // Parse bass note (everything after /)
+            let bass_str = &remaining[slash_pos + 1..];
+            let bass = if !bass_str.is_empty() {
+                Some(bass_str.to_string())
+            } else {
+                None
+            };
+            
+            return Ok(ASTChord {
+                root: root.to_string(),
+                accidental,
+                quality,
+                bass,
+            });
+        } else {
+            parse_quality_manual(&remaining)?
+        }
+    } else {
+        ChordQuality::Major
+    };
+    
+    Ok(ASTChord {
+        root: root.to_string(),
+        accidental,
+        quality,
+        bass: None,
+    })
+}
+
+/// Parse chord quality from string
+#[cfg(not(feature = "tree-sitter"))]
+fn parse_quality_manual(quality_str: &str) -> Result<ChordQuality> {
+    match quality_str {
+        "" => Ok(ChordQuality::Major),
+        "m" => Ok(ChordQuality::Minor),
+        "maj7" | "M7" => Ok(ChordQuality::Major7),
+        "7" => Ok(ChordQuality::Dominant7),
+        "dim" => Ok(ChordQuality::Diminished),
+        "aug" | "+" => Ok(ChordQuality::Augmented),
+        "sus4" => Ok(ChordQuality::Sus4),
+        "sus2" => Ok(ChordQuality::Sus2),
+        _ => Err(anyhow!("Unknown chord quality: {}", quality_str)),
+    }
+}
+
+/// Parse chord notation using TreeSitter, convert CST to AST
+#[cfg(feature = "tree-sitter")]
+fn parse_to_ast_tree_sitter(input: &str) -> Result<ASTRoot> {
     let mut parser = Parser::new();
     parser
         .set_language(tree_sitter_chord::language())
@@ -58,6 +193,7 @@ pub(crate) fn parse_to_ast(input: &str) -> Result<ASTRoot> {
 }
 
 /// Parse a single chord node from the CST
+#[cfg(feature = "tree-sitter")]
 fn parse_chord_node(chord_node: &tree_sitter::Node, source: &str) -> Result<ASTChord> {
     if chord_node.kind() != "chord" {
         return Err(anyhow!("Expected chord node, got: {}", chord_node.kind()));
@@ -132,6 +268,7 @@ fn parse_chord_node(chord_node: &tree_sitter::Node, source: &str) -> Result<ASTC
 }
 
 /// Parse chord quality text into ChordQuality enum
+#[cfg(feature = "tree-sitter")]
 fn parse_quality_text(quality_text: &str) -> Result<ChordQuality> {
     match quality_text {
         "m" => Ok(ChordQuality::Minor),
