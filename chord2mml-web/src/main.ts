@@ -32,7 +32,7 @@ class SimpleAudioSequencer implements AudioSequencer {
             'c': 261.63, 'c+': 277.18, 'd': 293.66, 'd+': 311.13,
             'e': 329.63, 'f': 349.23, 'f+': 369.99, 'g': 392.00,
             'g+': 415.30, 'a': 440.00, 'a+': 466.16, 'b': 493.88,
-            'c-': 246.94, 'd-': 277.18, 'e-': 311.13, 'f-': 329.63,
+            'c-': 493.88, 'd-': 277.18, 'e-': 311.13, 'f-': 329.63,
             'g-': 369.99, 'a-': 415.30, 'b-': 466.16
         };
 
@@ -58,14 +58,17 @@ class SimpleAudioSequencer implements AudioSequencer {
                 oscillator.start(now);
                 oscillator.stop(now + duration);
                 
+                // Clean up oscillator when it ends
+                oscillator.onended = () => {
+                    const index = this.oscillators.indexOf(oscillator);
+                    if (index > -1) {
+                        this.oscillators.splice(index, 1);
+                    }
+                };
+                
                 this.oscillators.push(oscillator);
             }
         });
-
-        // Clear oscillators after playback
-        setTimeout(() => {
-            this.oscillators = [];
-        }, duration * 1000 + 100);
     }
 
     stop(): void {
@@ -73,7 +76,10 @@ class SimpleAudioSequencer implements AudioSequencer {
             try {
                 osc.stop();
             } catch (e) {
-                // Oscillator might already be stopped
+                // Oscillator might already be stopped; ignore only InvalidStateError
+                if (!(e instanceof DOMException && e.name === 'InvalidStateError')) {
+                    console.error('Error while stopping oscillator:', e);
+                }
             }
         });
         this.oscillators = [];

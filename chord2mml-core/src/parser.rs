@@ -65,6 +65,12 @@ fn parse_chord_manual(input: &str) -> Result<ASTChord> {
     // Parse root note (A-G)
     let root = chars[index];
     if !matches!(root, 'A'..='G') {
+        if matches!(root, 'a'..='g') {
+            return Err(anyhow!(
+                "Invalid root note '{}': root note must be uppercase A-G",
+                root
+            ));
+        }
         return Err(anyhow!("Invalid root note: {}", root));
     }
     index += 1;
@@ -98,9 +104,11 @@ fn parse_chord_manual(input: &str) -> Result<ASTChord> {
             // Parse bass note (everything after /)
             let bass_str = &remaining[slash_pos + 1..];
             let bass = if !bass_str.is_empty() {
+                // Validate bass note format (should be A-G with optional accidental)
+                validate_bass_note(bass_str)?;
                 Some(bass_str.to_string())
             } else {
-                None
+                return Err(anyhow!("Empty bass note after '/' in slash chord"));
             };
             
             return Ok(ASTChord {
@@ -122,6 +130,32 @@ fn parse_chord_manual(input: &str) -> Result<ASTChord> {
         quality,
         bass: None,
     })
+}
+
+/// Validate bass note format (A-G with optional accidental #, b)
+#[cfg(not(feature = "tree-sitter"))]
+fn validate_bass_note(bass_str: &str) -> Result<()> {
+    let chars: Vec<char> = bass_str.chars().collect();
+    if chars.is_empty() {
+        return Err(anyhow!("Empty bass note"));
+    }
+    
+    // First character must be A-G
+    if !matches!(chars[0], 'A'..='G') {
+        return Err(anyhow!("Invalid bass note '{}': must start with A-G", bass_str));
+    }
+    
+    // Optional second character must be # or b
+    if chars.len() > 1 && !matches!(chars[1], '#' | 'b') {
+        return Err(anyhow!("Invalid bass note '{}': accidental must be # or b", bass_str));
+    }
+    
+    // No more than 2 characters allowed
+    if chars.len() > 2 {
+        return Err(anyhow!("Invalid bass note '{}': too many characters", bass_str));
+    }
+    
+    Ok(())
 }
 
 /// Parse chord quality from string (shared by both parsers)
@@ -276,4 +310,197 @@ fn parse_chord_node(chord_node: &tree_sitter::Node, source: &str) -> Result<ASTC
 #[cfg(feature = "tree-sitter")]
 fn parse_quality_text(quality_text: &str) -> Result<ChordQuality> {
     parse_chord_quality(quality_text)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // Tests for manual parser (without tree-sitter feature)
+    #[cfg(not(feature = "tree-sitter"))]
+    mod manual_parser_tests {
+        use super::*;
+
+        #[test]
+        fn test_parse_basic_major_chord() {
+            let result = parse_to_ast("C").unwrap();
+            match result {
+                ASTRoot::SingleChord(chord) => {
+                    assert_eq!(chord.root, "C");
+                    assert_eq!(chord.accidental, None);
+                    assert_eq!(chord.quality, ChordQuality::Major);
+                    assert_eq!(chord.bass, None);
+                }
+                _ => panic!("Expected SingleChord"),
+            }
+        }
+
+        #[test]
+        fn test_parse_chord_with_sharp() {
+            let result = parse_to_ast("C#").unwrap();
+            match result {
+                ASTRoot::SingleChord(chord) => {
+                    assert_eq!(chord.root, "C");
+                    assert_eq!(chord.accidental, Some(Accidental::Sharp));
+                    assert_eq!(chord.quality, ChordQuality::Major);
+                }
+                _ => panic!("Expected SingleChord"),
+            }
+        }
+
+        #[test]
+        fn test_parse_chord_with_flat() {
+            let result = parse_to_ast("Db").unwrap();
+            match result {
+                ASTRoot::SingleChord(chord) => {
+                    assert_eq!(chord.root, "D");
+                    assert_eq!(chord.accidental, Some(Accidental::Flat));
+                    assert_eq!(chord.quality, ChordQuality::Major);
+                }
+                _ => panic!("Expected SingleChord"),
+            }
+        }
+
+        #[test]
+        fn test_parse_minor_chord() {
+            let result = parse_to_ast("Dm").unwrap();
+            match result {
+                ASTRoot::SingleChord(chord) => {
+                    assert_eq!(chord.root, "D");
+                    assert_eq!(chord.quality, ChordQuality::Minor);
+                }
+                _ => panic!("Expected SingleChord"),
+            }
+        }
+
+        #[test]
+        fn test_parse_seventh_chord() {
+            let result = parse_to_ast("G7").unwrap();
+            match result {
+                ASTRoot::SingleChord(chord) => {
+                    assert_eq!(chord.root, "G");
+                    assert_eq!(chord.quality, ChordQuality::Dominant7);
+                }
+                _ => panic!("Expected SingleChord"),
+            }
+        }
+
+        #[test]
+        fn test_parse_major7_chord() {
+            let result = parse_to_ast("CM7").unwrap();
+            match result {
+                ASTRoot::SingleChord(chord) => {
+                    assert_eq!(chord.root, "C");
+                    assert_eq!(chord.quality, ChordQuality::Major7);
+                }
+                _ => panic!("Expected SingleChord"),
+            }
+        }
+
+        #[test]
+        fn test_parse_slash_chord() {
+            let result = parse_to_ast("C/E").unwrap();
+            match result {
+                ASTRoot::SingleChord(chord) => {
+                    assert_eq!(chord.root, "C");
+                    assert_eq!(chord.quality, ChordQuality::Major);
+                    assert_eq!(chord.bass, Some("E".to_string()));
+                }
+                _ => panic!("Expected SingleChord"),
+            }
+        }
+
+        #[test]
+        fn test_parse_slash_chord_with_accidental() {
+            let result = parse_to_ast("C/F#").unwrap();
+            match result {
+                ASTRoot::SingleChord(chord) => {
+                    assert_eq!(chord.root, "C");
+                    assert_eq!(chord.bass, Some("F#".to_string()));
+                }
+                _ => panic!("Expected SingleChord"),
+            }
+        }
+
+        #[test]
+        fn test_parse_chord_progression() {
+            let result = parse_to_ast("C-F-G-C").unwrap();
+            match result {
+                ASTRoot::ChordProgression(chords) => {
+                    assert_eq!(chords.len(), 4);
+                    assert_eq!(chords[0].root, "C");
+                    assert_eq!(chords[1].root, "F");
+                    assert_eq!(chords[2].root, "G");
+                    assert_eq!(chords[3].root, "C");
+                }
+                _ => panic!("Expected ChordProgression"),
+            }
+        }
+
+        #[test]
+        fn test_parse_lowercase_root_fails() {
+            let result = parse_to_ast("c");
+            assert!(result.is_err());
+            assert!(result.unwrap_err().to_string().contains("uppercase"));
+        }
+
+        #[test]
+        fn test_parse_invalid_root_note() {
+            let result = parse_to_ast("H");
+            assert!(result.is_err());
+        }
+
+        #[test]
+        fn test_parse_empty_bass_note_fails() {
+            let result = parse_to_ast("C/");
+            assert!(result.is_err());
+            assert!(result.unwrap_err().to_string().contains("Empty bass note"));
+        }
+
+        #[test]
+        fn test_parse_invalid_bass_note_fails() {
+            let result = parse_to_ast("C/xyz");
+            assert!(result.is_err());
+        }
+
+        #[test]
+        fn test_parse_unknown_quality_fails() {
+            let result = parse_to_ast("Cxyz");
+            assert!(result.is_err());
+            assert!(result.unwrap_err().to_string().contains("Unknown chord quality"));
+        }
+
+        #[test]
+        fn test_parse_sus4_chord() {
+            let result = parse_to_ast("Csus4").unwrap();
+            match result {
+                ASTRoot::SingleChord(chord) => {
+                    assert_eq!(chord.quality, ChordQuality::Sus4);
+                }
+                _ => panic!("Expected SingleChord"),
+            }
+        }
+
+        #[test]
+        fn test_parse_dim_chord() {
+            let result = parse_to_ast("Cdim").unwrap();
+            match result {
+                ASTRoot::SingleChord(chord) => {
+                    assert_eq!(chord.quality, ChordQuality::Diminished);
+                }
+                _ => panic!("Expected SingleChord"),
+            }
+        }
+
+        #[test]
+        fn test_parse_aug_chord() {
+            let result = parse_to_ast("Caug").unwrap();
+            match result {
+                ASTRoot::SingleChord(chord) => {
+                    assert_eq!(chord.quality, ChordQuality::Augmented);
+                }
+                _ => panic!("Expected SingleChord"),
+            }
+        }
+    }
 }
