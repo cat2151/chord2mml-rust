@@ -1,8 +1,5 @@
 use anyhow::{anyhow, Result};
 
-#[cfg(not(target_arch = "wasm32"))]
-use tree_sitter::Parser;
-
 /// Convert a chord notation to MML (Music Macro Language) format
 /// 
 /// # Example
@@ -28,19 +25,11 @@ pub fn convert(chord: &str) -> Result<String> {
         ));
     }
     
-    // Use TreeSitter for native builds, simple parser for WASM
-    #[cfg(not(target_arch = "wasm32"))]
-    {
-        parse_and_convert_treesitter(chord)
-    }
-    
-    #[cfg(target_arch = "wasm32")]
-    {
-        parse_and_convert_simple(chord)
-    }
+    // Use pure Rust parser for all builds (native and WASM)
+    parse_and_convert(chord)
 }
 
-/// AST structure representing a chord (abstracted from CST)
+/// AST structure representing a chord
 #[derive(Debug, Clone, PartialEq)]
 struct ASTChord {
     root: String,
@@ -50,14 +39,12 @@ struct ASTChord {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(target_arch = "wasm32", allow(dead_code))]
 enum Accidental {
     Sharp,
     Flat,
 }
 
 #[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(target_arch = "wasm32", allow(dead_code))]
 enum ChordQuality {
     Major,
     Minor,
@@ -69,127 +56,99 @@ enum ChordQuality {
     Sus2,
 }
 
-/// Parse chord notation using TreeSitter, convert to AST, and then to MML
-#[cfg(not(target_arch = "wasm32"))]
-fn parse_and_convert_treesitter(chord: &str) -> Result<String> {
-    let mut parser = Parser::new();
-    parser
-        .set_language(tree_sitter_chord::language())
-        .map_err(|e| anyhow!("Failed to set TreeSitter language: {}", e))?;
+/// Parse chord notation using pure Rust parser, convert to AST, and then to MML
+fn parse_and_convert(chord: &str) -> Result<String> {
+    // Parse the chord string into an AST
+    let ast = parse_chord(chord)?;
     
-    let tree = parser
-        .parse(chord, None)
-        .ok_or_else(|| anyhow!("Failed to parse chord notation"))?;
+    // Convert AST to MML
+    ast_to_mml(&ast)
+}
+
+/// Pure Rust parser for chord notation
+fn parse_chord(chord: &str) -> Result<ASTChord> {
+    let chars: Vec<char> = chord.chars().collect();
+    let mut index = 0;
     
-    let root_node = tree.root_node();
-    
-    // Check for parsing errors
-    if root_node.has_error() {
-        return Err(anyhow!("Syntax error in chord notation: {}", chord));
+    if chars.is_empty() {
+        return Err(anyhow!("Empty chord"));
     }
     
-    // Navigate to the chord node
-    let chord_node = if root_node.kind() == "source_file" {
-        root_node.child(0).ok_or_else(|| anyhow!("No chord found in parse tree"))?
-    } else {
-        root_node
-    };
-    
-    if chord_node.kind() != "chord" {
-        return Err(anyhow!("Expected chord node, got: {}", chord_node.kind()));
+    // Parse root note (C, D, E, F, G, A, B)
+    let root = chars[index];
+    if !matches!(root, 'C' | 'D' | 'E' | 'F' | 'G' | 'A' | 'B') {
+        return Err(anyhow!("Invalid root note: {}. Expected C, D, E, F, G, A, or B", root));
     }
+    index += 1;
     
-    // Extract root note
-    let root_node = chord_node
-        .child_by_field_name("root")
-        .or_else(|| chord_node.child(0))
-        .ok_or_else(|| anyhow!("No root node found"))?;
-    
-    let note_node = root_node.child_by_field_name("note")
-        .or_else(|| root_node.child(0))
-        .ok_or_else(|| anyhow!("No note found in root"))?;
-    
-    let note = note_node.utf8_text(chord.as_bytes())
-        .map_err(|e| anyhow!("Failed to extract note text: {}", e))?
-        .to_string();
-    
-    let accidental = if let Some(acc_node) = root_node.child_by_field_name("accidental")
-        .or_else(|| root_node.child(1))
-    {
-        let acc_text = acc_node.utf8_text(chord.as_bytes())
-            .map_err(|e| anyhow!("Failed to extract accidental text: {}", e))?;
-        match acc_text {
-            "#" => Some(Accidental::Sharp),
-            "b" => Some(Accidental::Flat),
+    // Parse accidental (# or b)
+    let accidental = if index < chars.len() {
+        match chars[index] {
+            '#' => {
+                index += 1;
+                Some(Accidental::Sharp)
+            }
+            'b' => {
+                index += 1;
+                Some(Accidental::Flat)
+            }
             _ => None,
         }
     } else {
         None
     };
     
-    // Extract quality (optional)
-    let quality = if let Some(quality_node) = chord_node.child_by_field_name("quality") {
-        let quality_text = quality_node.utf8_text(chord.as_bytes())
-            .map_err(|e| anyhow!("Failed to extract quality text: {}", e))?;
+    // Parse quality (m, maj7, 7, dim, aug, sus4, sus2, etc.)
+    let quality = if index < chars.len() {
+        let remaining: String = chars[index..].iter().collect();
         
-        match quality_text {
-            "m" => ChordQuality::Minor,
-            "maj7" | "M7" => ChordQuality::Major7,
-            "7" => ChordQuality::Dominant7,
-            "dim" => ChordQuality::Diminished,
-            "aug" | "+" => ChordQuality::Augmented,
-            "sus4" => ChordQuality::Sus4,
-            "sus2" => ChordQuality::Sus2,
-            _ => return Err(anyhow!("Unknown chord quality: {}", quality_text)),
-        }
-    } else {
-        // Check if there's a second child that's a quality
-        if chord_node.child_count() > 1 {
-            if let Some(second_child) = chord_node.child(1) {
-                if second_child.kind() == "quality" {
-                    let quality_text = second_child.utf8_text(chord.as_bytes())
-                        .map_err(|e| anyhow!("Failed to extract quality text: {}", e))?;
-                    
-                    match quality_text {
-                        "m" => ChordQuality::Minor,
-                        "maj7" | "M7" => ChordQuality::Major7,
-                        "7" => ChordQuality::Dominant7,
-                        "dim" => ChordQuality::Diminished,
-                        "aug" | "+" => ChordQuality::Augmented,
-                        "sus4" => ChordQuality::Sus4,
-                        "sus2" => ChordQuality::Sus2,
-                        _ => return Err(anyhow!("Unknown chord quality: {}", quality_text)),
-                    }
-                } else {
-                    ChordQuality::Major
-                }
-            } else {
-                ChordQuality::Major
-            }
+        // Check for multi-character qualities first
+        if remaining.starts_with("maj7") || remaining.starts_with("M7") {
+            index += if remaining.starts_with("maj7") { 4 } else { 2 };
+            ChordQuality::Major7
+        } else if remaining.starts_with("dim") {
+            index += 3;
+            ChordQuality::Diminished
+        } else if remaining.starts_with("aug") || remaining.starts_with("+") {
+            index += if remaining.starts_with("aug") { 3 } else { 1 };
+            ChordQuality::Augmented
+        } else if remaining.starts_with("sus4") {
+            index += 4;
+            ChordQuality::Sus4
+        } else if remaining.starts_with("sus2") {
+            index += 4;
+            ChordQuality::Sus2
+        } else if remaining.starts_with("7") {
+            index += 1;
+            ChordQuality::Dominant7
+        } else if remaining.starts_with("m") {
+            index += 1;
+            ChordQuality::Minor
         } else {
             ChordQuality::Major
         }
+    } else {
+        ChordQuality::Major
     };
     
-    // Extract bass (optional) 
-    let bass = if let Some(bass_node) = chord_node.child_by_field_name("bass") {
-        let bass_text = bass_node.utf8_text(chord.as_bytes())
-            .map_err(|e| anyhow!("Failed to extract bass text: {}", e))?;
-        Some(bass_text.trim_start_matches('/').to_string())
+    // Parse bass note (optional, after /)
+    let bass = if index < chars.len() && chars[index] == '/' {
+        index += 1;
+        if index < chars.len() {
+            Some(chars[index..].iter().collect())
+        } else {
+            None
+        }
     } else {
         None
     };
     
-    // Create AST
-    let ast = ASTChord {
-        root: note,
+    Ok(ASTChord {
+        root: root.to_string(),
         accidental,
         quality,
         bass,
-    };
-    
-    // Convert AST to MML
-    ast_to_mml(&ast)
+    })
 }
 
 /// Convert AST to MML notes
@@ -242,25 +201,6 @@ fn transpose_note(note: &str, semitones: i32) -> String {
     notes[new_index as usize].to_string()
 }
 
-/// Simple parser for WASM builds (no TreeSitter dependency)
-#[cfg(target_arch = "wasm32")]
-fn parse_and_convert_simple(chord: &str) -> Result<String> {
-    // Simple parser that only handles C major for now
-    // This is sufficient for the minimal implementation requirement
-    if chord == "C" {
-        // Create AST directly
-        let ast = ASTChord {
-            root: "C".to_string(),
-            accidental: None,
-            quality: ChordQuality::Major,
-            bass: None,
-        };
-        ast_to_mml(&ast)
-    } else {
-        Err(anyhow!("Unsupported chord: {}. Only 'C' is supported in WASM build.", chord))
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -269,6 +209,12 @@ mod tests {
     fn test_convert_c_major() {
         let result = convert("C").unwrap();
         assert_eq!(result, "c;e;g");
+    }
+
+    #[test]
+    fn test_convert_d_minor() {
+        let result = convert("Dm").unwrap();
+        assert_eq!(result, "d;f;a");
     }
 
     #[test]
