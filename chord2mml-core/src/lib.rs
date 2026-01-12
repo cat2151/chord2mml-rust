@@ -1,43 +1,41 @@
 use anyhow::{anyhow, Result};
-
-#[cfg(not(target_arch = "wasm32"))]
 use tree_sitter::Parser;
 
-/// Convert a chord notation to MML (Music Macro Language) format
+/// Convert a chord notation or chord progression to MML (Music Macro Language) format
+/// 
+/// Supports:
+/// - Single chords: "C" -> "c;e;g"
+/// - Chord progressions: "C-F-G-C" -> "c;e;g f;a;c g;b;d c;e;g"
 /// 
 /// # Example
 /// ```
 /// use chord2mml_core::convert;
 /// 
+/// // Single chord
 /// let mml = convert("C").unwrap();
 /// assert_eq!(mml, "c;e;g");
+/// 
+/// // Chord progression
+/// let mml = convert("C-F-G-C").unwrap();
+/// assert_eq!(mml, "c;e;g f;a;c g;b;d c;e;g");
 /// ```
-pub fn convert(chord: &str) -> Result<String> {
-    let chord = chord.trim();
+pub fn convert(input: &str) -> Result<String> {
+    let input = input.trim();
     
-    if chord.is_empty() {
+    if input.is_empty() {
         return Err(anyhow!(
-            "Empty chord input. Please provide a chord notation (e.g., 'C', 'Dm', 'G7')."
+            "Empty input. Please provide a chord notation (e.g., 'C', 'C-F-G-C')."
         ));
     }
     
     // Validate input length to prevent potential issues
-    if chord.len() > 100 {
+    if input.len() > 1000 {
         return Err(anyhow!(
-            "Chord notation too long (max 100 characters)."
+            "Input too long (max 1000 characters)."
         ));
     }
     
-    // Use TreeSitter for native builds, simple parser for WASM
-    #[cfg(not(target_arch = "wasm32"))]
-    {
-        parse_and_convert_treesitter(chord)
-    }
-    
-    #[cfg(target_arch = "wasm32")]
-    {
-        parse_and_convert_simple(chord)
-    }
+    parse_and_convert_treesitter(input)
 }
 
 /// AST structure representing a chord (abstracted from CST)
@@ -67,32 +65,69 @@ enum ChordQuality {
     Sus2,
 }
 
-/// Parse chord notation using TreeSitter, convert to AST, and then to MML
-#[cfg(not(target_arch = "wasm32"))]
-fn parse_and_convert_treesitter(chord: &str) -> Result<String> {
+/// AST structure representing the input (either a single chord or progression)
+#[derive(Debug, Clone, PartialEq)]
+enum ASTRoot {
+    SingleChord(ASTChord),
+    ChordProgression(Vec<ASTChord>),
+}
+
+/// Parse chord notation using TreeSitter, convert CST to AST, and then to MML
+fn parse_and_convert_treesitter(input: &str) -> Result<String> {
     let mut parser = Parser::new();
     parser
         .set_language(tree_sitter_chord::language())
         .map_err(|e| anyhow!("Failed to set TreeSitter language: {}", e))?;
     
     let tree = parser
-        .parse(chord, None)
+        .parse(input, None)
         .ok_or_else(|| anyhow!("Failed to parse chord notation"))?;
     
     let root_node = tree.root_node();
     
     // Check for parsing errors
     if root_node.has_error() {
-        return Err(anyhow!("Syntax error in chord notation: {}", chord));
+        return Err(anyhow!("Syntax error in chord notation: {}", input));
     }
     
-    // Navigate to the chord node
-    let chord_node = if root_node.kind() == "source_file" {
-        root_node.child(0).ok_or_else(|| anyhow!("No chord found in parse tree"))?
+    // Navigate to the first child (chord or chord_progression)
+    let first_child = if root_node.kind() == "source_file" {
+        root_node.child(0).ok_or_else(|| anyhow!("No content found in parse tree"))?
     } else {
         root_node
     };
     
+    // Convert CST to AST
+    let ast = match first_child.kind() {
+        "chord" => {
+            let chord = parse_chord_node(&first_child, input)?;
+            ASTRoot::SingleChord(chord)
+        }
+        "chord_progression" => {
+            let mut chords = Vec::new();
+            let mut cursor = first_child.walk();
+            
+            for child in first_child.children(&mut cursor) {
+                if child.kind() == "chord" {
+                    chords.push(parse_chord_node(&child, input)?);
+                }
+            }
+            
+            if chords.is_empty() {
+                return Err(anyhow!("No chords found in chord progression"));
+            }
+            
+            ASTRoot::ChordProgression(chords)
+        }
+        _ => return Err(anyhow!("Unexpected node type: {}", first_child.kind())),
+    };
+    
+    // Convert AST to MML
+    ast_to_mml(&ast)
+}
+
+/// Parse a single chord node from the CST
+fn parse_chord_node(chord_node: &tree_sitter::Node, source: &str) -> Result<ASTChord> {
     if chord_node.kind() != "chord" {
         return Err(anyhow!("Expected chord node, got: {}", chord_node.kind()));
     }
@@ -107,14 +142,14 @@ fn parse_and_convert_treesitter(chord: &str) -> Result<String> {
         .or_else(|| root_node.child(0))
         .ok_or_else(|| anyhow!("No note found in root"))?;
     
-    let note = note_node.utf8_text(chord.as_bytes())
+    let note = note_node.utf8_text(source.as_bytes())
         .map_err(|e| anyhow!("Failed to extract note text: {}", e))?
         .to_string();
     
     let accidental = if let Some(acc_node) = root_node.child_by_field_name("accidental")
         .or_else(|| root_node.child(1))
     {
-        let acc_text = acc_node.utf8_text(chord.as_bytes())
+        let acc_text = acc_node.utf8_text(source.as_bytes())
             .map_err(|e| anyhow!("Failed to extract accidental text: {}", e))?;
         match acc_text {
             "#" => Some(Accidental::Sharp),
@@ -127,7 +162,7 @@ fn parse_and_convert_treesitter(chord: &str) -> Result<String> {
     
     // Extract quality (optional)
     let quality = if let Some(quality_node) = chord_node.child_by_field_name("quality") {
-        let quality_text = quality_node.utf8_text(chord.as_bytes())
+        let quality_text = quality_node.utf8_text(source.as_bytes())
             .map_err(|e| anyhow!("Failed to extract quality text: {}", e))?;
         
         match quality_text {
@@ -142,60 +177,67 @@ fn parse_and_convert_treesitter(chord: &str) -> Result<String> {
         }
     } else {
         // Check if there's a second child that's a quality
-        if chord_node.child_count() > 1 {
-            if let Some(second_child) = chord_node.child(1) {
-                if second_child.kind() == "quality" {
-                    let quality_text = second_child.utf8_text(chord.as_bytes())
-                        .map_err(|e| anyhow!("Failed to extract quality text: {}", e))?;
-                    
-                    match quality_text {
-                        "m" => ChordQuality::Minor,
-                        "maj7" | "M7" => ChordQuality::Major7,
-                        "7" => ChordQuality::Dominant7,
-                        "dim" => ChordQuality::Diminished,
-                        "aug" | "+" => ChordQuality::Augmented,
-                        "sus4" => ChordQuality::Sus4,
-                        "sus2" => ChordQuality::Sus2,
-                        _ => return Err(anyhow!("Unknown chord quality: {}", quality_text)),
-                    }
-                } else {
-                    ChordQuality::Major
-                }
-            } else {
-                ChordQuality::Major
+        let mut found_quality = ChordQuality::Major;
+        let mut cursor = chord_node.walk();
+        for child in chord_node.children(&mut cursor) {
+            if child.kind() == "quality" {
+                let quality_text = child.utf8_text(source.as_bytes())
+                    .map_err(|e| anyhow!("Failed to extract quality text: {}", e))?;
+                
+                found_quality = match quality_text {
+                    "m" => ChordQuality::Minor,
+                    "maj7" | "M7" => ChordQuality::Major7,
+                    "7" => ChordQuality::Dominant7,
+                    "dim" => ChordQuality::Diminished,
+                    "aug" | "+" => ChordQuality::Augmented,
+                    "sus4" => ChordQuality::Sus4,
+                    "sus2" => ChordQuality::Sus2,
+                    _ => return Err(anyhow!("Unknown chord quality: {}", quality_text)),
+                };
+                break;
             }
-        } else {
-            ChordQuality::Major
         }
+        found_quality
     };
     
     // Extract bass (optional) 
     let bass = if let Some(bass_node) = chord_node.child_by_field_name("bass") {
-        let bass_text = bass_node.utf8_text(chord.as_bytes())
+        let bass_text = bass_node.utf8_text(source.as_bytes())
             .map_err(|e| anyhow!("Failed to extract bass text: {}", e))?;
         Some(bass_text.trim_start_matches('/').to_string())
     } else {
         None
     };
     
-    // Create AST
-    let ast = ASTChord {
+    Ok(ASTChord {
         root: note,
         accidental,
         quality,
         bass,
-    };
-    
-    // Convert AST to MML
-    ast_to_mml(&ast)
+    })
 }
 
 /// Convert AST to MML notes
-fn ast_to_mml(ast: &ASTChord) -> Result<String> {
+fn ast_to_mml(ast: &ASTRoot) -> Result<String> {
+    match ast {
+        ASTRoot::SingleChord(chord) => chord_to_mml(chord),
+        ASTRoot::ChordProgression(chords) => {
+            let mml_chords: Result<Vec<String>> = chords
+                .iter()
+                .map(|chord| chord_to_mml(chord))
+                .collect();
+            
+            Ok(mml_chords?.join(" "))
+        }
+    }
+}
+
+/// Convert a single chord to MML
+fn chord_to_mml(chord: &ASTChord) -> Result<String> {
     // Get the root note in MML format (lowercase)
-    let root = note_to_mml(&ast.root, &ast.accidental);
+    let root = note_to_mml(&chord.root, &chord.accidental);
     
-    match ast.quality {
+    match chord.quality {
         ChordQuality::Major => {
             // Major chord: root, major third, perfect fifth
             let third = transpose_note(&root, 4); // Major third = 4 semitones
@@ -208,7 +250,7 @@ fn ast_to_mml(ast: &ASTChord) -> Result<String> {
             let fifth = transpose_note(&root, 7); // Perfect fifth = 7 semitones
             Ok(format!("{};{};{}", root, third, fifth))
         }
-        _ => Err(anyhow!("Chord quality not yet implemented: {:?}", ast.quality)),
+        _ => Err(anyhow!("Chord quality not yet implemented: {:?}", chord.quality)),
     }
 }
 
@@ -225,38 +267,28 @@ fn note_to_mml(note: &str, accidental: &Option<Accidental>) -> String {
 }
 
 /// Transpose a note by semitones
+/// 
+/// # Panics
+/// 
+/// This function panics if the input note is not a valid MML note.
+/// For example, if an invalid note such as `"xyz"` or `"h"` is passed,
+/// this function will panic.
+/// This should never happen in normal operation as notes are only produced
+/// by the `note_to_mml` function, which guarantees valid output.
+/// A panic here indicates a programming error in the library itself.
 fn transpose_note(note: &str, semitones: i32) -> String {
     // Simple note names in chromatic order (C, C#, D, D#, E, F, F#, G, G#, A, A#, B)
     let notes = ["c", "c+", "d", "d+", "e", "f", "f+", "g", "g+", "a", "a+", "b"];
     
-    // Find the current note index - if not found, this is a programming error
-    // as notes should only come from our own note_to_mml function
+    // INVARIANT: notes should only come from our own note_to_mml function
+    // which guarantees valid MML note format. If this fails, it's a bug in our code.
     let current_index = notes.iter().position(|&n| n == note)
-        .unwrap_or_else(|| panic!("Internal error: invalid note '{}' passed to transpose_note", note));
+        .unwrap_or_else(|| panic!("Internal invariant violation: invalid note '{note}' passed to transpose_note. This is a bug in chord2mml-core."));
     
     // Calculate new index with wrapping
     let new_index = ((current_index as i32 + semitones) % 12 + 12) % 12;
     
     notes[new_index as usize].to_string()
-}
-
-/// Simple parser for WASM builds (no TreeSitter dependency)
-#[cfg(target_arch = "wasm32")]
-fn parse_and_convert_simple(chord: &str) -> Result<String> {
-    // Simple parser that only handles C major for now
-    // This is sufficient for the minimal implementation requirement
-    if chord == "C" {
-        // Create AST directly
-        let ast = ASTChord {
-            root: "C".to_string(),
-            accidental: None,
-            quality: ChordQuality::Major,
-            bass: None,
-        };
-        ast_to_mml(&ast)
-    } else {
-        Err(anyhow!("Unsupported chord: {}. Only 'C' is supported in WASM build.", chord))
-    }
 }
 
 #[cfg(test)]
@@ -267,6 +299,12 @@ mod tests {
     fn test_convert_c_major() {
         let result = convert("C").unwrap();
         assert_eq!(result, "c;e;g");
+    }
+
+    #[test]
+    fn test_convert_chord_progression() {
+        let result = convert("C-F-G-C").unwrap();
+        assert_eq!(result, "c;e;g f;a;c g;b;d c;e;g");
     }
 
     #[test]
@@ -282,15 +320,39 @@ mod tests {
     }
 
     #[test]
-    fn test_ast_to_mml_c_major() {
-        let ast = ASTChord {
+    fn test_chord_to_mml_c_major() {
+        let chord = ASTChord {
             root: "C".to_string(),
             accidental: None,
             quality: ChordQuality::Major,
             bass: None,
         };
-        let mml = ast_to_mml(&ast).unwrap();
+        let mml = chord_to_mml(&chord).unwrap();
         assert_eq!(mml, "c;e;g");
+    }
+
+    #[test]
+    fn test_chord_to_mml_f_major() {
+        let chord = ASTChord {
+            root: "F".to_string(),
+            accidental: None,
+            quality: ChordQuality::Major,
+            bass: None,
+        };
+        let mml = chord_to_mml(&chord).unwrap();
+        assert_eq!(mml, "f;a;c");
+    }
+
+    #[test]
+    fn test_chord_to_mml_g_major() {
+        let chord = ASTChord {
+            root: "G".to_string(),
+            accidental: None,
+            quality: ChordQuality::Major,
+            bass: None,
+        };
+        let mml = chord_to_mml(&chord).unwrap();
+        assert_eq!(mml, "g;b;d");
     }
 
     #[test]
@@ -305,5 +367,9 @@ mod tests {
         assert_eq!(transpose_note("c", 0), "c");
         assert_eq!(transpose_note("c", 4), "e"); // Major third
         assert_eq!(transpose_note("c", 7), "g"); // Perfect fifth
+        assert_eq!(transpose_note("f", 4), "a"); // F major third
+        assert_eq!(transpose_note("f", 7), "c"); // F perfect fifth
+        assert_eq!(transpose_note("g", 4), "b"); // G major third
+        assert_eq!(transpose_note("g", 7), "d"); // G perfect fifth
     }
 }

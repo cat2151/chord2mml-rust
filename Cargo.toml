@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "chord2mml-core",
+    "chord2mml-cli",
     "chord2mml-wasm",
 ]
 resolver = "2"

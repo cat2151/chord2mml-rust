@@ -16,53 +16,100 @@
 
 ## 概要
 
-このプロジェクトは、[chord2mml](https://github.com/cat2151/chord2mml)で Peggy.js + JavaScript で作っていたものを、Rust + WASM + TypeScript として新たに作り直したものです。
+このプロジェクトは、[chord2mml](https://github.com/cat2151/chord2mml)で Peggy.js + JavaScript で作っていたものを、**Rust + Tree-sitter** として新たに作り直したものです。
 
 ### 主な特徴
 
-- **Rustパーサーコア**: シンプルで高速な文字列マッチングパーサー（将来的にTree-sitterベースに移行予定）
+- **Tree-sitterパーサー**: 堅牢で正確な構文解析
+- **CST→AST変換**: Tree-sitterが生成するCST（具象構文木）をAST（抽象構文木）に変換
+- **純粋なRustネイティブアプリケーション**: text to text の変換に特化
+- **CLIツール**: コマンドラインから直接利用可能
 - **ライブラリクレート**: Rustのネイティブアプリケーションから直接利用可能
-- **WASM対応**: ブラウザ上でも動作
-- **TypeScript統合**: Webアプリケーションとしての利用
 
 ## アーキテクチャ
 
 ```
 chord2mml-rust/
-├── chord2mml-core/     # Rustによる変換コアライブラリ
-├── chord2mml-wasm/     # WASM バインディング
-└── chord2mml-web/      # TypeScript + Webアプリケーション
+├── tree-sitter-chord/   # Tree-sitterグラマー定義
+├── chord2mml-core/      # Rustによる変換コアライブラリ（CST→AST→MML）
+└── chord2mml-cli/       # コマンドラインインターフェース
+```
+
+### データフロー
+
+```
+入力テキスト (例: "C-F-G-C")
+    ↓
+Tree-sitterパーサー
+    ↓
+CST (Concrete Syntax Tree)
+    ↓
+AST変換
+    ↓
+AST (Abstract Syntax Tree)
+    ↓
+MML生成
+    ↓
+出力MML (例: "c;e;g f;a;c g;b;d c;e;g")
 ```
 
 ### コンポーネント
 
-1. **chord2mml-core**: コード進行をパースしてMMLに変換するRustライブラリ
-   - シンプルな文字列マッチングによる構文解析（Phase 3でTree-sitter導入予定）
+1. **tree-sitter-chord**: Tree-sitterグラマー定義
+   - コード記法の構文定義（C、Dm、G7など）
+   - コード進行のサポート（C-F-G-Cなど）
+
+2. **chord2mml-core**: コード進行をパースしてMMLに変換するRustライブラリ
+   - Tree-sitterによる構文解析
+   - CST（具象構文木）からAST（抽象構文木）への変換
+   - ASTからMMLへの変換
    - ネイティブアプリケーションから利用可能
 
-2. **chord2mml-wasm**: WASMバインディング
-   - Rust CoreをWebAssemblyにコンパイル
-   - JavaScriptからの呼び出しインターフェース
-
-3. **chord2mml-web**: ブラウザアプリケーション
-   - TypeScriptで実装
-   - Web Audio APIによる直接的な音声再生（Phase 2以降でtonejs系ライブラリ統合予定）
-   - textareaでコード進行を入力し、リアルタイムで変換・再生
+3. **chord2mml-cli**: コマンドラインツール
+   - text to text の変換インターフェース
+   - 標準入力/引数からの入力サポート
 
 ## デモ
 
-Webアプリケーションでは、textareaに「C」を入力すると「c;e;g」に変換され、
-ドミソの和音が鳴ります。
+### CLIツール
 
-試してみる: [https://cat2151.github.io/chord2mml-rust/](https://cat2151.github.io/chord2mml-rust/)
+```bash
+# 単一のコード
+$ chord2mml "C"
+c;e;g
+
+# コード進行
+$ chord2mml "C-F-G-C"
+c;e;g f;a;c g;b;d c;e;g
+
+# マイナーコード
+$ chord2mml "Dm"
+d;f;a
+
+# 混合進行
+$ chord2mml "C-Dm-G-C"
+c;e;g d;f;a g;b;d c;e;g
+```
 
 ## 使い方
 
-### Webアプリケーション
+### CLIツール
 
-1. ブラウザで https://cat2151.github.io/chord2mml-rust/ を開く
-2. textareaにコード進行を入力（例: `C`, `Dm`, `G7`）
-3. 自動的にMMLに変換され、音が鳴ります
+```bash
+# ビルド
+cd chord2mml-cli
+cargo build --release
+
+# 実行（引数から）
+chord2mml "C-F-G-C"
+
+# 実行（標準入力から）
+echo "C-F-G-C" | chord2mml
+
+# インタラクティブモード
+chord2mml
+# コード記法を入力してEnter
+```
 
 ### Rustライブラリとして
 
@@ -70,15 +117,21 @@ Webアプリケーションでは、textareaに「C」を入力すると「c;e;g
 use chord2mml_core::convert;
 
 fn main() {
+    // 単一のコード
     let chord = "C";
-    let mml = convert(chord);
+    let mml = convert(chord).unwrap();
     println!("MML: {}", mml); // "c;e;g"
+    
+    // コード進行
+    let progression = "C-F-G-C";
+    let mml = convert(progression).unwrap();
+    println!("MML: {}", mml); // "c;e;g f;a;c g;b;d c;e;g"
 }
 ```
 
 ### ビルド方法
 
-#### Rustライブラリ
+#### Rustライブラリとコア
 
 ```bash
 cd chord2mml-core
@@ -86,31 +139,31 @@ cargo build --release
 cargo test
 ```
 
-#### WASM
+#### CLIツール
 
 ```bash
-cd chord2mml-wasm
-wasm-pack build --target web
+cd chord2mml-cli
+cargo build --release
+# バイナリは ../target/release/chord2mml に生成されます
 ```
 
-#### Webアプリケーション
+#### 例の実行
 
 ```bash
-cd chord2mml-web
-npm install
-npm run build
-npm run dev  # 開発サーバー起動
+cd chord2mml-core
+cargo run --example basic
 ```
 
 ## ロードマップ
 
-### Phase 1: 基本機能の実装 ✅
+### Phase 1: Tree-sitterベースの基本実装 ✅
 
-- [x] プロジェクト構造の構築
+- [x] Tree-sitterグラマーの定義
 - [x] 基本的なコード変換機能（C → c;e;g）
-- [x] WASMバインディング
-- [x] Webアプリケーションの基本機能
-- [x] Web Audio APIによる基本的な音声再生
+- [x] コード進行のサポート（C-F-G-C）
+- [x] CST→AST→MML変換パイプライン
+- [x] CLIツールの実装
+- [x] 包括的なテストの追加
 
 ### Phase 2: 元のchord2mmlテストの移植
 
@@ -163,11 +216,12 @@ npm run dev  # 開発サーバー起動
 - [ ] 複数コードの連続入力
 - [ ] コード進行パターンの自動生成
 
-### Phase 3: 高度な機能
+### Phase 3: 高度な機能と統合
 
 - [ ] より複雑なコード進行のサポート
-- [ ] Tree-sitterの導入とグラマーの実装
-- [ ] tonejs-mml-to-json と tonejs-json-sequencer の統合
+- [ ] すべてのコードタイプの実装完了
+- [ ] WASM対応の再実装（必要に応じて）
+- [ ] tonejs-mml-to-json と tonejs-json-sequencer の統合（音声再生機能）
 - [ ] パフォーマンス改善
 - [ ] エラーハンドリングの強化
 - [ ] ドキュメント整備
@@ -178,9 +232,10 @@ npm run dev  # 開発サーバー起動
 
 | 項目 | chord2mml (旧) | chord2mml-rust (新) |
 |------|---------------|-------------------|
-| パーサー | Peggy.js | 文字列マッチング（Tree-sitterは今後導入予定） |
-| 言語 | JavaScript/TypeScript | Rust + TypeScript |
-| 実行環境 | ブラウザ専用 | ネイティブ + WASM |
+| パーサー | Peggy.js | Tree-sitter |
+| 言語 | JavaScript/TypeScript | Rust |
+| 実行環境 | ブラウザ専用 | ネイティブ（CLI） |
+| 変換フロー | PEG → AST → MML | Tree-sitter → CST → AST → MML |
 | ライブラリ利用 | 困難 | 容易（Rustクレート） |
 
 ### 設計思想
@@ -193,21 +248,19 @@ npm run dev  # 開発サーバー起動
 ## 対象プラットフォーム
 
 - **Rust ライブラリ**: すべてのRustサポート環境
-- **WASM**: モダンブラウザ（Chrome, Firefox, Safari, Edge）
-- **Webアプリ**: モダンブラウザ
+- **CLIツール**: Linux, macOS, Windows
 
 ## 技術スタック
 
 - **Rust**: 1.70以降
-- **wasm-pack**: WASMビルドツール
-- **TypeScript**: Webアプリケーション
-- **Web Audio API**: 音声再生
+- **Tree-sitter**: 構文解析エンジン
+- **tree-sitter-cli**: グラマー生成ツール
 
 ### 将来的な導入予定
 
-- **Tree-sitter**: より堅牢な構文解析（Phase 3）
-- **tonejs-mml-to-json**: MML解析の高度化（Phase 3）
-- **tonejs-json-sequencer**: より高機能な音声再生（Phase 3）
+- **WASM**: ブラウザでの実行サポート（必要に応じて）
+- **tonejs-mml-to-json**: MML解析の高度化
+- **tonejs-json-sequencer**: より高機能な音声再生
 
 ## テスト
 
@@ -216,20 +269,19 @@ npm run dev  # 開発サーバー起動
 cd chord2mml-core
 cargo test
 
-# WASM統合テスト
-cd chord2mml-wasm
-wasm-pack test --node
+# 全体のテスト
+cargo test --all
 
-# Webアプリのテスト
-cd chord2mml-web
-npm test
+# 例の実行
+cd chord2mml-core
+cargo run --example basic
 ```
 
 ## ビルド要件
 
 - Rust 1.70以降
-- Node.js 18以降
-- wasm-pack
+- Node.js 18以降（tree-sitter-cli用）
+- tree-sitter-cli（グラマー生成用）
 
 ## ライセンス
 
@@ -251,5 +303,6 @@ cat2151
 
 ## 参考リンク
 
-- [プロジェクトページ](https://cat2151.github.io/chord2mml-rust/)
-- [元のchord2mmlデモ](https://cat2151.github.io/chord2mml/dist/)
+- [元のchord2mml](https://github.com/cat2151/chord2mml) - オリジナルのJavaScript版
+- [Tree-sitter](https://tree-sitter.github.io/tree-sitter/) - 構文解析ライブラリ
+- [EXAMPLES.md](EXAMPLES.md) - より詳しい使用例とアーキテクチャ説明
