@@ -322,3 +322,27 @@ mod tests {
         }
     }
 }
+#[test]
+fn debug_slash_chord() {
+    use tree_sitter::Parser;
+    
+    let mut parser = Parser::new();
+    parser.set_language(tree_sitter_chord::language()).unwrap();
+    
+    let input = "C/E";
+    let tree = parser.parse(input, None).unwrap();
+    let root = tree.root_node();
+    
+    fn print_tree(node: &tree_sitter::Node, source: &str, indent: usize) {
+        let indent_str = "  ".repeat(indent);
+        let text = node.utf8_text(source.as_bytes()).unwrap_or("");
+        eprintln!("{}kind: {}, text: {:?}", indent_str, node.kind(), text);
+        
+        let mut cursor = node.walk();
+        for child in node.children(&mut cursor) {
+            print_tree(&child, source, indent + 1);
+        }
+    }
+    
+    print_tree(&root, input, 0);
+}
