@@ -10,18 +10,10 @@ description = "Core library for converting chord notation to MML (Music Macro La
 [lib]
 crate-type = ["lib"]
 
-[features]
-# Default: no features enabled.
-# Uses the manual parser, which is fully WASM-compatible and requires no native toolchain.
-default = []
-# Enable the Tree-sitter-based parser for native builds that need more robust parsing.
-# Not suitable for WASM targets (requires a C compiler and native Tree-sitter runtime).
-tree-sitter = ["dep:tree-sitter", "dep:tree-sitter-chord"]
-
 [dependencies]
 anyhow.workspace = true
 thiserror.workspace = true
-tree-sitter = { version = "0.20", optional = true }
-tree-sitter-chord = { path = "../tree-sitter-chord", optional = true }
+tree-sitter = "0.20"
+tree-sitter-chord = { path = "../tree-sitter-chord" }
 
 [dev-dependencies]

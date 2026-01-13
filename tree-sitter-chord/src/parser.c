@@ -12,9 +12,9 @@
 #define ALIAS_COUNT 0
 #define TOKEN_COUNT 15
 #define EXTERNAL_TOKEN_COUNT 0
-#define FIELD_COUNT 0
+#define FIELD_COUNT 5
 #define MAX_ALIAS_SEQUENCE_LENGTH 3
-#define PRODUCTION_ID_COUNT 1
+#define PRODUCTION_ID_COUNT 7
 
 enum {
   anon_sym_DASH = 1,
@@ -186,6 +186,52 @@ static const TSSymbolMetadata ts_symbol_metadata[] = {
     .visible = false,
     .named = false,
   },
+};
+
+enum {
+  field_accidental = 1,
+  field_bass = 2,
+  field_note = 3,
+  field_quality = 4,
+  field_root = 5,
+};
+
+static const char * const ts_field_names[] = {
+  [0] = NULL,
+  [field_accidental] = "accidental",
+  [field_bass] = "bass",
+  [field_note] = "note",
+  [field_quality] = "quality",
+  [field_root] = "root",
+};
+
+static const TSFieldMapSlice ts_field_map_slices[PRODUCTION_ID_COUNT] = {
+  [1] = {.index = 0, .length = 1},
+  [2] = {.index = 1, .length = 1},
+  [3] = {.index = 2, .length = 2},
+  [4] = {.index = 4, .length = 2},
+  [5] = {.index = 6, .length = 2},
+  [6] = {.index = 8, .length = 3},
+};
+
+static const TSFieldMapEntry ts_field_map_entries[] = {
+  [0] =
+    {field_note, 0},
+  [1] =
+    {field_root, 0},
+  [2] =
+    {field_accidental, 1},
+    {field_note, 0},
+  [4] =
+    {field_quality, 1},
+    {field_root, 0},
+  [6] =
+    {field_bass, 1},
+    {field_root, 0},
+  [8] =
+    {field_bass, 2},
+    {field_quality, 1},
+    {field_root, 0},
 };
 
 static const TSSymbol ts_alias_sequences[PRODUCTION_ID_COUNT][MAX_ALIAS_SEQUENCE_LENGTH] = {
@@ -481,7 +527,7 @@ static const uint16_t ts_small_parse_table[] = {
     STATE(15), 1,
       sym_root,
   [64] = 1,
-    ACTIONS(27), 2,
+    ACTIONS(42), 2,
       ts_builtin_sym_end,
       anon_sym_DASH,
   [69] = 1,
@@ -489,15 +535,15 @@ static const uint16_t ts_small_parse_table[] = {
       ts_builtin_sym_end,
       anon_sym_DASH,
   [74] = 1,
-    ACTIONS(42), 2,
-      ts_builtin_sym_end,
-      anon_sym_DASH,
-  [79] = 1,
     ACTIONS(44), 2,
       ts_builtin_sym_end,
       anon_sym_DASH,
+  [79] = 1,
+    ACTIONS(46), 2,
+      ts_builtin_sym_end,
+      anon_sym_DASH,
   [84] = 1,
-    ACTIONS(46), 1,
+    ACTIONS(48), 1,
       ts_builtin_sym_end,
   [88] = 1,
     ACTIONS(29), 1,
@@ -524,27 +570,28 @@ static const TSParseActionEntry ts_parse_actions[] = {
   [0] = {.entry = {.count = 0, .reusable = false}},
   [1] = {.entry = {.count = 1, .reusable = false}}, RECOVER(),
   [3] = {.entry = {.count = 1, .reusable = true}}, SHIFT(2),
-  [5] = {.entry = {.count = 1, .reusable = true}}, REDUCE(sym_root, 1),
+  [5] = {.entry = {.count = 1, .reusable = true}}, REDUCE(sym_root, 1, .production_id = 1),
   [7] = {.entry = {.count = 1, .reusable = true}}, SHIFT(4),
-  [9] = {.entry = {.count = 1, .reusable = false}}, REDUCE(sym_root, 1),
-  [11] = {.entry = {.count = 1, .reusable = true}}, REDUCE(sym_chord, 1),
+  [9] = {.entry = {.count = 1, .reusable = false}}, REDUCE(sym_root, 1, .production_id = 1),
+  [11] = {.entry = {.count = 1, .reusable = true}}, REDUCE(sym_chord, 1, .production_id = 2),
   [13] = {.entry = {.count = 1, .reusable = false}}, SHIFT(10),
   [15] = {.entry = {.count = 1, .reusable = true}}, SHIFT(10),
   [17] = {.entry = {.count = 1, .reusable = true}}, SHIFT(12),
   [19] = {.entry = {.count = 1, .reusable = true}}, REDUCE(sym_accidental, 1),
   [21] = {.entry = {.count = 1, .reusable = false}}, REDUCE(sym_accidental, 1),
-  [23] = {.entry = {.count = 1, .reusable = true}}, REDUCE(sym_root, 2),
-  [25] = {.entry = {.count = 1, .reusable = false}}, REDUCE(sym_root, 2),
-  [27] = {.entry = {.count = 1, .reusable = true}}, REDUCE(sym_chord, 2),
+  [23] = {.entry = {.count = 1, .reusable = true}}, REDUCE(sym_root, 2, .production_id = 3),
+  [25] = {.entry = {.count = 1, .reusable = false}}, REDUCE(sym_root, 2, .production_id = 3),
+  [27] = {.entry = {.count = 1, .reusable = true}}, REDUCE(sym_chord, 2, .production_id = 4),
   [29] = {.entry = {.count = 1, .reusable = true}}, REDUCE(sym_source_file, 1),
   [31] = {.entry = {.count = 1, .reusable = true}}, SHIFT(8),
   [33] = {.entry = {.count = 1, .reusable = true}}, REDUCE(sym_chord_progression, 2),
   [35] = {.entry = {.count = 1, .reusable = true}}, REDUCE(sym_quality, 1),
   [37] = {.entry = {.count = 1, .reusable = true}}, REDUCE(aux_sym_chord_progression_repeat1, 2),
   [39] = {.entry = {.count = 2, .reusable = true}}, REDUCE(aux_sym_chord_progression_repeat1, 2), SHIFT_REPEAT(8),
-  [42] = {.entry = {.count = 1, .reusable = true}}, REDUCE(sym_bass, 2),
-  [44] = {.entry = {.count = 1, .reusable = true}}, REDUCE(sym_chord, 3),
-  [46] = {.entry = {.count = 1, .reusable = true}},  ACCEPT_INPUT(),
+  [42] = {.entry = {.count = 1, .reusable = true}}, REDUCE(sym_chord, 2, .production_id = 5),
+  [44] = {.entry = {.count = 1, .reusable = true}}, REDUCE(sym_bass, 2),
+  [46] = {.entry = {.count = 1, .reusable = true}}, REDUCE(sym_chord, 3, .production_id = 6),
+  [48] = {.entry = {.count = 1, .reusable = true}},  ACCEPT_INPUT(),
 };
 
 #ifdef __cplusplus
@@ -571,6 +618,9 @@ extern const TSLanguage *tree_sitter_chord(void) {
     .small_parse_table_map = ts_small_parse_table_map,
     .parse_actions = ts_parse_actions,
     .symbol_names = ts_symbol_names,
+    .field_names = ts_field_names,
+    .field_map_slices = ts_field_map_slices,
+    .field_map_entries = ts_field_map_entries,
     .symbol_metadata = ts_symbol_metadata,
     .public_symbol_map = ts_symbol_map,
     .alias_map = ts_non_terminal_alias_map,

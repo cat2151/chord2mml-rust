@@ -22,24 +22,37 @@
   {
     "type": "chord",
     "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "bass",
-          "named": true
-        },
-        {
-          "type": "quality",
-          "named": true
-        },
-        {
-          "type": "root",
-          "named": true
-        }
-      ]
+    "fields": {
+      "bass": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "bass",
+            "named": true
+          }
+        ]
+      },
+      "quality": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "quality",
+            "named": true
+          }
+        ]
+      },
+      "root": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "root",
+            "named": true
+          }
+        ]
+      }
     }
   },
   {
@@ -65,20 +78,27 @@
   {
     "type": "root",
     "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "accidental",
-          "named": true
-        },
-        {
-          "type": "note",
-          "named": true
-        }
-      ]
+    "fields": {
+      "accidental": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "accidental",
+            "named": true
+          }
+        ]
+      },
+      "note": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "note",
+            "named": true
+          }
+        ]
+      }
     }
   },
   {
