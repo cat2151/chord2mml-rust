@@ -9,7 +9,7 @@ This directory contains examples demonstrating the chord2mml-rust library and CL
 ```bash
 # Convert a single C major chord
 chord2mml "C"
-# Output: c;e;g
+# Output: 'c;e;g'
 ```
 
 ### Chord Progression
@@ -17,7 +17,7 @@ chord2mml "C"
 ```bash
 # Convert a chord progression
 chord2mml "C-F-G-C"
-# Output: c;e;g f;a;c g;b;d c;e;g
+# Output: 'c;e;g' 'f;a;c' 'g;b;d' 'c;e;g'
 ```
 
 ### Minor Chords
@@ -25,11 +25,11 @@ chord2mml "C-F-G-C"
 ```bash
 # D minor chord
 chord2mml "Dm"
-# Output: d;f;a
+# Output: 'd;f;a'
 
 # Chord progression with minor chords
 chord2mml "C-Dm-G-C"
-# Output: c;e;g d;f;a g;b;d c;e;g
+# Output: 'c;e;g' 'd;f;a' 'g;b;d' 'c;e;g'
 ```
 
 ## Using as a Library
@@ -43,12 +43,12 @@ fn main() {
     // Convert a single chord
     let mml = convert("C").unwrap();
     println!("C major: {}", mml);
-    // Output: C major: c;e;g
+    // Output: C major: 'c;e;g'
     
     // Convert a chord progression
     let progression = convert("C-F-G-C").unwrap();
     println!("Progression: {}", progression);
-    // Output: Progression: c;e;g f;a;c g;b;d c;e;g
+    // Output: Progression: 'c;e;g' 'f;a;c' 'g;b;d' 'c;e;g'
     
     // Handle errors
     match convert("InvalidChord") {
@@ -134,7 +134,7 @@ For input `"C-F-G"`:
 
 3. **MML generation** produces:
    ```
-   c;e;g f;a;c g;b;d
+   'c;e;g' 'f;a;c' 'g;b;d'
    ```
 
 ## More Examples

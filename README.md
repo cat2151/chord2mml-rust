@@ -50,7 +50,7 @@ AST (Abstract Syntax Tree)
     ↓
 MML Generation
     ↓
-Output MML (e.g., "c;e;g f;a;c g;b;d c;e;g")
+Output MML (e.g., "'c;e;g' 'f;a;c' 'g;b;d' 'c;e;g'")
 ```
 
 ### Components
@@ -76,19 +76,19 @@ Output MML (e.g., "c;e;g f;a;c g;b;d c;e;g")
 ```bash
 # Single chord
 $ chord2mml "C"
-c;e;g
+'c;e;g'
 
 # Chord progression
 $ chord2mml "C-F-G-C"
-c;e;g f;a;c g;b;d c;e;g
+'c;e;g' 'f;a;c' 'g;b;d' 'c;e;g'
 
 # Minor chord
 $ chord2mml "Dm"
-d;f;a
+'d;f;a'
 
 # Mixed progression
 $ chord2mml "C-Dm-G-C"
-c;e;g d;f;a g;b;d c;e;g
+'c;e;g' 'd;f;a' 'g;b;d' 'c;e;g'
 ```
 
 ## Usage
@@ -120,12 +120,12 @@ fn main() {
     // Single chord
     let chord = "C";
     let mml = convert(chord).unwrap();
-    println!("MML: {}", mml); // "c;e;g"
+    println!("MML: {}", mml); // "'c;e;g'"
     
     // Chord progression
     let progression = "C-F-G-C";
     let mml = convert(progression).unwrap();
-    println!("MML: {}", mml); // "c;e;g f;a;c g;b;d c;e;g"
+    println!("MML: {}", mml); // "'c;e;g' 'f;a;c' 'g;b;d' 'c;e;g'"
 }
 ```
 
