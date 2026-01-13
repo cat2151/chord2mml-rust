@@ -1,4 +1,4 @@
-Last updated: 2026-01-13
+Last updated: 2026-01-14
 
 
 # プロジェクト概要生成プロンプト（来訪者向け）
@@ -469,7 +469,7 @@ cat2151
   - 関数: catch, if
   - インポート: ../../build/Release/tree_sitter_chord_binding, ../../build/Debug/tree_sitter_chord_binding, ../../src/node-types.json
 
-**_codeql_detected_source_root/grammar.js** (61行, 1243バイト)
+**_codeql_detected_source_root/grammar.js** (61行, 1327バイト)
   - 関数: なし
   - インポート: なし
 
@@ -489,7 +489,7 @@ cat2151
   - 関数: catch, if
   - インポート: ../../build/Release/tree_sitter_chord_binding, ../../build/Debug/tree_sitter_chord_binding, ../../src/node-types.json
 
-**tree-sitter-chord/grammar.js** (61行, 1243バイト)
+**tree-sitter-chord/grammar.js** (61行, 1327バイト)
   - 関数: なし
   - インポート: なし
 
@@ -544,4 +544,4 @@ tree-sitter-chord/grammar.js
 
 
 ---
-Generated at: 2026-01-13 07:01:40 JST
+Generated at: 2026-01-14 07:01:42 JST

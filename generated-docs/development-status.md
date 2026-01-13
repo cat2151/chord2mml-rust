@@ -1,72 +1,51 @@
-Last updated: 2026-01-13
+Last updated: 2026-01-14
 
 # Development Status
 
 ## 現在のIssues
-- コアパーサーをTree-sitterベースに移行し、手動パーサーを削除する作業([Issue #17](../issue-notes/17.md), [Issue #18](../issue-notes/18.md))が進行中です。
-- MML出力の文法準拠のため、各コードをシングルクォートで囲む変更([Issue #19](../issue-notes/19.md))が必要です。
-- README.ja.mdに、現在扱っているコードのロードマップを整理し、LLMによるハルシネーション([Issue #21](../issue-notes/21.md), [Issue #22](../issue-notes/22.md))を削除します。
+- [Issue #22](../issue-notes/22.md) はREADME.ja.md内のLLMハルシネーションを削除し、[Issue #21](../issue-notes/21.md) はロードマップを正確に整備することを目指しています。
+- [Issue #19](../issue-notes/19.md) はMML出力にシングルクォートを追加し、[Issue #20](../issue-notes/20.md) はWeb UIでの即時演奏開始を計画しています。
+- これらのIssueは、プロジェクトのドキュメントの正確性を高め、MML出力の品質とWebアプリケーションのUXを向上させることに注力しています。
 
 ## 次の一手候補
-1. [Issue #17](../issue-notes/17.md) 手動パーサーを削除し、Tree-sitterベースの実装へ移行する
-   - 最初の小さな一歩: `chord2mml-core/src/parser.rs` から、手動パーサーのコードブロックを完全に削除する。
+1. [Issue #22](../issue-notes/22.md): README.ja.mdからLLMがハルシネーションした不要な要素を削除
+   - 最初の小さな一歩: `README.ja.md` をレビューし、現在のプロジェクトで扱われていないLLMが生成したとみられる記述（特にロードマップやサポート範囲に関する記述）を特定し、削除する。
    - Agent実行プロンプ:
      ```
-     対象ファイル: chord2mml-core/src/parser.rs, chord2mml-core/Cargo.toml
+     対象ファイル: `README.ja.md`
 
-     実行内容:
-     `chord2mml-core/src/parser.rs` から、`#[cfg(not(feature = "tree-sitter"))]` で囲まれた `parse_to_ast_manual` 関数および、`parse_chord_manual`, `validate_bass_note`, `parse_quality_manual` 関数とその関連コード（手動パーサー部分）を完全に削除してください。
-     また、`parse_to_ast` 関数から手動パーサーへの条件分岐を削除し、Tree-sitterパーサーのみを使用するように修正してください。
-     `chord2mml-core/Cargo.toml` から `default = []` フィーチャーを削除し、`tree-sitter` フィーチャーをデフォルトで有効にするか、`tree-sitter` フィーチャーなしではコンパイルできないように修正してください。
+     実行内容: `README.ja.md` を精査し、「ロードマップ」セクションやその他の説明文において、現在の`chord2mml-rust`プロジェクトでサポートされていない機能や概念（LLMによるハルシネーションが疑われるもの）を特定し、それらを削除または修正してください。具体的には、Tree-sitterパーサーや`chord2mml-core`の実装内容と照合し、現状と異なる記述を修正します。
 
-     確認事項:
-     手動パーサー関連コードの削除によって、`chord2mml-core` クレートがTree-sitterフィーチャーなしではコンパイルされないことを確認してください。
-     `chord2mml-wasm` クレートのビルドに失敗しないことを確認してください。（WASMは`tree-sitter`フィーチャーを有効にできないため、`chord2mml-core`が`default`フィーチャーに依存しないように変更する必要があります。）
-     `chord2mml-wasm/Cargo.toml` が `chord2mml-core` の `tree-sitter` フィーチャーを有効にしていないことを確認してください。
+     確認事項: プロジェクトのファイル一覧、特に`chord2mml-core`クレートのソースコード（例: `chord2mml-core/src/lib.rs`, `chord2mml-core/src/mml.rs`）と`tree-sitter-chord`グラマー定義（例: `tree-sitter-chord/grammar.js`）の内容を横断的に確認し、README.ja.mdの記載内容がプロジェクトの現状と一致しているか検証してください。
 
-     期待する出力:
-     修正された `chord2mml-core/src/parser.rs` と `chord2mml-core/Cargo.toml` の内容。
+     期待する出力: 修正された `README.ja.md` のファイル内容。
      ```
 
-2. [Issue #19](../issue-notes/19.md) 出力されたchordそれぞれをシングルクォートで囲むようにする
-   - 最初の小さな一歩: `chord2mml-core/src/mml.rs` の `chord_to_mml` 関数内で、MML文字列の各コードの生成時にシングルクォートを追加する。
-   - Agent実行プロンプト:
+2. [Issue #21](../issue-notes/21.md): chord2mmlで扱っているchordのロードマップをREADME.ja.mdに正確にリストする
+   - 最初の小さな一歩: `README.ja.md` の「ロードマップ」セクションを、現在の`chord2mml-core`のコードと`tree-sitter-chord`のグラマー定義に基づいて、実装状況を正確に反映させるように更新する。「ハイフンは区切り文字としてのみ使用する」というルールも追記する。
+   - Agent実行プロンプ:
      ```
-     対象ファイル: chord2mml-core/src/mml.rs
+     対象ファイル: `README.ja.md`
 
-     実行内容:
-     `chord2mml-core/src/mml.rs` 内の `chord_to_mml` 関数を修正し、各コードがMML文字列として出力される際に、そのコード全体をシングルクォート `'` で囲むように変更してください。
-     例えば、`c;e;g` だったものが `'c;e;g'` となるように修正してください。
-     `generate_mml_from_ast` 関数も、この変更に合わせて適切にMML文字列を結合するように調整してください。
+     実行内容: `README.ja.md` の「ロードマップ」セクションを更新してください。現在の`chord2mml-core/src/mml.rs`と`tree-sitter-chord/grammar.js`の実装状況に基づき、メジャー系、マイナー系、セブンス系などの各コードタイプが実際にMML変換可能か、パーサーで認識されているかを正確に反映させてください。また、「ハイフンは区切り文字としてのみ使用する」という制約を明記してください。
 
-     確認事項:
-     既存のテストがパスすることを確認してください。
-     CLIツール (`chord2mml-cli`) で変換した際に、MML出力がシングルクォートで囲まれていることを確認してください。
+     確認事項: `chord2mml-core/src/mml.rs`と`tree-sitter-chord/grammar.js`の内容を確認し、どのコードタイプがMML変換まで実装されているか（`generate_mml`関数や関連ロジック）、どのコードタイプがTree-sitterグラマーで認識されているかを確認してください。既存のロードマップ記述との整合性を保ち、矛盾がないことを確認してください。
 
-     期待する出力:
-     修正された `chord2mml-core/src/mml.rs` の内容。
+     期待する出力: 更新された `README.ja.md` のファイル内容。
      ```
 
-3. [Issue #21](../issue-notes/21.md) chord2mmlリポジトリで扱っているchordを一通り実装するためのロードマップをREADME.ja.mdにlistする
-   - 最初の小さな一歩: `README.ja.md` の「ロードマップ」セクションで、各コードタイプの実装状況（MML変換の有無）を正確に反映したチェックボックスリストに更新する。
-   - Agent実行プロンプト:
+3. [Issue #19](../issue-notes/19.md): MML出力の各コードをシングルクォートで囲むよう修正し、mmlabc文法に準拠させる
+   - 最初の小さな一歩: `chord2mml-core/src/mml.rs` 内のMML文字列を生成する関数を特定し、出力される各コード（例: `c;e;g`）が `'c;e;g'` のようにシングルクォートで囲まれるようにロジックを変更する。
+   - Agent実行プロンプ:
      ```
-     対象ファイル: README.ja.md
+     対象ファイル: `chord2mml-core/src/mml.rs`
 
-     実行内容:
-     `README.ja.md` ファイルの「ロードマップ」セクションにある「Phase 2: 元のchord2mmlテストの移植」の内容を更新してください。
-     特に「現在の実装状況」を、`chord2mml-core/src/parser.rs` と `chord2mml-core/src/mml.rs` の現在の実装を反映した、より正確な記述に修正してください。
-     また、各コードタイプのリスト（メジャー系、マイナー系、セブンス系など）について、現時点でMML変換が実装されているものと未実装のものを明確に区別し、未実装のものは`[ ]`チェックボックスで示すように変更してください。
-     「ハイフンは区切り文字だけに使うのが違いである」という点については、必要に応じて追記を検討してください。ただし、この点は主にパーサーの挙動に関わるため、MML変換のロードマップ部分では簡潔に触れる程度で十分です。
+     実行内容: `chord2mml-core/src/mml.rs` ファイル内の、ASTからMML文字列を構築している`generate_mml`関数、またはそれに相当するMML生成ロジックを特定してください。そして、出力されるMML内の各コードブロック（例: `c;e;g`）が、mmlabcの文法に準拠するようにシングルクォートで囲まれる形式（例: `'c;e;g'`）に変更してください。
 
-     確認事項:
-     既存のMML変換が実装されているコードタイプ（例: C, Cm）が「[x]」とマークされていること。
-     Tree-sitterパーサーが認識するがMML変換が未実装のコードタイプ（例: CM7, Cdim, Csus4, C/E）が「[ ]」とマークされていること。
-     [Issue #22](../issue-notes/22.md)で言及されているLLMのハルシネーション（「README.ja.mdの計画に書いてあるが、chord2mmlリポジトリで扱っていない要素」）に該当する部分がないか確認し、削除または修正してください。
-     更新されたロードマップが、プロジェクトの現状と今後の方向性を正確に反映していることを確認してください。
+     確認事項: MML生成ロジックの変更が、コードブロックの区切りや音符の生成に予期せぬ影響を与えないか確認してください。特に、複数のコードが連続する場合や、異なる音符が混在する場合でも正しくシングルクォートが適用されることを保証してください。可能であれば、関連するテストケースを更新または追加して動作を確認してください。
 
-     期待する出力:
-     更新された `README.ja.md` の内容。
+     期待する出力: 修正された `chord2mml-core/src/mml.rs` のファイル内容。
+     ```
 
 ---
-Generated at: 2026-01-13 07:02:03 JST
+Generated at: 2026-01-14 07:02:11 JST
