@@ -43,15 +43,23 @@
       "type": "SEQ",
       "members": [
         {
-          "type": "SYMBOL",
-          "name": "root"
+          "type": "FIELD",
+          "name": "root",
+          "content": {
+            "type": "SYMBOL",
+            "name": "root"
+          }
         },
         {
           "type": "CHOICE",
           "members": [
             {
-              "type": "SYMBOL",
-              "name": "quality"
+              "type": "FIELD",
+              "name": "quality",
+              "content": {
+                "type": "SYMBOL",
+                "name": "quality"
+              }
             },
             {
               "type": "BLANK"
@@ -62,8 +70,12 @@
           "type": "CHOICE",
           "members": [
             {
-              "type": "SYMBOL",
-              "name": "bass"
+              "type": "FIELD",
+              "name": "bass",
+              "content": {
+                "type": "SYMBOL",
+                "name": "bass"
+              }
             },
             {
               "type": "BLANK"
@@ -76,15 +88,23 @@
       "type": "SEQ",
       "members": [
         {
-          "type": "SYMBOL",
-          "name": "note"
+          "type": "FIELD",
+          "name": "note",
+          "content": {
+            "type": "SYMBOL",
+            "name": "note"
+          }
         },
         {
           "type": "CHOICE",
           "members": [
             {
-              "type": "SYMBOL",
-              "name": "accidental"
+              "type": "FIELD",
+              "name": "accidental",
+              "content": {
+                "type": "SYMBOL",
+                "name": "accidental"
+              }
             },
             {
               "type": "BLANK"

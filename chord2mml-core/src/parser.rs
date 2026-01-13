@@ -1,6 +1,21 @@
-//! Parser module for converting chord notation to AST using Tree-sitter
+//! Parser module for converting chord notation to AST using Tree-sitter.
 //!
-//! This module handles parsing and conversion to AST using Tree-sitter for robust parsing.
+//! This module uses [Tree-sitter](https://tree-sitter.github.io/tree-sitter/) as the
+//! **only** parser implementation. Tree-sitter is an incremental parsing library that
+//! generates fast, robust parsers from grammar definitions. The concrete grammar used
+//! here is provided by the `tree_sitter_chord` crate, and the resulting concrete syntax
+//! tree (CST) is converted into the internal AST types (`ASTRoot`, `ASTChord`, etc.).
+//!
+//! System requirements / build notes:
+//! - A working C toolchain (C compiler and linker) is typically required to build
+//!   Tree-sitter grammars, as many Tree-sitter language crates compile C code in
+//!   their `build.rs` scripts.
+//! - The `tree_sitter_chord` language must be available at build time so that
+//!   `tree_sitter_chord::language()` can be linked into the final binary.
+//! - Consumers of this crate do not need to interact with Tree-sitter directly;
+//!   they can use `parse_to_ast` as the stable entry point for turning chord
+//!   notation into the high-level AST.
+//!
 
 use anyhow::{anyhow, Result};
 use crate::ast::{ASTChord, ASTRoot, Accidental, ChordQuality};
@@ -281,12 +296,18 @@ mod tests {
     fn test_parse_invalid_root_note() {
         let result = parse_to_ast("H");
         assert!(result.is_err());
+        let err_msg = result.unwrap_err().to_string();
+        // Tree-sitter reports syntax errors for invalid input
+        assert!(err_msg.contains("Syntax error") || err_msg.contains("error"));
     }
 
     #[test]
     fn test_parse_unknown_quality_fails() {
         let result = parse_to_ast("Cxyz");
         assert!(result.is_err());
+        let err_msg = result.unwrap_err().to_string();
+        // Tree-sitter reports syntax errors for unrecognized chord qualities
+        assert!(err_msg.contains("Syntax error") || err_msg.contains("Unknown chord quality"));
     }
 
     #[test]
@@ -321,28 +342,4 @@ mod tests {
             _ => panic!("Expected SingleChord"),
         }
     }
-}
-#[test]
-fn debug_slash_chord() {
-    use tree_sitter::Parser;
-    
-    let mut parser = Parser::new();
-    parser.set_language(tree_sitter_chord::language()).unwrap();
-    
-    let input = "C/E";
-    let tree = parser.parse(input, None).unwrap();
-    let root = tree.root_node();
-    
-    fn print_tree(node: &tree_sitter::Node, source: &str, indent: usize) {
-        let indent_str = "  ".repeat(indent);
-        let text = node.utf8_text(source.as_bytes()).unwrap_or("");
-        eprintln!("{}kind: {}, text: {:?}", indent_str, node.kind(), text);
-        
-        let mut cursor = node.walk();
-        for child in node.children(&mut cursor) {
-            print_tree(&child, source, indent + 1);
-        }
-    }
-    
-    print_tree(&root, input, 0);
 }

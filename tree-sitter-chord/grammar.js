@@ -20,15 +20,15 @@ module.exports = grammar({
 
     // A chord consists of: root + optional quality + optional bass
     chord: $ => seq(
-      $.root,
-      optional($.quality),
-      optional($.bass)
+      field('root', $.root),
+      optional(field('quality', $.quality)),
+      optional(field('bass', $.bass))
     ),
 
     // Root note: C, D, E, F, G, A, B with optional accidental
     root: $ => seq(
-      $.note,
-      optional($.accidental)
+      field('note', $.note),
+      optional(field('accidental', $.accidental))
     ),
 
     // Note names
