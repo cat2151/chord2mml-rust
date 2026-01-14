@@ -183,15 +183,15 @@ Port tests from the original [chord2mml](https://github.com/cat2151/chord2mml) r
 - [ ] Cm6 (C-E♭-G-A)
 - [ ] Cm7 (C-E♭-G-B♭)
 - [ ] CmM7, Cm(maj7) (C-E♭-G-B)
-- [ ] Cm7-5, Cm7(♭5) (C-E♭-G♭-B♭)
+- [ ] Cm7♭5, Cm7(♭5) (C-E♭-G♭-B♭)
 
 #### Seventh Chords
 - [ ] C7 (C-E-G-B♭) *Parser only, MML conversion not yet implemented*
 - [ ] C7sus4 (C-F-G-B♭)
-- [ ] C7-5, C7(♭5) (C-E-G♭-B♭)
-- [ ] C7+5, C7(#5), Caug7 (C-E-G#-B♭)
-- [ ] C7-9, C7(♭9) (C-E-G-B♭-D♭)
-- [ ] C7+9, C7(#9) (C-E-G-B♭-D#)
+- [ ] C7♭5, C7(♭5) (C-E-G♭-B♭)
+- [ ] C7#5, C7(#5), Caug7 (C-E-G#-B♭)
+- [ ] C7♭9, C7(♭9) (C-E-G-B♭-D♭)
+- [ ] C7#9, C7(#9) (C-E-G-B♭-D#)
 
 #### Diminished and Augmented Chords
 - [ ] Cdim, Cdim7 (C-E♭-G♭-A) *Parser only, MML conversion not yet implemented*
