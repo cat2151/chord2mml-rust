@@ -105,7 +105,7 @@ function showStatus(message: string, type: 'success' | 'error') {
     }, 3000);
 }
 
-function updateOutput(chord: string) {
+async function updateOutput(chord: string) {
     if (!wasmInitialized) {
         output.textContent = 'WASM未初期化';
         output.classList.add('error');
@@ -116,6 +116,16 @@ function updateOutput(chord: string) {
         const mml = convert_chord(chord);
         output.textContent = mml;
         output.classList.remove('error');
+        
+        // Auto-play the generated MML
+        if (mml && audioSequencer) {
+            try {
+                await audioSequencer.play(mml);
+            } catch (error) {
+                console.error('Auto-play error:', error);
+                // Don't show error status for auto-play failures
+            }
+        }
     } catch (error) {
         output.textContent = `エラー: ${error}`;
         output.classList.add('error');
@@ -132,8 +142,8 @@ async function initialize() {
         audioSequencer = new SimpleAudioSequencer();
         
         // Set up event listeners
-        chordInput.addEventListener('input', () => {
-            updateOutput(chordInput.value);
+        chordInput.addEventListener('input', async () => {
+            await updateOutput(chordInput.value);
         });
 
         playButton.addEventListener('click', async () => {
@@ -155,7 +165,7 @@ async function initialize() {
         });
 
         // Initial conversion
-        updateOutput(chordInput.value);
+        await updateOutput(chordInput.value);
         
         showStatus('初期化完了', 'success');
         
