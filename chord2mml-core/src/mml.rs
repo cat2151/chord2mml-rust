@@ -31,13 +31,13 @@ pub(crate) fn chord_to_mml(chord: &ASTChord) -> Result<String> {
             // Major chord: root, major third, perfect fifth
             let third = transpose_note(&root, 4); // Major third = 4 semitones
             let fifth = transpose_note(&root, 7); // Perfect fifth = 7 semitones
-            Ok(format!("{};{};{}", root, third, fifth))
+            Ok(format!("'{};{};{}'", root, third, fifth))
         }
         ChordQuality::Minor => {
             // Minor chord: root, minor third, perfect fifth
             let third = transpose_note(&root, 3); // Minor third = 3 semitones
             let fifth = transpose_note(&root, 7); // Perfect fifth = 7 semitones
-            Ok(format!("{};{};{}", root, third, fifth))
+            Ok(format!("'{};{};{}'", root, third, fifth))
         }
         _ => Err(anyhow!("Chord quality not yet implemented: {:?}", chord.quality)),
     }
@@ -57,7 +57,7 @@ mod tests {
             bass: None,
         };
         let mml = chord_to_mml(&chord).unwrap();
-        assert_eq!(mml, "c;e;g");
+        assert_eq!(mml, "'c;e;g'");
     }
 
     #[test]
@@ -69,7 +69,7 @@ mod tests {
             bass: None,
         };
         let mml = chord_to_mml(&chord).unwrap();
-        assert_eq!(mml, "f;a;c");
+        assert_eq!(mml, "'f;a;c'");
     }
 
     #[test]
@@ -81,6 +81,6 @@ mod tests {
             bass: None,
         };
         let mml = chord_to_mml(&chord).unwrap();
-        assert_eq!(mml, "g;b;d");
+        assert_eq!(mml, "'g;b;d'");
     }
 }

@@ -18,7 +18,7 @@ Successfully rebuilt the project as a **pure Rust native text-to-text applicatio
   1. **Input** → Tree-sitter Parser
   2. **CST** (Concrete Syntax Tree) → AST Converter
   3. **AST** (Abstract Syntax Tree) → MML Generator
-  4. **Output** (MML format like `c;e;g`)
+  4. **Output** (MML format like `'c;e;g'`)
 
 ### 3. CLI Application (`chord2mml-cli/`)
 - Text-to-text conversion tool
@@ -32,22 +32,22 @@ Successfully rebuilt the project as a **pure Rust native text-to-text applicatio
 ### Single Chord
 ```bash
 $ chord2mml "C"
-c;e;g
+'c;e;g'
 ```
 
 ### Chord Progression
 ```bash
 $ chord2mml "C-F-G-C"
-c;e;g f;a;c g;b;d c;e;g
+'c;e;g' 'f;a;c' 'g;b;d' 'c;e;g'
 ```
 
 ### Minor Chords
 ```bash
 $ chord2mml "Dm"
-d;f;a
+'d;f;a'
 
 $ chord2mml "C-Dm-G-C"
-c;e;g d;f;a g;b;d c;e;g
+'c;e;g' 'd;f;a' 'g;b;d' 'c;e;g'
 ```
 
 ## Architecture
@@ -74,7 +74,7 @@ AST: ChordProgression([
     ↓
 MML Generator (ast_to_mml)
     ↓
-Output: "c;e;g f;a;c g;b;d c;e;g"
+Output: "'c;e;g' 'f;a;c' 'g;b;d' 'c;e;g'"
 ```
 
 ## Key Features

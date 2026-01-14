@@ -4,8 +4,8 @@ Command-line interface for converting chord notation to MML (Music Macro Languag
 
 ## Features
 
-- Convert single chords: `C` → `c;e;g`
-- Convert chord progressions: `C-F-G-C` → `c;e;g f;a;c g;b;d c;e;g`
+- Convert single chords: `C` → `'c;e;g'`
+- Convert chord progressions: `C-F-G-C` → `'c;e;g' 'f;a;c' 'g;b;d' 'c;e;g'`
 - Uses Tree-sitter for robust parsing
 - Pure Rust implementation
 
@@ -26,10 +26,10 @@ The binary will be available at `../target/release/chord2mml`.
 
 ```bash
 chord2mml "C"
-# Output: c;e;g
+# Output: 'c;e;g'
 
 chord2mml "C-F-G-C"
-# Output: c;e;g f;a;c g;b;d c;e;g
+# Output: 'c;e;g' 'f;a;c' 'g;b;d' 'c;e;g'
 ```
 
 ### Interactive mode (stdin)
@@ -43,7 +43,7 @@ chord2mml
 
 ```bash
 echo "C-F-G-C" | chord2mml
-# Output: c;e;g f;a;c g;b;d c;e;g
+# Output: 'c;e;g' 'f;a;c' 'g;b;d' 'c;e;g'
 ```
 
 ## Supported Chords
@@ -56,12 +56,12 @@ Currently supported:
 
 The output is in mmlabc format where:
 - Notes are lowercase letters
-- Chords are represented as semicolon-separated notes
+- Chords are represented as semicolon-separated notes wrapped in single quotes
 - Multiple chords are space-separated
 
 Example:
-- `c;e;g` = C major chord (C, E, G notes)
-- `c;e;g f;a;c` = C major followed by F major
+- `'c;e;g'` = C major chord (C, E, G notes)
+- `'c;e;g' 'f;a;c'` = C major followed by F major
 
 ## License
 

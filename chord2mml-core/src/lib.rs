@@ -22,8 +22,8 @@ pub use ast::{ASTChord, ASTRoot, Accidental, ChordQuality};
 /// Convert a chord notation or chord progression to MML (Music Macro Language) format
 /// 
 /// Supports:
-/// - Single chords: "C" -> "c;e;g"
-/// - Chord progressions: "C-F-G-C" -> "c;e;g f;a;c g;b;d c;e;g"
+/// - Single chords: "C" -> "'c;e;g'"
+/// - Chord progressions: "C-F-G-C" -> "'c;e;g' 'f;a;c' 'g;b;d' 'c;e;g'"
 /// 
 /// # Example
 /// ```
@@ -31,11 +31,11 @@ pub use ast::{ASTChord, ASTRoot, Accidental, ChordQuality};
 /// 
 /// // Single chord
 /// let mml = convert("C").unwrap();
-/// assert_eq!(mml, "c;e;g");
+/// assert_eq!(mml, "'c;e;g'");
 /// 
 /// // Chord progression
 /// let mml = convert("C-F-G-C").unwrap();
-/// assert_eq!(mml, "c;e;g f;a;c g;b;d c;e;g");
+/// assert_eq!(mml, "'c;e;g' 'f;a;c' 'g;b;d' 'c;e;g'");
 /// ```
 pub fn convert(input: &str) -> Result<String> {
     let input = input.trim();
@@ -67,13 +67,13 @@ mod tests {
     #[test]
     fn test_convert_c_major() {
         let result = convert("C").unwrap();
-        assert_eq!(result, "c;e;g");
+        assert_eq!(result, "'c;e;g'");
     }
 
     #[test]
     fn test_convert_chord_progression() {
         let result = convert("C-F-G-C").unwrap();
-        assert_eq!(result, "c;e;g f;a;c g;b;d c;e;g");
+        assert_eq!(result, "'c;e;g' 'f;a;c' 'g;b;d' 'c;e;g'");
     }
 
     #[test]
@@ -85,6 +85,6 @@ mod tests {
     #[test]
     fn test_convert_whitespace_trimmed() {
         let result = convert("  C  ").unwrap();
-        assert_eq!(result, "c;e;g");
+        assert_eq!(result, "'c;e;g'");
     }
 }

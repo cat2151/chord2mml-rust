@@ -50,7 +50,7 @@ AST (Abstract Syntax Tree)
     ↓
 MML生成
     ↓
-出力MML (例: "c;e;g f;a;c g;b;d c;e;g")
+出力MML (例: "'c;e;g' 'f;a;c' 'g;b;d' 'c;e;g'")
 ```
 
 ### コンポーネント
@@ -76,19 +76,19 @@ MML生成
 ```bash
 # 単一のコード
 $ chord2mml "C"
-c;e;g
+'c;e;g'
 
 # コード進行
 $ chord2mml "C-F-G-C"
-c;e;g f;a;c g;b;d c;e;g
+'c;e;g' 'f;a;c' 'g;b;d' 'c;e;g'
 
 # マイナーコード
 $ chord2mml "Dm"
-d;f;a
+'d;f;a'
 
 # 混合進行
 $ chord2mml "C-Dm-G-C"
-c;e;g d;f;a g;b;d c;e;g
+'c;e;g' 'd;f;a' 'g;b;d' 'c;e;g'
 ```
 
 ## 使い方
@@ -120,12 +120,12 @@ fn main() {
     // 単一のコード
     let chord = "C";
     let mml = convert(chord).unwrap();
-    println!("MML: {}", mml); // "c;e;g"
+    println!("MML: {}", mml); // "'c;e;g'"
     
     // コード進行
     let progression = "C-F-G-C";
     let mml = convert(progression).unwrap();
-    println!("MML: {}", mml); // "c;e;g f;a;c g;b;d c;e;g"
+    println!("MML: {}", mml); // "'c;e;g' 'f;a;c' 'g;b;d' 'c;e;g'"
 }
 ```
 
