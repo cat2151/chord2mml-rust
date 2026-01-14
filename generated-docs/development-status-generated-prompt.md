@@ -1,4 +1,4 @@
-Last updated: 2026-01-14
+Last updated: 2026-01-15
 
 # 開発状況生成プロンプト（開発者向け）
 
@@ -285,36 +285,6 @@ Last updated: 2026-01-14
 
 ```
 
-## [Issue #20](../issue-notes/20.md): textareaに入力があったら即座にplay開始する。処理が高速なので待つ必要もない。playボタンも明示的な演奏用にとっておく
-[issue-notes/20.md](https://github.com/cat2151/chord2mml-rust/blob/main/issue-notes/20.md)
-
-...
-ラベル: 
---- issue-notes/20.md の内容 ---
-
-```markdown
-# issue textareaに入力があったら即座にplay開始する。処理が高速なので待つ必要もない。playボタンも明示的な演奏用にとっておく #20
-[issues #20](https://github.com/cat2151/chord2mml-rust/issues/20)
-
-
-
-```
-
-## [Issue #19](../issue-notes/19.md): 出力されたchordそれぞれをシングルクォートで囲むようにする。mmlabcの文法に従うということ
-[issue-notes/19.md](https://github.com/cat2151/chord2mml-rust/blob/main/issue-notes/19.md)
-
-...
-ラベル: 
---- issue-notes/19.md の内容 ---
-
-```markdown
-# issue 出力されたchordそれぞれをシングルクォートで囲むようにする。mmlabcの文法に従うということ #19
-[issues #19](https://github.com/cat2151/chord2mml-rust/issues/19)
-
-
-
-```
-
 ## ドキュメントで言及されているファイルの内容
 ### .github/actions-tmp/README.ja.md
 ```md
@@ -404,7 +374,7 @@ AST (Abstract Syntax Tree)
     ↓
 MML生成
     ↓
-出力MML (例: "c;e;g f;a;c g;b;d c;e;g")
+出力MML (例: "'c;e;g' 'f;a;c' 'g;b;d' 'c;e;g'")
 ```
 
 ### コンポーネント
@@ -430,19 +400,19 @@ MML生成
 ```bash
 # 単一のコード
 $ chord2mml "C"
-c;e;g
+'c;e;g'
 
 # コード進行
 $ chord2mml "C-F-G-C"
-c;e;g f;a;c g;b;d c;e;g
+'c;e;g' 'f;a;c' 'g;b;d' 'c;e;g'
 
 # マイナーコード
 $ chord2mml "Dm"
-d;f;a
+'d;f;a'
 
 # 混合進行
 $ chord2mml "C-Dm-G-C"
-c;e;g d;f;a g;b;d c;e;g
+'c;e;g' 'd;f;a' 'g;b;d' 'c;e;g'
 ```
 
 ## 使い方
@@ -474,12 +444,12 @@ fn main() {
     // 単一のコード
     let chord = "C";
     let mml = convert(chord).unwrap();
-    println!("MML: {}", mml); // "c;e;g"
+    println!("MML: {}", mml); // "'c;e;g'"
     
     // コード進行
     let progression = "C-F-G-C";
     let mml = convert(progression).unwrap();
-    println!("MML: {}", mml); // "c;e;g f;a;c g;b;d c;e;g"
+    println!("MML: {}", mml); // "'c;e;g' 'f;a;c' 'g;b;d' 'c;e;g'"
 }
 ```
 
@@ -662,56 +632,6 @@ cat2151
 - [元のchord2mml](https://github.com/cat2151/chord2mml) - オリジナルのJavaScript版
 - [Tree-sitter](https://tree-sitter.github.io/tree-sitter/) - 構文解析ライブラリ
 - [EXAMPLES.md](EXAMPLES.md) - より詳しい使用例とアーキテクチャ説明
-
-{% endraw %}
-```
-
-### .github/actions-tmp/issue-notes/19.md
-```md
-{% raw %}
-# issue project-summary の development-status 生成時、issue-notes/ 配下のmdファイルの内容を参照させる #19
-[issues #19](https://github.com/cat2151/github-actions/issues/19)
-
-# 何が困るの？
-- issue解決に向けての次の一手の内容が実態に即していないことが多い。
-
-# 対策案
-- issue-notes/ 配下のmdファイルの内容を参照させる
-
-# 備考
-- さらにmd内に書かれているfileも、project内をcjsに検索させて添付させると、よりGeminiの生成品質が向上する可能性がある。
-    - [issues #20](https://github.com/cat2151/github-actions/issues/20)
-- さらにproject overviewでGeminiがまとめたmdも、Geminiに与えると、よりGeminiの生成品質が向上する可能性がある。
-    - [issues #21](https://github.com/cat2151/github-actions/issues/21)
-- さらに、Geminiに与えたpromptをfileにしてcommit pushしておくと、デバッグに役立つ可能性がある。
-    - [issues #22](https://github.com/cat2151/github-actions/issues/22)
-
-# close条件
-- issues #22 がcloseされること。
-- commitされたpromptを確認し、issue-notes/ 配下のmdファイルがpromptに添付されていること、が確認できること。
-
-# 状況
-- 課題、実装したがtestができていない
-- 対策、issues #22 が実装されれば、testができる
-- 対策、issues #22 のcloseを待つ
-
-# 状況
-- issues #22 がcloseされた
-- testできるようになった
-- commitされたpromptを確認した。issue-notes/ 配下のmdファイルがpromptに添付されていること、が確認できた
-
-# closeする
-
-{% endraw %}
-```
-
-### issue-notes/19.md
-```md
-{% raw %}
-# issue 出力されたchordそれぞれをシングルクォートで囲むようにする。mmlabcの文法に従うということ #19
-[issues #19](https://github.com/cat2151/chord2mml-rust/issues/19)
-
-
 
 {% endraw %}
 ```
@@ -902,92 +822,6 @@ jobs:
 {% endraw %}
 ```
 
-### .github/actions-tmp/issue-notes/20.md
-```md
-{% raw %}
-# issue project-summary の development-status 生成時、issue-notes/ 配下のmdにファイル名が書いてあれば、そのファイル内容もpromptに添付、を試す #20
-[issues #20](https://github.com/cat2151/github-actions/issues/20)
-
-# 何が困るの？
-- Geminiに次の一手を生成させるとき、cjsの内容も添付したほうが、生成品質が改善できる可能性がある。
-
-# 案
-## outputのimage
-- promptが言及するfilename、について、そのfileの内容もすべてpromptに含める。
-    - 軸は、projectのfilename一覧である。
-        - 一覧それぞれのfilenameについて、promptで言及されているものをfile内容埋め込み、とする。
-- 方向性
-    - シンプルで明確なルール、曖昧さのないルールで、メンテを楽にすることを優先する
-    - 余分なファイルが出てしまうが割り切ってOKとし、欠落リスクを減らせることを優先する
-- 備考
-    - 曖昧でメンテが必要な「documentからのfilename抽出」をやめ、
-        - かわりに、逆に、「今のprojectにあるfileすべてのうち、promptで言及されているもの」を軸とする
-## 実現方法の案
-- project全体について、filenameと、filepath配列（複数ありうる）、のmapを取得する。そういう関数Aをまず実装する。
-    - filepathは、agentが扱えるよう、github上のworkの絶対pathではなく、projectRootからの相対パス表記とする。
-- そして、そのfilenameにmatchするfilepath配列について、filepathとファイル内容を記したmarkdown文字列を返却、という関数Bを実装する。
-- さらに、Geminiにわたすpromptについて、前述の関数Aのfilenameそれぞれについて、prompt内を検索し、filenameが存在する場合は、そのfilenameについて、関数Bを用いてmarkdown文字列を取得する。そうして得られたmarkdown文字列群を返却する、という関数Cを実装する。
-- さらに、promptの末尾に書いてあるプレースホルダー「`${file_contents}`」を、関数Cの結果で置き換える、という関数Dを実装する。
-- 実際には、Geminiにわたすpromptのプレースホルダー展開は、2回にわたる必要がある。1回目でissues-note内容をpromptに埋め込む。2回目でそのpromptに対して関数Dを適用する。
-## 備忘
-- 上記は、agentにplanさせてレビューし、context不足と感じたら上記をメンテ、というサイクルで書いた。
-
-# どうする？
-- 上記をagentに投げる。documentやtestについてのplanもしてくるかもしれないがそこは時間の都合で省略して実施させるつもり。
-- 投げた、実装させた、レビューして人力リファクタリングした
-- testする
-
-# 結果
-- バグ
-    - この20.mdにあるプレースホルダーが置換されてしまっている
-    - issue-notesで言及されていないfileまで添付されてしまっている
-- 分析
-    - この20.mdにあるプレースホルダーが置換されてしまっている
-        - 原因
-            - 20.mdにあるプレースホルダーまで置換対象としてしまっていたため。
-            - prompt全体のプレースホルダーを置換対象としてしまっていたため。
-            - issue-notesを埋め込んだあとでの、プレースホルダー処理だったので、
-                - 20.md が置換対象となってしまったため。
-        - 対策案
-            - プレースホルダーはすべて、「行頭と行末で囲まれている」ときだけ置換対象とする。
-                - つまり文中やcode中のプレースホルダーは置換対象外とする。
-            - さらに、2つ以上プレースホルダーが出たら想定外なので早期エラー終了させ、検知させる。
-    - issue-notesで言及されていないfileまで添付されてしまっている
-        - 原因
-            - promptに、既にprojectの全file listが書き込まれたあとなので、
-                - issue-noteで言及されていなくても、
-                - promptの全file listを対象に検索してしまっている
-        - 対策案の候補
-            - プレースホルダー置換の順番を変更し、全file listは最後に置換する
-            - file添付の対象を変更し、promptでなく、issue-notesとする
-                - これが範囲が絞られているので安全である、と考える
-        - 備忘
-            - 全fileの対象は、リモートリポジトリ側のfileなので、secretsの心配はないし、実際に検索して確認済み
-
-# どうする？
-- agent半分、人力が半分（agentがハルシネーションでソース破壊したので、関数切り分けしたり、リファクタリングしたり）。
-- で実装した。
-- testする
-
-# 結果
-- test green
-
-# closeとする
-
-{% endraw %}
-```
-
-### issue-notes/20.md
-```md
-{% raw %}
-# issue textareaに入力があったら即座にplay開始する。処理が高速なので待つ必要もない。playボタンも明示的な演奏用にとっておく #20
-[issues #20](https://github.com/cat2151/chord2mml-rust/issues/20)
-
-
-
-{% endraw %}
-```
-
 ### .github/actions-tmp/issue-notes/21.md
 ```md
 {% raw %}
@@ -1109,59 +943,35 @@ jobs:
 {% endraw %}
 ```
 
-### .github/actions-tmp/issue-notes/9.md
-```md
-{% raw %}
-# issue 関数コールグラフhtmlビジュアライズが0件なので、原因を可視化する #9
-[issues #9](https://github.com/cat2151/github-actions/issues/9)
-
-# agentに修正させたり、人力で修正したりした
-- agentがハルシネーションし、いろいろ根の深いバグにつながる、エラー隠蔽などを仕込んでいたため、検知が遅れた
-- 詳しくはcommit logを参照のこと
-- WSL + actの環境を少し変更、act起動時のコマンドライン引数を変更し、generated-docsをmountする（ほかはデフォルト挙動であるcpだけにする）ことで、デバッグ情報をコンテナ外に出力できるようにし、デバッグを効率化した
-
-# test green
-
-# closeとする
-
-{% endraw %}
-```
-
-### issue-notes/9.md
-```md
-{% raw %}
-# issue Rust Tree-sitter WASM TypeScript の構成で根本的に作り直す #9
-[issues #9](https://github.com/cat2151/chord2mml-rust/issues/9)
-
-
-
-{% endraw %}
-```
-
 ## 最近の変更（過去7日間）
 ### コミット履歴:
+93a6db9 Auto-play MML on textarea input (#24)
+2b154d9 Auto-translate README.ja.md to README.md [auto]
+7e4aa01 Wrap chord output in single quotes for mmlabc syntax compliance (#23)
+3a99698 Update project summaries (overview & development status) [auto]
 dba6ca1 Remove manual parser and implement Tree-sitter (#18)
 1d4a926 Update project summaries (overview & development status) [auto]
 7aba882 Add issue note for #22 [auto]
 4edef66 Add issue note for #21 [auto]
 3f3fdbd Add issue note for #20 [auto]
 e59ece1 Add issue note for #19 [auto]
-1aac07f Auto-translate README.ja.md to README.md [auto]
-917f458 Update README implementation status to reflect actual chord support (#16)
-e94821f Add issue note for #17 [auto]
-be32b74 Implement Tree-sitter based parser with WASM-compatible fallback for browser deployment (#14)
 
 ### 変更されたファイル:
+EXAMPLES.md
+IMPLEMENTATION.md
+README.ja.md
 README.md
+chord2mml-cli/README.md
 chord2mml-core/Cargo.toml
+chord2mml-core/src/lib.rs
+chord2mml-core/src/mml.rs
 chord2mml-core/src/parser.rs
+chord2mml-web/index.html
+chord2mml-web/src/main.ts
 generated-docs/development-status-generated-prompt.md
 generated-docs/development-status.md
 generated-docs/project-overview-generated-prompt.md
 generated-docs/project-overview.md
-issue-notes/19.md
-issue-notes/20.md
-issue-notes/21.md
 issue-notes/22.md
 tree-sitter-chord/grammar.js
 tree-sitter-chord/src/grammar.json
@@ -1170,4 +980,4 @@ tree-sitter-chord/src/parser.c
 
 
 ---
-Generated at: 2026-01-14 07:01:43 JST
+Generated at: 2026-01-15 07:01:41 JST
