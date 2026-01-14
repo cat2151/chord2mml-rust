@@ -176,25 +176,17 @@ Port tests from the original [chord2mml](https://github.com/cat2151/chord2mml) r
 - [ ] C6 (C-E-G-A)
 - [ ] CM7, Cmaj7 (C-E-G-B) *Parser only, MML conversion not yet implemented*
 - [ ] Cadd9 (C-E-G-D)
-- [ ] C69 (C-E-G-A-D)
 
 #### Minor Chords
 - [x] Cm (C-E♭-G)
-- [ ] Cm6 (C-E♭-G-A)
 - [ ] Cm7 (C-E♭-G-B♭)
-- [ ] CmM7, Cm(maj7) (C-E♭-G-B)
-- [ ] Cm7♭5, Cm7(♭5) (C-E♭-G♭-B♭)
 
 #### Seventh Chords
 - [ ] C7 (C-E-G-B♭) *Parser only, MML conversion not yet implemented*
 - [ ] C7sus4 (C-F-G-B♭)
-- [ ] C7♭5, C7(♭5) (C-E-G♭-B♭)
-- [ ] C7#5, C7(#5), Caug7 (C-E-G#-B♭)
-- [ ] C7♭9, C7(♭9) (C-E-G-B♭-D♭)
-- [ ] C7#9, C7(#9) (C-E-G-B♭-D#)
 
 #### Diminished and Augmented Chords
-- [ ] Cdim, Cdim7 (C-E♭-G♭-A) *Parser only, MML conversion not yet implemented*
+- [ ] Cdim (C-E♭-G♭) *Parser only, MML conversion not yet implemented*
 - [ ] Caug, C+, C(#5) (C-E-G#) *Parser only, MML conversion not yet implemented*
 
 #### Suspend Chords
@@ -206,23 +198,16 @@ Port tests from the original [chord2mml](https://github.com/cat2151/chord2mml) r
 - [ ] C/G (Second inversion: G-C-E) *Parser only, MML conversion not yet implemented*
 - [ ] C/D (On-chord: D-C-E-G) *Parser only, MML conversion not yet implemented*
 
-#### Other Chords
-- [ ] 9th, 11th, 13th chords
-- [ ] Tension notes
-- [ ] Complex combinations of accidentals
-
 #### Feature Enhancements
 - [ ] Octave specification
 - [ ] Rhythm and note length specification
 - [x] Continuous input of multiple chords (chord progressions)
-- [ ] Automatic generation of chord progression patterns
 
 ### Phase 3: Advanced Features and Integration
 
 - [ ] Support for more complex chord progressions
 - [ ] Full implementation of all chord types
 - [ ] Re-implementation of WASM support (if necessary)
-- [ ] Integration of tonejs-mml-to-json and tonejs-json-sequencer (audio playback functionality)
 - [ ] Performance improvements
 - [ ] Enhanced error handling
 - [ ] Documentation improvement
@@ -256,12 +241,6 @@ Port tests from the original [chord2mml](https://github.com/cat2151/chord2mml) r
 - **Rust**: 1.70 or later
 - **Tree-sitter**: Parsing engine
 - **tree-sitter-cli**: Grammar generation tool
-
-### Planned Future Integrations
-
-- **WASM**: Browser execution support (if necessary)
-- **tonejs-mml-to-json**: Advanced MML parsing
-- **tonejs-json-sequencer**: More functional audio playback
 
 ## Testing
 
