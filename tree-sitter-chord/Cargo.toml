@@ -24,4 +24,3 @@ tree-sitter = "~0.20.10"
 
 [build-dependencies]
 cc = "1.0"
-tree-sitter-wasm-build-tool = "0.2"

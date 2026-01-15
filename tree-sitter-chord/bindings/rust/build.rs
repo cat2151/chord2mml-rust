@@ -7,13 +7,6 @@ fn main() {
         .flag_if_supported("-Wno-unused-parameter")
         .flag_if_supported("-Wno-unused-but-set-variable")
         .flag_if_supported("-Wno-trigraphs");
-    
-    // Add WASM header support when building for wasm32 targets
-    let target = std::env::var("TARGET").unwrap_or_default();
-    if target.starts_with("wasm32") {
-        tree_sitter_wasm_build_tool::add_wasm_headers(&mut c_config).unwrap();
-    }
-    
     let parser_path = src_dir.join("parser.c");
     c_config.file(&parser_path);
 
