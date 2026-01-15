@@ -1,60 +1,51 @@
-Last updated: 2026-01-15
+Last updated: 2026-01-16
 
 # Development Status
 
 ## 現在のIssues
-- [Issue #22](../issue-notes/22.md) は、README.ja.mdに存在する可能性のある、AIによるハルシネーション由来の無関係な記述を特定し、削除することを目指しています。
-- [Issue #21](../issue-notes/21.md) は、README.ja.mdに、現在扱っているコードタイプの実装ロードマップを明確にリスト化し、表現を調整することを目的としています。
-- これらにより、READMEの正確性を高め、今後の開発指針を明確にする作業が進行中です。
+- 現在オープン中のIssueはありません。
+- したがって、特定のIssueに対する開発状況の要約は行えません。
+- 直近のコミット履歴に基づき、今後の開発候補を検討します。
 
 ## 次の一手候補
-1. [Issue #22](../issue-notes/22.md) README.ja.mdからハルシネーションされた要素を特定・削除
-   - 最初の小さな一歩: `README.ja.md` 全体を精査し、「chord2mmlリポジトリで扱っていない要素」であり、かつ「LLMが勝手にハルシネーションしたもの」と判断できる記述を特定する。特に「将来的な導入予定」セクションや、プロジェクトのスコープと明らかに異なる記述に注目します。
+1. `tree-sitter-chord` と `wasm` の非互換性の詳細調査と対応策検討 [Issue #28](../issue-notes/28.md)
+   - 最初の小さな一歩: `tree-sitter-chord` のビルドプロセスと `wasm32-unknown-unknown` ターゲットに関する公式ドキュメントや既存の解決策を調査する。
    - Agent実行プロンプト:
      ```
-     対象ファイル: `README.ja.md`
+     対象ファイル: `tree-sitter-chord/Cargo.toml`, `tree-sitter-chord/bindings/rust/lib.rs`, および `tree-sitter` と `wasm` 関連の公式ドキュメント
 
-     実行内容: `README.ja.md` の内容を精査し、[Issue #22](../issue-notes/22.md) の意図（「README.ja.mdの計画に書いてあるが、chord2mmlリポジトリで扱っていない要素」は、LLMが勝手にハルシネーションしたものなので、READMEから削除する）に基づき、以下の観点から削除対象候補を特定してください：
-     1. 現在の`chord2mml-rust`プロジェクトのコア機能やロードマップ（Phase 1, 2）と明らかに乖離している記述。
-     2. プロジェクトのスコープ外であるにも関わらず、存在するように記述されている機能や要素。
-     3. 特に、AIが自動生成した際に誤って含まれた可能性のある、無関係な情報や未導入の技術に関する言及。
-     （例: 「将来的な導入予定」セクションは、現在のプロジェクトで「扱っていない」ため、削除対象候補となり得るか検討する。）
+     実行内容: `tree-sitter` の `wasm` ビルドに関する公式ドキュメント、関連するRustクレート（`wasm-bindgen`など）、およびGitHub上の`tree-sitter`の`wasm`対応事例を調査し、`tree-sitter-chord`で`wasm`をサポートするための具体的な技術的課題と可能な解決策をMarkdown形式でまとめる。
 
-     確認事項: 削除を提案する際は、その記述が本当に「ハルシネーション」であり、プロジェクトの重要な情報や将来の計画と混同していないか、十分に確認してください。
+     確認事項: `tree-sitter-chord`の現在のビルド設定、`wasm-pack`などの関連ツールチェーンの互換性、`tree-sitter`本体の`wasm`サポート状況を確認してください。
 
-     期待する出力: 削除すべき具体的な箇所（セクション、行番号、テキスト内容）をmarkdown形式でリストアップし、削除理由を簡潔に説明してください。もし明確な削除対象が見つからない場合は、その旨を報告してください。
+     期待する出力: `tree-sitter-chord` の `wasm` 対応に向けた技術レポートをMarkdown形式で生成してください。課題、複数の解決策候補（例: wasm-bindgen, manual FFI, etc.）、それぞれのPros/Cons、および推奨されるアプローチを含むこと。
      ```
 
-2. [Issue #21](../issue-notes/21.md) README.ja.mdにコード実装ロードマップをリスト
-   - 最初の小さな一歩: `README.ja.md` の「ロードマップ」セクション（特にPhase 2）を分析し、Issue #21の「ロードマップをlistする」という要件と「ハイフンは区切り文字だけに使うのが違いである」という制約を満たしているか確認します。必要に応じて、より明確で簡潔なロードマップ表現に調整します。
+2. Agent プロンプト生成におけるハルシネーション抑制と具体性向上の継続的改善 [Issue #30](../issue-notes/30.md)
+   - 最初の小さな一歩: 現在の `Agent実行プロンプト` ガイドライン（特に「避けるべき例」と「良い例」）を見直し、より具体的な改善点を特定する。
    - Agent実行プロンプト:
      ```
-     対象ファイル: `README.ja.md`
+     対象ファイル: `.github/copilot-instructions.md`, `.github/actions-tmp/.github_automation/project_summary/prompts/development-status-prompt.md`
 
-     実行内容: `README.ja.md` の「ロードマップ」セクションを分析し、[Issue #21](../issue-notes/21.md) の要件（「chord2mmlリポジトリで扱っているchordを一通り実装するためのロードマップをREADME.ja.mdにlistする。ただしハイフンは区切り文字だけに使うのが違いである」）を満たしているか確認してください。特に以下の点を重点的に確認し、必要に応じて修正案を提示してください。
-     1. 現在の「Phase 2: 元のchord2mmlテストの移植」セクションが、明確なロードマップとして機能しているか。
-     2. 「現在の実装状況」の記述がロードマップの一部として適切か、または別の表現が望ましいか。
-     3. 「ハイフンは区切り文字だけに使う」という制約が、コード進行の記述やコードネームの表現において、READMEの内容と矛盾しないか。
+     実行内容: 現在の `Agent実行プロンプト` のガイドラインが、ハルシネーションを抑制しつつ、開発者が次のアクションを取りやすい具体的なプロンプトを生成するために十分であるかを評価する。特に、「期待する出力」セクションの具体性を高めるための改善策を検討し、Markdown形式で提案してください。
 
-     確認事項: 変更案を提案する前に、現在のREADME.ja.mdの内容が`chord2mml-rust`プロジェクトの実際の開発状況と合致していることを確認してください。また、大幅な内容変更ではなく、表現の調整に留めるようにしてください。
+     確認事項: 「生成しないもの」セクションの原則が守られているか。提供された「良い例」と「避けるべき例」が明確な差分を持っているかを確認してください。
 
-     期待する出力: `README.ja.md` の「ロードマップ」セクションに対する修正案をmarkdown形式で提示してください。変更がある場合は差分形式で、変更がない場合は現状維持の理由を説明してください。
+     期待する出力: `Agent実行プロンプト` ガイドラインの改善案をMarkdown形式で出力してください。具体的な修正提案（例: 「期待する出力」に特定のファイルパスやフォーマットの記述を義務付けるなど）と、その改善がハルシネーション抑制と具体性向上にどのように寄与するかを説明すること。
      ```
 
-3. 未実装コードタイプ `Csus4` のMML変換を実装
-   - 最初の小さな一歩: `chord2mml-core/src/parser.rs` を参照し、`Csus4`コードがASTでどのように表現されているかを確認します。次に、`chord2mml-core/src/mml.rs` 内で、既存のコード変換ロジックに倣い、`Csus4`に対応するMML（`'c;f;g'`）を生成するハンドリングを追加します。
+3. `daily-project-summary` ワークフローによる出力のレビューと改善メカニズムの検討 (関連機能: daily-project-summary)
+   - 最初の小さな一歩: `daily-project-summary.yml` と `generate-project-summary.cjs` の既存の処理フローを分析し、生成されたサマリーを手動または自動でレビューする仕組みを導入する可能性を検討する。
    - Agent実行プロンプト:
      ```
-     対象ファイル: `chord2mml-core/src/parser.rs`, `chord2mml-core/src/mml.rs`, `chord2mml-core/src/ast.rs`
+     対象ファイル: `.github/actions-tmp/.github/workflows/daily-project-summary.yml`, `.github/actions-tmp/.github_automation/project_summary/scripts/generate-project-summary.cjs`, `.github/actions-tmp/generated-docs/development-status.md`
 
-     実行内容: [Issue #21](../issue-notes/21.md) に示されているロードマップの「サスペンド系」にある`Csus4`コードのMML変換機能を`chord2mml-core`に実装してください。
-     1. `chord2mml-core/src/ast.rs` を参照し、`ChordKind::Sus4` が存在するか、およびその構造を確認します。必要に応じて`ast.rs`も更新してください。
-     2. `chord2mml-core/src/parser.rs` を分析し、`Csus4`がどのようにパースされ、ASTノードに変換されているか確認します。
-     3. `chord2mml-core/src/mml.rs` 内の`convert_node_to_mml`関数（または関連する変換ロジック）に、`ChordKind::Sus4`に対応するMML文字列（例: `'c;f;g'`）を生成する処理を追加してください。
+     実行内容: `daily-project-summary` ワークフローが生成する `development-status.md` (このファイル自体) や `project-overview.md` の品質を検証し、その品質を向上させるための自動レビューメカニズムや、生成後の手動レビュープロセスを組み込む方法について分析してください。特に、生成された内容がプロンプトのガイドライン（ハルシネーション抑制、具体性など）に準拠しているかを確認する機構の導入可能性を探ること。
 
-     確認事項: 既存のコード（特にメジャー/マイナーコード）の変換ロジックとの一貫性を保ってください。また、`Csus4`のAST表現が正確にMMLに変換されることを確認するため、テストケースを追加する準備を考慮してください（Agent実行プロンプトとしてはテストケースの追加は含めない）。
+     確認事項: 既存のワークフローのトリガーと出力先。`check-recent-human-commit.yml` との連携。レビューメカニズムを導入する際のオーバーヘッドと実現可能性を確認してください。
 
-     期待する出力: `chord2mml-core/src/mml.rs` および必要であれば`chord2mml-core/src/ast.rs` の修正差分をmarkdown形式で出力してください。
+     期待する出力: `daily-project-summary` ワークフローにレビュープロセスを導入するための提案をMarkdown形式で出力してください。提案には、自動Linterの導入、レビュアーへの通知、生成されたドキュメントの承認フローなどが含まれること。
+     ```
 
 ---
-Generated at: 2026-01-15 07:02:15 JST
+Generated at: 2026-01-16 07:02:01 JST
