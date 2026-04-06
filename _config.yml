@@ -1,3 +1,8 @@
-theme: jekyll-theme-cayman
-title: chord2mml-rust
-description: コード進行をMMLに変換して音を鳴らすライブラリ・アプリケーション
+title: "chord2mml-rust"
+description: "chord2mml-rust"
+theme: jekyll-theme-slate
+github:
+  is_project_page: true
+  repository_url: https://github.com/cat2151/chord2mml-rust
+plugins:
+  - jekyll-sitemap
