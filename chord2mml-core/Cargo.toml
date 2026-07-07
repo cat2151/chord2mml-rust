@@ -10,10 +10,23 @@ description = "Core library for converting chord notation to MML (Music Macro La
 [lib]
 crate-type = ["lib"]
 
+[[example]]
+name = "basic"
+required-features = ["tree-sitter"]
+
+[features]
+# Default: no features enabled (WASM-safe, no C compiler required).
+# WASM builds parse with web-tree-sitter (JS) and pass CST JSON to `convert_cst`.
+default = []
+# Enable the native Tree-sitter parser (requires a C toolchain).
+tree-sitter = ["dep:tree-sitter", "dep:tree-sitter-chord"]
+
 [dependencies]
 anyhow.workspace = true
 thiserror.workspace = true
-tree-sitter = "0.20"
-tree-sitter-chord = { path = "../tree-sitter-chord" }
+serde.workspace = true
+serde_json.workspace = true
+tree-sitter = { version = "0.20", optional = true }
+tree-sitter-chord = { path = "../tree-sitter-chord", optional = true }
 
 [dev-dependencies]

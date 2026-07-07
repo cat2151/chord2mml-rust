@@ -1,181 +1,87 @@
-//! Parser module for converting chord notation to AST using Tree-sitter.
+//! Native parser (feature `tree-sitter` only).
 //!
-//! This module uses [Tree-sitter](https://tree-sitter.github.io/tree-sitter/) as the
-//! **only** parser implementation. Tree-sitter is an incremental parsing library that
-//! generates fast, robust parsers from grammar definitions. The concrete grammar used
-//! here is provided by the `tree_sitter_chord` crate, and the resulting concrete syntax
-//! tree (CST) is converted into the internal AST types (`ASTRoot`, `ASTChord`, etc.).
+//! Parses chord notation with the [tree-sitter](https://tree-sitter.github.io/tree-sitter/)
+//! Rust crate and the `tree_sitter_chord` grammar, then serializes the CST into
+//! the same [`CSTNode`] shape that web-tree-sitter produces in the browser, so
+//! that all semantics live in the shared `cst_to_ast` module.
 //!
-//! System requirements / build notes:
-//! - A working C toolchain (C compiler and linker) is typically required to build
-//!   Tree-sitter grammars, as many Tree-sitter language crates compile C code in
-//!   their `build.rs` scripts.
-//! - The `tree_sitter_chord` language must be available at build time so that
-//!   `tree_sitter_chord::language()` can be linked into the final binary.
-//! - Consumers of this crate do not need to interact with Tree-sitter directly;
-//!   they can use `parse_to_ast` as the stable entry point for turning chord
-//!   notation into the high-level AST.
-//!
+//! Build notes:
+//! - Requires a C toolchain (the grammar crate compiles C in its `build.rs`),
+//!   which is why this module is gated behind the `tree-sitter` feature and
+//!   excluded from `wasm32-unknown-unknown` builds. WASM builds parse with
+//!   web-tree-sitter (JavaScript) instead and call `convert_cst`.
 
 use anyhow::{anyhow, Result};
-use crate::ast::{ASTChord, ASTRoot, Accidental, ChordQuality};
-use tree_sitter::Parser;
+use std::collections::HashMap;
+use tree_sitter::{Node, Parser};
+
+use crate::ast::ASTRoot;
+use crate::cst_to_ast::{cst_to_ast, CSTNode};
 
 /// Parse chord notation using Tree-sitter and convert to AST
 pub(crate) fn parse_to_ast(input: &str) -> Result<ASTRoot> {
-    parse_to_ast_tree_sitter(input)
-}
-
-/// Parse chord quality from string
-fn parse_chord_quality(quality_str: &str) -> Result<ChordQuality> {
-    match quality_str {
-        "" => Ok(ChordQuality::Major),
-        "m" => Ok(ChordQuality::Minor),
-        "maj7" | "M7" => Ok(ChordQuality::Major7),
-        "7" => Ok(ChordQuality::Dominant7),
-        "dim" => Ok(ChordQuality::Diminished),
-        "aug" | "+" => Ok(ChordQuality::Augmented),
-        "sus4" => Ok(ChordQuality::Sus4),
-        "sus2" => Ok(ChordQuality::Sus2),
-        _ => Err(anyhow!("Unknown chord quality: {}", quality_str)),
-    }
-}
-
-/// Parse chord notation using Tree-sitter and convert CST to AST
-fn parse_to_ast_tree_sitter(input: &str) -> Result<ASTRoot> {
     let mut parser = Parser::new();
     parser
         .set_language(tree_sitter_chord::language())
         .map_err(|e| anyhow!("Failed to set TreeSitter language: {}", e))?;
-    
+
     let tree = parser
         .parse(input, None)
         .ok_or_else(|| anyhow!("Failed to parse chord notation"))?;
-    
+
     let root_node = tree.root_node();
-    
-    // Check for parsing errors
+
     if root_node.has_error() {
         return Err(anyhow!("Syntax error in chord notation: {}", input));
     }
-    
-    // Navigate to the first child (chord or chord_progression)
-    let first_child = if root_node.kind() == "source_file" {
-        root_node.child(0).ok_or_else(|| anyhow!("No content found in parse tree"))?
-    } else {
-        root_node
-    };
-    
-    // Convert CST to AST
-    match first_child.kind() {
-        "chord" => {
-            let chord = parse_chord_node(&first_child, input)?;
-            Ok(ASTRoot::SingleChord(chord))
-        }
-        "chord_progression" => {
-            let mut chords = Vec::new();
-            let mut cursor = first_child.walk();
-            
-            for child in first_child.children(&mut cursor) {
-                if child.kind() == "chord" {
-                    chords.push(parse_chord_node(&child, input)?);
-                }
-            }
-            
-            if chords.is_empty() {
-                return Err(anyhow!("No chords found in chord progression"));
-            }
-            
-            Ok(ASTRoot::ChordProgression(chords))
-        }
-        _ => Err(anyhow!("Unexpected node type: {}", first_child.kind())),
-    }
+
+    let cst = node_to_cst(root_node, input.as_bytes())?;
+    cst_to_ast(&cst)
 }
 
-/// Parse a single chord node from the CST
-fn parse_chord_node(chord_node: &tree_sitter::Node, source: &str) -> Result<ASTChord> {
-    if chord_node.kind() != "chord" {
-        return Err(anyhow!("Expected chord node, got: {}", chord_node.kind()));
-    }
-    
-    // Extract root note
-    let root_node = chord_node
-        .child_by_field_name("root")
-        .or_else(|| chord_node.child(0))
-        .ok_or_else(|| anyhow!("No root node found"))?;
-    
-    let note_node = root_node.child_by_field_name("note")
-        .or_else(|| root_node.child(0))
-        .ok_or_else(|| anyhow!("No note found in root"))?;
-    
-    let note = note_node.utf8_text(source.as_bytes())
-        .map_err(|e| anyhow!("Failed to extract note text: {}", e))?
-        .to_string();
-    
-    let accidental = if let Some(acc_node) = root_node.child_by_field_name("accidental")
-        .or_else(|| root_node.child(1))
-    {
-        let acc_text = acc_node.utf8_text(source.as_bytes())
-            .map_err(|e| anyhow!("Failed to extract accidental text: {}", e))?;
-        match acc_text {
-            "#" => Some(Accidental::Sharp),
-            "b" => Some(Accidental::Flat),
-            _ => None,
-        }
-    } else {
-        None
-    };
-    
-    // Extract quality (optional)
-    let mut quality_node_opt = chord_node.child_by_field_name("quality");
-    if quality_node_opt.is_none() {
-        // Fallback: search all children for a quality node
-        let mut cursor = chord_node.walk();
-        for child in chord_node.children(&mut cursor) {
-            if child.kind() == "quality" {
-                quality_node_opt = Some(child);
+/// Serialize a tree-sitter node into the CSTNode JSON shape shared with
+/// web-tree-sitter: named children with a field name go to `fields`, other
+/// named children go to `children`.
+fn node_to_cst(node: Node, source: &[u8]) -> Result<CSTNode> {
+    let mut children = Vec::new();
+    let mut fields: HashMap<String, Vec<CSTNode>> = HashMap::new();
+
+    let mut cursor = node.walk();
+    if cursor.goto_first_child() {
+        loop {
+            let child = cursor.node();
+            if child.is_named() {
+                let field_name = cursor.field_name().map(str::to_string);
+                let child_cst = node_to_cst(child, source)?;
+                match field_name {
+                    Some(name) => fields.entry(name).or_default().push(child_cst),
+                    None => children.push(child_cst),
+                }
+            }
+            if !cursor.goto_next_sibling() {
                 break;
             }
         }
     }
 
-    let quality = if let Some(quality_node) = quality_node_opt {
-        let quality_text = quality_node.utf8_text(source.as_bytes())
-            .map_err(|e| anyhow!("Failed to extract quality text: {}", e))?;
+    let text = node
+        .utf8_text(source)
+        .map_err(|e| anyhow!("Failed to extract node text: {}", e))?
+        .to_string();
 
-        parse_quality_text(quality_text)?
-    } else {
-        // Default to major when no explicit quality is present
-        ChordQuality::Major
-    };
-    
-    // Extract bass (optional) 
-    let bass = if let Some(bass_node) = chord_node.child_by_field_name("bass") {
-        let bass_text = bass_node.utf8_text(source.as_bytes())
-            .map_err(|e| anyhow!("Failed to extract bass text: {}", e))?;
-        Some(bass_text.trim_start_matches('/').to_string())
-    } else {
-        None
-    };
-    
-    Ok(ASTChord {
-        root: note,
-        accidental,
-        quality,
-        bass,
+    Ok(CSTNode {
+        node_type: node.kind().to_string(),
+        text: Some(text),
+        children,
+        fields,
     })
-}
-
-/// Parse chord quality text into ChordQuality enum
-fn parse_quality_text(quality_text: &str) -> Result<ChordQuality> {
-    parse_chord_quality(quality_text)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ast::{Accidental, ChordQuality};
 
-    // Tests for Tree-sitter parser
     #[test]
     fn test_parse_basic_major_chord() {
         let result = parse_to_ast("C").unwrap();

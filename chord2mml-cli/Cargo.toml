@@ -12,5 +12,5 @@ name = "chord2mml"
 path = "src/main.rs"
 
 [dependencies]
-chord2mml-core = { path = "../chord2mml-core" }
+chord2mml-core = { path = "../chord2mml-core", features = ["tree-sitter"] }
 anyhow.workspace = true
