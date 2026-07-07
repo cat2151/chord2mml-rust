@@ -128,7 +128,31 @@
     "named": false
   },
   {
+    "type": "11",
+    "named": false
+  },
+  {
+    "type": "13",
+    "named": false
+  },
+  {
+    "type": "6",
+    "named": false
+  },
+  {
     "type": "7",
+    "named": false
+  },
+  {
+    "type": "7sus2",
+    "named": false
+  },
+  {
+    "type": "7sus4",
+    "named": false
+  },
+  {
+    "type": "9",
     "named": false
   },
   {
@@ -136,11 +160,63 @@
     "named": false
   },
   {
+    "type": "M(9)",
+    "named": false
+  },
+  {
     "type": "M7",
     "named": false
   },
   {
+    "type": "M9",
+    "named": false
+  },
+  {
+    "type": "MAJ",
+    "named": false
+  },
+  {
+    "type": "MAJ(9)",
+    "named": false
+  },
+  {
+    "type": "MAJ7",
+    "named": false
+  },
+  {
+    "type": "MAJ9",
+    "named": false
+  },
+  {
+    "type": "MIN",
+    "named": false
+  },
+  {
+    "type": "MIN7",
+    "named": false
+  },
+  {
+    "type": "Maj",
+    "named": false
+  },
+  {
+    "type": "Maj(9)",
+    "named": false
+  },
+  {
     "type": "Maj7",
+    "named": false
+  },
+  {
+    "type": "Maj9",
+    "named": false
+  },
+  {
+    "type": "Min",
+    "named": false
+  },
+  {
+    "type": "Min7",
     "named": false
   },
   {
@@ -168,7 +244,15 @@
     "named": false
   },
   {
+    "type": "maj(9)",
+    "named": false
+  },
+  {
     "type": "maj7",
+    "named": false
+  },
+  {
+    "type": "maj9",
     "named": false
   },
   {
@@ -197,6 +281,14 @@
   },
   {
     "type": "△",
+    "named": false
+  },
+  {
+    "type": "△(9)",
+    "named": false
+  },
+  {
+    "type": "△9",
     "named": false
   },
   {

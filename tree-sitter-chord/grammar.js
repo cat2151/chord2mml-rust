@@ -43,22 +43,40 @@ module.exports = grammar({
     // Chord quality tokens (longest match wins in the lexer).
     // Normalization to the JS quality strings happens in cst_to_ast.rs.
     quality: $ => choice(
+      // Quartal harmony (JS: "4." [2-9]+; only the first digit counts)
+      /4\.[2-9]+/,
+      // maj9 family (JS MAJ9: ("maj"i / "M" / "△") "("? "9" ")"?)
+      'maj9', 'Maj9', 'MAJ9', 'M9', '△9',
+      'maj(9)', 'Maj(9)', 'MAJ(9)', 'M(9)', '△(9)',
       'maj7',
       'Maj7',
+      'MAJ7',
       'M7',
       '△',
       'maj',
+      'Maj',
+      'MAJ',
       'M',
       'min7',
+      'Min7',
+      'MIN7',
       'm7',
       'min',
+      'Min',
+      'MIN',
       'm',
-      '7',
+      '7sus2',
+      '7sus4',
+      'sus4',
+      'sus2',
       'dim',
       'aug',
       '+',
-      'sus4',
-      'sus2',
+      '13',
+      '11',
+      '9',
+      '7',
+      '6',
       // Add more as needed
     ),
 

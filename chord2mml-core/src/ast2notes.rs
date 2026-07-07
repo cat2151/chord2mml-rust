@@ -104,9 +104,14 @@ fn get_notes_without_omit(root: i32, quality: &str) -> Result<Vec<i32>> {
         "11" => vec![0, 4, 7, 10, 14, 17],
         "13" => vec![0, 4, 7, 10, 14, 17, 21],
         other => {
-            // Quartal harmony: "4.N" stacks N notes in fourths
-            if let Some(count) = other.strip_prefix("4.").and_then(|n| n.parse::<i32>().ok()) {
-                (0..count).map(|i| i * 5).collect()
+            // Quartal harmony: "4.N" stacks N notes in fourths.
+            // Only the first digit counts (JS: parseInt(q[0][2])).
+            if let Some(count) = other
+                .strip_prefix("4.")
+                .and_then(|n| n.chars().next())
+                .and_then(|c| c.to_digit(10))
+            {
+                (0..count as i32).map(|i| i * 5).collect()
             } else {
                 return Err(anyhow!("Unknown chord quality: {}", other));
             }

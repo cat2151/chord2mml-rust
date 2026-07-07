@@ -136,12 +136,60 @@
       "type": "CHOICE",
       "members": [
         {
+          "type": "PATTERN",
+          "value": "4\\.[2-9]+"
+        },
+        {
+          "type": "STRING",
+          "value": "maj9"
+        },
+        {
+          "type": "STRING",
+          "value": "Maj9"
+        },
+        {
+          "type": "STRING",
+          "value": "MAJ9"
+        },
+        {
+          "type": "STRING",
+          "value": "M9"
+        },
+        {
+          "type": "STRING",
+          "value": "△9"
+        },
+        {
+          "type": "STRING",
+          "value": "maj(9)"
+        },
+        {
+          "type": "STRING",
+          "value": "Maj(9)"
+        },
+        {
+          "type": "STRING",
+          "value": "MAJ(9)"
+        },
+        {
+          "type": "STRING",
+          "value": "M(9)"
+        },
+        {
+          "type": "STRING",
+          "value": "△(9)"
+        },
+        {
           "type": "STRING",
           "value": "maj7"
         },
         {
           "type": "STRING",
           "value": "Maj7"
+        },
+        {
+          "type": "STRING",
+          "value": "MAJ7"
         },
         {
           "type": "STRING",
@@ -157,11 +205,27 @@
         },
         {
           "type": "STRING",
+          "value": "Maj"
+        },
+        {
+          "type": "STRING",
+          "value": "MAJ"
+        },
+        {
+          "type": "STRING",
           "value": "M"
         },
         {
           "type": "STRING",
           "value": "min7"
+        },
+        {
+          "type": "STRING",
+          "value": "Min7"
+        },
+        {
+          "type": "STRING",
+          "value": "MIN7"
         },
         {
           "type": "STRING",
@@ -173,11 +237,31 @@
         },
         {
           "type": "STRING",
+          "value": "Min"
+        },
+        {
+          "type": "STRING",
+          "value": "MIN"
+        },
+        {
+          "type": "STRING",
           "value": "m"
         },
         {
           "type": "STRING",
-          "value": "7"
+          "value": "7sus2"
+        },
+        {
+          "type": "STRING",
+          "value": "7sus4"
+        },
+        {
+          "type": "STRING",
+          "value": "sus4"
+        },
+        {
+          "type": "STRING",
+          "value": "sus2"
         },
         {
           "type": "STRING",
@@ -193,11 +277,23 @@
         },
         {
           "type": "STRING",
-          "value": "sus4"
+          "value": "13"
         },
         {
           "type": "STRING",
-          "value": "sus2"
+          "value": "11"
+        },
+        {
+          "type": "STRING",
+          "value": "9"
+        },
+        {
+          "type": "STRING",
+          "value": "7"
+        },
+        {
+          "type": "STRING",
+          "value": "6"
         }
       ]
     },

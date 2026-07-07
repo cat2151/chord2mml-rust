@@ -6,14 +6,22 @@
 //
 // Runs the same golden corpus as the native test
 // (chord2mml-core/tests/corpus/*.json), guaranteeing both paths agree.
-import { readFile } from 'fs/promises';
+import { readFile, readdir } from 'fs/promises';
 import { fileURLToPath } from 'url';
 import { Parser, Language } from 'web-tree-sitter';
 import init, { convert_cst } from '../public/wasm/chord2mml_wasm.js';
 import { nodeToCSTJson } from '../src/cst-serializer.js';
 
-const corpusUrl = new URL('../../chord2mml-core/tests/corpus/basic.json', import.meta.url);
-const cases = JSON.parse(await readFile(corpusUrl, 'utf8'));
+const corpusDir = new URL('../../chord2mml-core/tests/corpus/', import.meta.url);
+const corpusFiles = (await readdir(corpusDir)).filter((f) => f.endsWith('.json')).sort();
+if (corpusFiles.length === 0) {
+  console.error('✗ no corpus files found');
+  process.exit(1);
+}
+const cases = [];
+for (const file of corpusFiles) {
+  cases.push(...JSON.parse(await readFile(new URL(file, corpusDir), 'utf8')));
+}
 
 async function main() {
   // Initialize the Rust WASM module from bytes (no fetch in Node)
