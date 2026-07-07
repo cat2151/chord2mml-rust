@@ -1,0 +1,22 @@
+[
+  {
+    "input": "C-F-G-C",
+    "expected": "v11'c1eg''f1a<c''g1b<d''c1eg'"
+  },
+  {
+    "input": "C-Dm-G7-C",
+    "expected": "v11'c1eg''d1fa''g1b<df''c1eg'"
+  },
+  {
+    "input": "Am-F-C-G",
+    "expected": "v11'a1<ce''f1a<c''c1eg''g1b<d'"
+  },
+  {
+    "input": "Cmaj7-Am7-Dm7-G7",
+    "expected": "v11'c1egb''a1<ceg''d1fa<c''g1b<df'"
+  },
+  {
+    "input": "C#-Db",
+    "expected": "v11'c+1fg+''c+1fg+'"
+  }
+]
