@@ -1,0 +1,38 @@
+name: Rust Test
+
+# Guards the two build targets that must always stay green:
+# - native (tree-sitter feature): cargo test across the workspace
+# - wasm32-unknown-unknown (default features): the WASM-safe path.
+#   tree-sitter's C dependency must never be compiled for this target
+#   (see .github/copilot-instructions.md and issue #27-#29).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  native-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Run workspace tests (native, tree-sitter feature)
+        run: cargo test --workspace --all-features
+      - name: Run core tests (default features, WASM-safe path)
+        run: cargo test -p chord2mml-core
+
+  wasm-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - name: Build WASM (default features, no C dependency)
+        run: cargo build -p chord2mml-wasm --target wasm32-unknown-unknown --release
