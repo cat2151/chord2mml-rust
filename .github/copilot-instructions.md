@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-コード進行（例: `C-F-G-C`）をMML（Music Macro Language）形式（例: `'c;e;g' 'f;a;c' 'g;b;d' 'c;e;g'`）に変換するRustライブラリ・CLIツール。
+コード進行（例: `Dm G7 C`）をMML（Music Macro Language）形式（例: `v11'd1fa''g1b<df''c1eg'`）に変換するRustライブラリ・CLIツール。出力は元のJS版 [chord2mml](https://github.com/cat2151/chord2mml) と互換であり、**JS版の約100テストが唯一の仕様**（`chord2mml-core/tests/corpus/` のゴールデンコーパスに段階移植中。期待値はJS版の実行結果から生成する）。
 
 ## Architecture
 
@@ -68,30 +68,34 @@ cd tree-sitter-chord && npx tree-sitter-cli@0.20.8 build-wasm --docker
 3. [mml.rs](../chord2mml-core/src/mml.rs) の `chord_to_mml` にMML生成ロジック追加
 4. テストを追加（ネイティブ + `chord2mml-web` のWASM経路テスト）
 
-### MML出力形式
-- 単一コード: `'c;e;g'`（シングルクォートで囲み、セミコロン区切り）
-- コード進行: `'c;e;g' 'f;a;c'`（スペース区切り）
-- シャープ: `c+`, フラット: `c-`
+### MML出力形式（JS版互換）
+- 先頭に `v11`、単一コード: `v11'c1eg'`（シングルクォートで囲み、音名連結）
+- コード進行: `v11'c1eg''f1a<c'`（**スペースなし**で連結）
+- シャープ: `+`（例 `c+`）、フラット: `-`（例 `d-`）、オクターブ: `<`（上）`>`（下）
+- 各コードの最初の音名の直後の数字は音長（1=全音符）
+- **旧 `'c;e;g'` 形式は廃止済み**。古いドキュメント・コードを見ても復活させないこと
 
 ### テストの書き方
+仕様追加は原則ゴールデンコーパス（`chord2mml-core/tests/corpus/*.json`）に追加する。
+期待値は必ずJS版（`N:\notM2\projects\chord2mml` / cat2151/chord2mml）を実行して得ること（発明しない）。
 ```rust
 #[test]
 fn test_convert_c_major() {
     let result = convert("C").unwrap();
-    assert_eq!(result, "'c;e;g'");
+    assert_eq!(result, "v11'c1eg'");
 }
 ```
 
 ## Current Implementation Status
 
-**実装済み**: Major, Minor コードのみ  
-**パーサーのみ対応（MML変換未実装）**: 7, maj7, dim, aug, sus4, sus2, スラッシュコード
+**実装済み（Phase 1）**: maj / min / maj7 / min7 / 7 / dim / aug / sus2 / sus4、全角半角の #♭、分数コード（chord over bass note）、コード進行（空白・` - `・`→`・`・` 区切り）
+**未実装（Wave A〜G で移植予定）**: テンション(6,9,11,13)、add/omit/♭5/#5、オンコード・ポリコード・転回形、drop系ボイシング、小節・音長、度数記法、キー/スケール、インラインMML、MIDI PC、方言プリプロセス — 詳細は README のロードマップ参照
 
 ## Important Notes
 
 - **AIコード生成プロジェクト**: このリポジトリはAI自動運転の実験場。READMEにはハルシネーション由来の記述が含まれる可能性あり
-- **ハイフンはコード区切り専用**: コード進行の区切りにのみハイフン使用（`C-F-G-C`）
-- **Windows対応必須**: CIでWindows GNUクロスコンパイルチェックあり
+- **コード進行の区切り**: JS版仕様は空白・` - `（スペース付きハイフン）・`→`・`・`。スペースなしハイフン（`C-F-G-C`）は当面サポートするが、`-`をマイナー表記（`C-7`）として導入する際に扱いを再検討する（ユーザー確認必須）
+- **Windows対応必須**: CIでWindows GNUクロスコンパイルチェックあり。parser.c はUTF-8リテラルを含むため MSVC には `/utf-8` フラグが必要（build.rs 設定済み）
 - **issue-notes/**: 各Issueの作業メモが格納されている
 
 ## File Structure Reference

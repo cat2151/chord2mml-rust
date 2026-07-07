@@ -18,7 +18,7 @@ use wasm_bindgen::prelude::*;
 /// const tree = parser.parse('C');           // web-tree-sitter
 /// const cstJson = serializeCst(tree.rootNode);
 /// const mml = convert_cst(JSON.stringify(cstJson));
-/// console.log(mml); // "'c;e;g'"
+/// console.log(mml); // "v11'c1eg'"
 /// ```
 #[wasm_bindgen]
 pub fn convert_cst(cst_json: &str) -> Result<String, JsValue> {
@@ -50,7 +50,7 @@ mod tests {
     #[wasm_bindgen_test]
     fn test_convert_cst_c_major() {
         let result = convert_cst(C_MAJOR_CST).unwrap();
-        assert_eq!(result, "'c;e;g'");
+        assert_eq!(result, "v11'c1eg'");
     }
 
     #[wasm_bindgen_test]

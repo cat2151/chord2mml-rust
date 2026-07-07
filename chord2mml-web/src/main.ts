@@ -31,18 +31,15 @@ class SimpleAudioSequencer implements AudioSequencer {
         // Stop any currently playing notes
         this.stop();
 
-        // Parse MML like "'c;e;g' 'f;a;c'" into a sequence of chords
+        // Parse MML like "v11'c1eg''>c<ceg'" into a sequence of chords
         const chords = [...mml.matchAll(/'([^']*)'/g)].map(m => m[1]);
-        if (chords.length === 0 && mml.trim().length > 0) {
-            chords.push(mml.trim());
-        }
 
-        // Note frequencies (middle octave, C4=261.63Hz)
+        // Note frequencies (middle octave, C4=261.63Hz); sharp '+' / flat '-'
         const noteFrequencies: { [key: string]: number } = {
             'c': 261.63, 'c+': 277.18, 'd': 293.66, 'd+': 311.13,
             'e': 329.63, 'f': 349.23, 'f+': 369.99, 'g': 392.00,
             'g+': 415.30, 'a': 440.00, 'a+': 466.16, 'b': 493.88,
-            'c-': 493.88, 'd-': 277.18, 'e-': 311.13, 'f-': 329.63,
+            'c-': 246.94, 'd-': 277.18, 'e-': 311.13, 'f-': 329.63,
             'g-': 369.99, 'a-': 415.30, 'b-': 466.16
         };
 
@@ -51,10 +48,20 @@ class SimpleAudioSequencer implements AudioSequencer {
 
         chords.forEach((chordMml, chordIndex) => {
             const startTime = now + chordIndex * chordDuration;
-            const notes = chordMml.split(';').map(n => n.trim()).filter(n => n.length > 0);
 
-            notes.forEach((note) => {
-                const freq = noteFrequencies[note.toLowerCase()];
+            // Tokenize chord content: '<'/'>' shift octave, note letter with
+            // optional '+'/'-', digits (note length) are skipped
+            const notes: { name: string; octave: number }[] = [];
+            let octave = 0;
+            for (const m of chordMml.matchAll(/([<>])|([a-g][+-]?)|(\d+)/g)) {
+                if (m[1] === '<') octave++;
+                else if (m[1] === '>') octave--;
+                else if (m[2]) notes.push({ name: m[2], octave });
+            }
+
+            notes.forEach(({ name, octave: noteOctave }) => {
+                const baseFreq = noteFrequencies[name];
+                const freq = baseFreq ? baseFreq * Math.pow(2, noteOctave) : undefined;
                 if (freq) {
                     const oscillator = audioContext.createOscillator();
                     const gainNode = audioContext.createGain();

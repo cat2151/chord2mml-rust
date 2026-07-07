@@ -1,39 +1,46 @@
 //! Chord2MML Core Library
 //!
-//! This library converts chord notation to MML (Music Macro Language) format.
+//! Converts chord progression notation to MML (Music Macro Language) in the
+//! format of the original JS chord2mml (e.g. `C` → `v11'c1eg'`), consumable
+//! by obsidian-plugin-mmlabc.
+//!
+//! The pipeline mirrors the JS version's four stages:
+//! ```text
+//! parse → cst_to_ast (events) → ast2ast → ast2notes → notes2mml
+//! ```
 //!
 //! Two parsing paths converge on the shared `cst_to_ast` semantic layer
 //! (the architecture proven in tonejs-mml-to-json):
-//! - Native (feature `tree-sitter`, enabled by the CLI): `convert` parses with
-//!   the tree-sitter Rust crate.
+//! - Native (feature `tree-sitter`, enabled by the CLI): `convert` parses
+//!   with the tree-sitter Rust crate.
 //! - WASM/browser (default features, no C dependency): web-tree-sitter (JS)
 //!   parses the input and `convert_cst` receives the CST as JSON.
-//!
-//! Modules:
-//! - `ast`: Abstract Syntax Tree data structures
-//! - `cst_to_ast`: CST (JSON) to AST conversion — shared semantics
-//! - `parser`: native tree-sitter parsing (feature `tree-sitter`)
-//! - `mml`: AST to MML conversion
-//! - `note`: Note operations (conversion and transposition)
 
 use anyhow::{anyhow, Result};
 
 // Module declarations
 mod ast;
+mod ast2ast;
+mod ast2notes;
 pub mod cst_to_ast;
-mod mml;
-mod note;
+mod notes2mml;
 #[cfg(feature = "tree-sitter")]
 mod parser;
 
 // Re-export public types for external use
-pub use ast::{ASTChord, ASTRoot, Accidental, ChordQuality};
+pub use ast::{ChordEvent, Event, NotesEvent, SlashChordEvent};
 
-/// Convert a chord notation or chord progression to MML (Music Macro Language) format
+/// Run the shared pipeline stages after parsing.
+fn events_to_mml(events: Vec<Event>) -> Result<String> {
+    let events = ast2ast::ast_to_ast(events);
+    let note_events = ast2notes::ast_to_notes(events)?;
+    Ok(notes2mml::notes_to_mml(&note_events))
+}
+
+/// Convert a chord notation or chord progression to MML (Music Macro
+/// Language) in the JS-chord2mml-compatible format.
 ///
-/// Supports:
-/// - Single chords: "C" -> "'c;e;g'"
-/// - Chord progressions: "C-F-G-C" -> "'c;e;g' 'f;a;c' 'g;b;d' 'c;e;g'"
+/// Chords are separated by whitespace, ` - `, `→`, or `・`.
 ///
 /// # Example
 /// ```
@@ -41,11 +48,11 @@ pub use ast::{ASTChord, ASTRoot, Accidental, ChordQuality};
 ///
 /// // Single chord
 /// let mml = convert("C").unwrap();
-/// assert_eq!(mml, "'c;e;g'");
+/// assert_eq!(mml, "v11'c1eg'");
 ///
 /// // Chord progression
-/// let mml = convert("C-F-G-C").unwrap();
-/// assert_eq!(mml, "'c;e;g' 'f;a;c' 'g;b;d' 'c;e;g'");
+/// let mml = convert("Dm G7 C").unwrap();
+/// assert_eq!(mml, "v11'd1fa''g1b<df''c1eg'");
 /// ```
 #[cfg(feature = "tree-sitter")]
 pub fn convert(input: &str) -> Result<String> {
@@ -53,7 +60,7 @@ pub fn convert(input: &str) -> Result<String> {
 
     if input.is_empty() {
         return Err(anyhow!(
-            "Empty input. Please provide a chord notation (e.g., 'C', 'C-F-G-C')."
+            "Empty input. Please provide a chord notation (e.g., 'C', 'Dm G7 C')."
         ));
     }
 
@@ -62,11 +69,8 @@ pub fn convert(input: &str) -> Result<String> {
         return Err(anyhow!("Input too long (max 1000 characters)."));
     }
 
-    // Parse input to AST
-    let ast = parser::parse_to_ast(input)?;
-
-    // Convert AST to MML
-    mml::ast_to_mml(&ast)
+    let events = parser::parse_to_ast(input)?;
+    events_to_mml(events)
 }
 
 /// Convert a CST serialized as JSON (produced by web-tree-sitter in the
@@ -77,8 +81,8 @@ pub fn convert_cst(cst_json: &str) -> Result<String> {
         return Err(anyhow!("Empty CST JSON input."));
     }
 
-    let ast = cst_to_ast::cst_json_to_ast(cst_json)?;
-    mml::ast_to_mml(&ast)
+    let events = cst_to_ast::cst_json_to_ast(cst_json)?;
+    events_to_mml(events)
 }
 
 #[cfg(test)]
@@ -92,13 +96,22 @@ mod tests {
         #[test]
         fn test_convert_c_major() {
             let result = convert("C").unwrap();
-            assert_eq!(result, "'c;e;g'");
+            assert_eq!(result, "v11'c1eg'");
         }
 
         #[test]
-        fn test_convert_chord_progression() {
+        fn test_convert_chord_progression_whitespace() {
+            let result = convert("C F G C").unwrap();
+            assert_eq!(result, "v11'c1eg''f1a<c''g1b<d''c1eg'");
+        }
+
+        #[test]
+        fn test_convert_chord_progression_hyphen() {
+            // Unspaced-hyphen separators are legacy Rust-version syntax,
+            // kept until `-` becomes the minor quality (JS spec) in a
+            // later wave.
             let result = convert("C-F-G-C").unwrap();
-            assert_eq!(result, "'c;e;g' 'f;a;c' 'g;b;d' 'c;e;g'");
+            assert_eq!(result, "v11'c1eg''f1a<c''g1b<d''c1eg'");
         }
 
         #[test]
@@ -110,7 +123,7 @@ mod tests {
         #[test]
         fn test_convert_whitespace_trimmed() {
             let result = convert("  C  ").unwrap();
-            assert_eq!(result, "'c;e;g'");
+            assert_eq!(result, "v11'c1eg'");
         }
     }
 
@@ -133,7 +146,7 @@ mod tests {
             ]
         }"#;
         let result = convert_cst(cst_json).unwrap();
-        assert_eq!(result, "'c;e;g'");
+        assert_eq!(result, "v11'c1eg'");
     }
 
     #[test]
