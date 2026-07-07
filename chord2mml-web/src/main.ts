@@ -1,5 +1,12 @@
 // Main TypeScript entry point for chord2mml-web
-import init, { convert_chord } from '../public/wasm/chord2mml_wasm.js';
+//
+// Parsing pipeline (tonejs-mml-to-json pattern):
+//   input → web-tree-sitter (JS) + tree-sitter-chord.wasm → CST JSON
+//         → chord2mml-wasm convert_cst (Rust) → MML
+import init, { convert_cst } from '../public/wasm/chord2mml_wasm.js';
+import { Parser, Language } from 'web-tree-sitter';
+import treeSitterWasmUrl from 'web-tree-sitter/web-tree-sitter.wasm?url';
+import { nodeToCSTJson } from './cst-serializer.js';
 
 // Simple audio sequencer using Web Audio API
 interface AudioSequencer {
@@ -24,9 +31,12 @@ class SimpleAudioSequencer implements AudioSequencer {
         // Stop any currently playing notes
         this.stop();
 
-        // Parse simple MML format (e.g., "c;e;g")
-        const notes = mml.split(';').map(n => n.trim()).filter(n => n.length > 0);
-        
+        // Parse MML like "'c;e;g' 'f;a;c'" into a sequence of chords
+        const chords = [...mml.matchAll(/'([^']*)'/g)].map(m => m[1]);
+        if (chords.length === 0 && mml.trim().length > 0) {
+            chords.push(mml.trim());
+        }
+
         // Note frequencies (middle octave, C4=261.63Hz)
         const noteFrequencies: { [key: string]: number } = {
             'c': 261.63, 'c+': 277.18, 'd': 293.66, 'd+': 311.13,
@@ -37,37 +47,41 @@ class SimpleAudioSequencer implements AudioSequencer {
         };
 
         const now = audioContext.currentTime;
-        const duration = 1.0; // 1 second
+        const chordDuration = 1.0; // 1 second per chord
 
-        // Play each note simultaneously (chord)
-        notes.forEach((note) => {
-            const freq = noteFrequencies[note.toLowerCase()];
-            if (freq) {
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                
-                oscillator.type = 'sine';
-                oscillator.frequency.setValueAtTime(freq, now);
-                
-                gainNode.gain.setValueAtTime(0.2, now);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, now + duration);
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                
-                oscillator.start(now);
-                oscillator.stop(now + duration);
-                
-                // Clean up oscillator when it ends
-                oscillator.onended = () => {
-                    const index = this.oscillators.indexOf(oscillator);
-                    if (index > -1) {
-                        this.oscillators.splice(index, 1);
-                    }
-                };
-                
-                this.oscillators.push(oscillator);
-            }
+        chords.forEach((chordMml, chordIndex) => {
+            const startTime = now + chordIndex * chordDuration;
+            const notes = chordMml.split(';').map(n => n.trim()).filter(n => n.length > 0);
+
+            notes.forEach((note) => {
+                const freq = noteFrequencies[note.toLowerCase()];
+                if (freq) {
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(freq, startTime);
+
+                    gainNode.gain.setValueAtTime(0.2, startTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + chordDuration);
+
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+
+                    oscillator.start(startTime);
+                    oscillator.stop(startTime + chordDuration);
+
+                    // Clean up oscillator when it ends
+                    oscillator.onended = () => {
+                        const index = this.oscillators.indexOf(oscillator);
+                        if (index > -1) {
+                            this.oscillators.splice(index, 1);
+                        }
+                    };
+
+                    this.oscillators.push(oscillator);
+                }
+            });
         });
     }
 
@@ -87,7 +101,7 @@ class SimpleAudioSequencer implements AudioSequencer {
 }
 
 // Application state
-let wasmInitialized = false;
+let parser: Parser | null = null;
 let audioSequencer: AudioSequencer;
 
 // Get DOM elements
@@ -105,18 +119,34 @@ function showStatus(message: string, type: 'success' | 'error') {
     }, 3000);
 }
 
+function convertChord(input: string): string {
+    if (!parser) {
+        throw new Error('パーサー未初期化');
+    }
+    const tree = parser.parse(input);
+    if (!tree) {
+        throw new Error('パースに失敗しました');
+    }
+    if (tree.rootNode.hasError) {
+        throw new Error(`コード表記を解釈できません: ${input}`);
+    }
+    const cstJson = nodeToCSTJson(tree.rootNode);
+    return convert_cst(JSON.stringify(cstJson));
+}
+
 async function updateOutput(chord: string) {
-    if (!wasmInitialized) {
-        output.textContent = 'WASM未初期化';
-        output.classList.add('error');
+    const input = chord.trim();
+    if (input.length === 0) {
+        output.textContent = '';
+        output.classList.remove('error');
         return;
     }
 
     try {
-        const mml = convert_chord(chord);
+        const mml = convertChord(input);
         output.textContent = mml;
         output.classList.remove('error');
-        
+
         // Auto-play the generated MML
         if (mml && audioSequencer) {
             try {
@@ -127,20 +157,29 @@ async function updateOutput(chord: string) {
             }
         }
     } catch (error) {
-        output.textContent = `エラー: ${error}`;
+        output.textContent = `エラー: ${error instanceof Error ? error.message : error}`;
         output.classList.add('error');
     }
 }
 
 async function initialize() {
     try {
-        // Initialize WASM module for chord2mml
+        // Initialize the Rust WASM module (CST → MML conversion)
         await init();
-        wasmInitialized = true;
-        
+
+        // Initialize web-tree-sitter and load the chord grammar
+        await Parser.init({
+            locateFile: () => treeSitterWasmUrl,
+        });
+        const language = await Language.load(
+            new URL('tree-sitter-chord.wasm', new URL(import.meta.env.BASE_URL, location.href)).href
+        );
+        parser = new Parser();
+        parser.setLanguage(language);
+
         // Initialize audio sequencer
         audioSequencer = new SimpleAudioSequencer();
-        
+
         // Set up event listeners
         chordInput.addEventListener('input', async () => {
             await updateOutput(chordInput.value);
@@ -166,9 +205,9 @@ async function initialize() {
 
         // Initial conversion
         await updateOutput(chordInput.value);
-        
+
         showStatus('初期化完了', 'success');
-        
+
     } catch (error) {
         console.error('Initialization error:', error);
         output.textContent = `初期化エラー: ${error}`;
