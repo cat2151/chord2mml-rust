@@ -3,17 +3,17 @@
 //         → chord2mml-wasm convert_cst (Rust WASM) → MML
 // This is the same pipeline the browser runs, so it verifies the full
 // WASM-safe architecture (tonejs-mml-to-json pattern).
+//
+// Runs the same golden corpus as the native test
+// (chord2mml-core/tests/corpus/*.json), guaranteeing both paths agree.
 import { readFile } from 'fs/promises';
 import { fileURLToPath } from 'url';
 import { Parser, Language } from 'web-tree-sitter';
 import init, { convert_cst } from '../public/wasm/chord2mml_wasm.js';
 import { nodeToCSTJson } from '../src/cst-serializer.js';
 
-const cases = [
-  ['C', "'c;e;g'"],
-  ['Dm', "'d;f;a'"],
-  ['C-F-G-C', "'c;e;g' 'f;a;c' 'g;b;d' 'c;e;g'"],
-];
+const corpusUrl = new URL('../../chord2mml-core/tests/corpus/basic.json', import.meta.url);
+const cases = JSON.parse(await readFile(corpusUrl, 'utf8'));
 
 async function main() {
   // Initialize the Rust WASM module from bytes (no fetch in Node)
@@ -31,7 +31,8 @@ async function main() {
   parser.setLanguage(language);
 
   let failed = 0;
-  for (const [input, expected] of cases) {
+  let passed = 0;
+  for (const { input, expected } of cases) {
     const tree = parser.parse(input);
     if (!tree || tree.rootNode.hasError) {
       console.error(`✗ ${input}: parse error`);
@@ -39,9 +40,16 @@ async function main() {
       continue;
     }
     const cstJson = nodeToCSTJson(tree.rootNode);
-    const actual = convert_cst(JSON.stringify(cstJson));
+    let actual;
+    try {
+      actual = convert_cst(JSON.stringify(cstJson));
+    } catch (e) {
+      console.error(`✗ ${input}: convert error: ${e}`);
+      failed++;
+      continue;
+    }
     if (actual === expected) {
-      console.log(`✓ ${input} -> ${actual}`);
+      passed++;
     } else {
       console.error(`✗ ${input}: expected ${expected}, got ${actual}`);
       failed++;
@@ -49,10 +57,10 @@ async function main() {
   }
 
   if (failed > 0) {
-    console.error(`${failed} test(s) failed`);
+    console.error(`${failed} of ${failed + passed} corpus case(s) failed on the WASM path`);
     process.exit(1);
   }
-  console.log('All WASM path tests passed');
+  console.log(`All ${passed} corpus cases passed on the WASM path`);
 }
 
 main().catch((e) => {

@@ -1,22 +1,25 @@
 // TreeSitter grammar for chord notation
-// Supports basic chord parsing: C, Dm, G7, etc.
-// Also supports chord progressions: C-F-G-C
+//
+// The input is a sequence of chords separated by whitespace, " - "
+// (spaced hyphen), "→", or "・" — matching the original JS chord2mml
+// (peggyjs/chord2mml_chord2ast.pegjs). The unspaced hyphen (C-F-G-C)
+// is legacy syntax of this Rust port, kept until "-" becomes the minor
+// quality per the JS spec.
+//
+// Semantics (root numbers, quality normalization) live in
+// chord2mml-core/src/cst_to_ast.rs — this grammar only names the tokens.
 
 module.exports = grammar({
   name: 'chord',
 
-  rules: {
-    // Entry point: can be a single chord or a chord progression
-    source_file: $ => choice(
-      $.chord_progression,
-      $.chord
-    ),
+  extras: $ => [/\s/],
 
-    // Chord progression: one or more chords separated by hyphens
-    chord_progression: $ => seq(
-      $.chord,
-      repeat1(seq('-', $.chord))
-    ),
+  rules: {
+    // Entry point: a sequence of chords and separators
+    source_file: $ => repeat(choice($.chord, $.separator)),
+
+    // Progression separators (carry no meaning)
+    separator: $ => choice('-', '→', '・'),
 
     // A chord consists of: root + optional quality + optional bass
     chord: $ => seq(
@@ -25,23 +28,31 @@ module.exports = grammar({
       optional(field('bass', $.bass))
     ),
 
-    // Root note: C, D, E, F, G, A, B with optional accidental
+    // Root note: C, D, E, F, G, A, B with optional accidentals
     root: $ => seq(
       field('note', $.note),
-      optional(field('accidental', $.accidental))
+      repeat(field('accidental', $.accidental))
     ),
 
     // Note names
     note: $ => /[A-G]/,
 
-    // Accidentals: sharp (#) or flat (b)
-    accidental: $ => choice('#', 'b'),
+    // Accidentals: sharp (#, ＃, ♯) or flat (b, ♭); half- and full-width
+    accidental: $ => choice('#', '＃', '♯', 'b', '♭'),
 
-    // Chord quality: m, maj7, 7, sus4, etc.
+    // Chord quality tokens (longest match wins in the lexer).
+    // Normalization to the JS quality strings happens in cst_to_ast.rs.
     quality: $ => choice(
-      'm',
       'maj7',
+      'Maj7',
       'M7',
+      '△',
+      'maj',
+      'M',
+      'min7',
+      'm7',
+      'min',
+      'm',
       '7',
       'dim',
       'aug',
@@ -51,10 +62,10 @@ module.exports = grammar({
       // Add more as needed
     ),
 
-    // Bass note: /note for slash chords (e.g., C/E)
+    // Bass note: /root for slash chords (e.g. C/E)
     bass: $ => seq(
       '/',
-      $.root
+      field('root', $.root)
     ),
   }
 });

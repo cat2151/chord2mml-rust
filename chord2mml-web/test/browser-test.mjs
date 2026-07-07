@@ -63,27 +63,32 @@ try {
     { timeout: 15000 }
   );
   const initial = await page.locator('#output').textContent();
-  if (initial === "'c;e;g'") {
+  if (initial === "v11'c1eg'") {
     console.log(`✓ initial C -> ${initial}`);
   } else {
-    console.error(`✗ initial C: expected 'c;e;g', got ${initial}`);
+    console.error(`✗ initial C: expected v11'c1eg', got ${initial}`);
     failed++;
   }
 
-  // Type a progression
-  await page.locator('#chordInput').fill('C-F-G-C');
-  await page.waitForFunction(
-    () => document.getElementById('output')?.textContent?.includes('g;b;d'),
-    null,
-    { timeout: 5000 }
-  );
-  const progression = await page.locator('#output').textContent();
-  const expected = "'c;e;g' 'f;a;c' 'g;b;d' 'c;e;g'";
-  if (progression === expected) {
-    console.log(`✓ C-F-G-C -> ${progression}`);
-  } else {
-    console.error(`✗ C-F-G-C: expected ${expected}, got ${progression}`);
-    failed++;
+  // Type progressions (JS-spec whitespace separator and legacy hyphen)
+  const progressions = [
+    ['Dm G7 C', "v11'd1fa''g1b<df''c1eg'", 'd1fa'],
+    ['C-F-G-C', "v11'c1eg''f1a<c''g1b<d''c1eg'", 'f1a'],
+  ];
+  for (const [input, expected, marker] of progressions) {
+    await page.locator('#chordInput').fill(input);
+    await page.waitForFunction(
+      (m) => document.getElementById('output')?.textContent?.includes(m),
+      marker,
+      { timeout: 5000 }
+    );
+    const actual = await page.locator('#output').textContent();
+    if (actual === expected) {
+      console.log(`✓ ${input} -> ${actual}`);
+    } else {
+      console.error(`✗ ${input}: expected ${expected}, got ${actual}`);
+      failed++;
+    }
   }
 } catch (e) {
   console.error('✗ browser test error:', e);

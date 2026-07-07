@@ -2,40 +2,35 @@
   "name": "chord",
   "rules": {
     "source_file": {
+      "type": "REPEAT",
+      "content": {
+        "type": "CHOICE",
+        "members": [
+          {
+            "type": "SYMBOL",
+            "name": "chord"
+          },
+          {
+            "type": "SYMBOL",
+            "name": "separator"
+          }
+        ]
+      }
+    },
+    "separator": {
       "type": "CHOICE",
       "members": [
         {
-          "type": "SYMBOL",
-          "name": "chord_progression"
+          "type": "STRING",
+          "value": "-"
         },
         {
-          "type": "SYMBOL",
-          "name": "chord"
-        }
-      ]
-    },
-    "chord_progression": {
-      "type": "SEQ",
-      "members": [
-        {
-          "type": "SYMBOL",
-          "name": "chord"
+          "type": "STRING",
+          "value": "→"
         },
         {
-          "type": "REPEAT1",
-          "content": {
-            "type": "SEQ",
-            "members": [
-              {
-                "type": "STRING",
-                "value": "-"
-              },
-              {
-                "type": "SYMBOL",
-                "name": "chord"
-              }
-            ]
-          }
+          "type": "STRING",
+          "value": "・"
         }
       ]
     },
@@ -96,20 +91,15 @@
           }
         },
         {
-          "type": "CHOICE",
-          "members": [
-            {
-              "type": "FIELD",
-              "name": "accidental",
-              "content": {
-                "type": "SYMBOL",
-                "name": "accidental"
-              }
-            },
-            {
-              "type": "BLANK"
+          "type": "REPEAT",
+          "content": {
+            "type": "FIELD",
+            "name": "accidental",
+            "content": {
+              "type": "SYMBOL",
+              "name": "accidental"
             }
-          ]
+          }
         }
       ]
     },
@@ -126,7 +116,19 @@
         },
         {
           "type": "STRING",
+          "value": "＃"
+        },
+        {
+          "type": "STRING",
+          "value": "♯"
+        },
+        {
+          "type": "STRING",
           "value": "b"
+        },
+        {
+          "type": "STRING",
+          "value": "♭"
         }
       ]
     },
@@ -135,15 +137,43 @@
       "members": [
         {
           "type": "STRING",
-          "value": "m"
-        },
-        {
-          "type": "STRING",
           "value": "maj7"
         },
         {
           "type": "STRING",
+          "value": "Maj7"
+        },
+        {
+          "type": "STRING",
           "value": "M7"
+        },
+        {
+          "type": "STRING",
+          "value": "△"
+        },
+        {
+          "type": "STRING",
+          "value": "maj"
+        },
+        {
+          "type": "STRING",
+          "value": "M"
+        },
+        {
+          "type": "STRING",
+          "value": "min7"
+        },
+        {
+          "type": "STRING",
+          "value": "m7"
+        },
+        {
+          "type": "STRING",
+          "value": "min"
+        },
+        {
+          "type": "STRING",
+          "value": "m"
         },
         {
           "type": "STRING",
@@ -179,8 +209,12 @@
           "value": "/"
         },
         {
-          "type": "SYMBOL",
-          "name": "root"
+          "type": "FIELD",
+          "name": "root",
+          "content": {
+            "type": "SYMBOL",
+            "name": "root"
+          }
         }
       ]
     }

@@ -2,6 +2,12 @@
 
 This directory contains examples demonstrating the chord2mml-rust library and CLI.
 
+The output format is compatible with the original JS
+[chord2mml](https://github.com/cat2151/chord2mml) (consumable by
+obsidian-plugin-mmlabc): a leading `v11` volume command, each chord wrapped
+in `'...'`, lowercase note names with `+`/`-` for sharp/flat, `<`/`>` for
+octave movement, and a note-length digit after the first note of each chord.
+
 ## Basic Examples
 
 ### Single Chord Conversion
@@ -9,32 +15,43 @@ This directory contains examples demonstrating the chord2mml-rust library and CL
 ```bash
 # Convert a single C major chord
 chord2mml "C"
-# Output: 'c;e;g'
+# Output: v11'c1eg'
 ```
 
 ### Chord Progression
 
+Chords are separated by whitespace, ` - ` (spaced hyphen), `→`, or `・`.
+The unspaced hyphen (`C-F-G-C`) also works for now (legacy syntax of this
+Rust port; it will change when `-` becomes the minor quality per the JS spec).
+
 ```bash
-# Convert a chord progression
+chord2mml "Dm G7 C"
+# Output: v11'd1fa''g1b<df''c1eg'
+
 chord2mml "C-F-G-C"
-# Output: 'c;e;g' 'f;a;c' 'g;b;d' 'c;e;g'
+# Output: v11'c1eg''f1a<c''g1b<d''c1eg'
 ```
 
-### Minor Chords
+### Chord Qualities
 
 ```bash
-# D minor chord
-chord2mml "Dm"
-# Output: 'd;f;a'
+chord2mml "Cm"      # v11'c1d+g'
+chord2mml "Cmaj7"   # v11'c1egb'
+chord2mml "Cm7"     # v11'c1d+ga+'
+chord2mml "C7"      # v11'c1ega+'
+chord2mml "Csus4"   # v11'c1fg'
+chord2mml "Cdim"    # v11'c1d+f+'
+chord2mml "Caug"    # v11'c1eg+'
+```
 
-# Chord progression with minor chords
-chord2mml "C-Dm-G-C"
-# Output: 'c;e;g' 'd;f;a' 'g;b;d' 'c;e;g'
+### Slash Chords (chord over bass note)
+
+```bash
+chord2mml "F/C"
+# Output: v11'>c1fa<c'
 ```
 
 ## Using as a Library
-
-Create a file `examples/basic.rs`:
 
 ```rust
 use chord2mml_core::convert;
@@ -43,13 +60,13 @@ fn main() {
     // Convert a single chord
     let mml = convert("C").unwrap();
     println!("C major: {}", mml);
-    // Output: C major: 'c;e;g'
-    
+    // Output: C major: v11'c1eg'
+
     // Convert a chord progression
-    let progression = convert("C-F-G-C").unwrap();
+    let progression = convert("Dm G7 C").unwrap();
     println!("Progression: {}", progression);
-    // Output: Progression: 'c;e;g' 'f;a;c' 'g;b;d' 'c;e;g'
-    
+    // Output: Progression: v11'd1fa''g1b<df''c1eg'
+
     // Handle errors
     match convert("InvalidChord") {
         Ok(mml) => println!("Result: {}", mml),
@@ -58,85 +75,52 @@ fn main() {
 }
 ```
 
-Run with:
+Run the bundled example with:
 ```bash
 cd chord2mml-core
 cargo run --example basic
 ```
 
-## Pipeline Examples
+## Architecture: Pipeline Flow
 
-### Process Multiple Lines
-
-```bash
-# Create a file with chord progressions
-cat > chords.txt << EOF
-C
-C-F-G-C
-Dm-G-C
-EOF
-
-# Convert all progressions
-cat chords.txt | while read line; do
-    chord2mml "$line"
-done
-```
-
-### Filter and Convert
-
-```bash
-# Only convert lines that don't start with #
-grep -v "^#" chords.txt | while read line; do
-    chord2mml "$line"
-done
-```
-
-## Architecture: Tree-sitter Flow
-
-The conversion process follows this flow:
+The conversion mirrors the JS version's four stages. Both parsing paths
+(native tree-sitter and browser web-tree-sitter) converge on the shared
+`cst_to_ast` semantic layer:
 
 ```
 Input Text
     ↓
-Tree-sitter Parser (grammar.js)
+Tree-sitter Parser (grammar.js)          [native: tree-sitter crate,
+    ↓                                     browser: web-tree-sitter (JS)]
+CST as JSON
     ↓
-CST (Concrete Syntax Tree)
+cst_to_ast  — roots resolved to semitone numbers, qualities normalized
     ↓
-AST Converter (parse_chord_node)
+Event AST (chord / slash-chord events)
     ↓
-AST (Abstract Syntax Tree)
+ast2ast     — slash-chord mode resolution, bar → note length
     ↓
-MML Generator (ast_to_mml)
+ast2notes   — quality → intervals, note stacking
+    ↓
+notes2mml   — JS-compatible MML text
     ↓
 Output MML
 ```
 
 ### Example Flow
 
-For input `"C-F-G"`:
+For input `"F/C"`:
 
-1. **Tree-sitter parsing** creates CST:
-   ```
-   chord_progression
-     ├── chord (C)
-     ├── chord (F)
-     └── chord (G)
-   ```
+1. **Tree-sitter parsing** creates a CST with a chord node (root `F`, bass `/C`).
+2. **cst_to_ast** produces `SlashChord { upper_root: 5, upper_quality: "maj", lower_root: 0, ... }`.
+3. **ast2ast** resolves it to the default slash mode, chord-over-bass-note, and stamps note length 1.
+4. **ast2notes** stacks the F major triad above the C bass and shifts down an octave: `[-12, -7, -3, 0]`.
+5. **notes2mml** renders `v11'>c1fa<c'`.
 
-2. **AST conversion** creates:
-   ```rust
-   ASTRoot::ChordProgression([
-       ASTChord { root: "C", quality: Major, ... },
-       ASTChord { root: "F", quality: Major, ... },
-       ASTChord { root: "G", quality: Major, ... },
-   ])
-   ```
+## The Golden Corpus
 
-3. **MML generation** produces:
-   ```
-   'c;e;g' 'f;a;c' 'g;b;d'
-   ```
-
-## More Examples
-
-See the `tests` directory in `chord2mml-core/src/lib.rs` for more examples.
+The spec is the original JS chord2mml's test suite. Ported cases live in
+`chord2mml-core/tests/corpus/*.json` with expected outputs generated by
+executing the JS implementation. The same corpus runs on:
+- the native path: `cargo test --workspace --all-features`
+- the WASM path: `cd chord2mml-web && npm test`

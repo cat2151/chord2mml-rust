@@ -7,16 +7,17 @@
   {
     "type": "bass",
     "named": true,
-    "fields": {},
-    "children": {
-      "multiple": false,
-      "required": true,
-      "types": [
-        {
-          "type": "root",
-          "named": true
-        }
-      ]
+    "fields": {
+      "root": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "root",
+            "named": true
+          }
+        ]
+      }
     }
   },
   {
@@ -56,21 +57,6 @@
     }
   },
   {
-    "type": "chord_progression",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "chord",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
     "type": "quality",
     "named": true,
     "fields": {}
@@ -80,7 +66,7 @@
     "named": true,
     "fields": {
       "accidental": {
-        "multiple": false,
+        "multiple": true,
         "required": false,
         "types": [
           {
@@ -102,19 +88,24 @@
     }
   },
   {
+    "type": "separator",
+    "named": true,
+    "fields": {}
+  },
+  {
     "type": "source_file",
     "named": true,
     "fields": {},
     "children": {
-      "multiple": false,
-      "required": true,
+      "multiple": true,
+      "required": false,
       "types": [
         {
           "type": "chord",
           "named": true
         },
         {
-          "type": "chord_progression",
+          "type": "separator",
           "named": true
         }
       ]
@@ -141,7 +132,15 @@
     "named": false
   },
   {
+    "type": "M",
+    "named": false
+  },
+  {
     "type": "M7",
+    "named": false
+  },
+  {
+    "type": "Maj7",
     "named": false
   },
   {
@@ -161,7 +160,23 @@
     "named": false
   },
   {
+    "type": "m7",
+    "named": false
+  },
+  {
+    "type": "maj",
+    "named": false
+  },
+  {
     "type": "maj7",
+    "named": false
+  },
+  {
+    "type": "min",
+    "named": false
+  },
+  {
+    "type": "min7",
     "named": false
   },
   {
@@ -174,6 +189,30 @@
   },
   {
     "type": "sus4",
+    "named": false
+  },
+  {
+    "type": "→",
+    "named": false
+  },
+  {
+    "type": "△",
+    "named": false
+  },
+  {
+    "type": "♭",
+    "named": false
+  },
+  {
+    "type": "♯",
+    "named": false
+  },
+  {
+    "type": "・",
+    "named": false
+  },
+  {
+    "type": "＃",
     "named": false
   }
 ]

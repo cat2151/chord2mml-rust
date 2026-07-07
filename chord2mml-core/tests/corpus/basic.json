@@ -1,0 +1,194 @@
+[
+  {
+    "input": "C",
+    "expected": "v11'c1eg'"
+  },
+  {
+    "input": "D",
+    "expected": "v11'd1f+a'"
+  },
+  {
+    "input": "E",
+    "expected": "v11'e1g+b'"
+  },
+  {
+    "input": "F",
+    "expected": "v11'f1a<c'"
+  },
+  {
+    "input": "G",
+    "expected": "v11'g1b<d'"
+  },
+  {
+    "input": "A",
+    "expected": "v11'a1<c+e'"
+  },
+  {
+    "input": "B",
+    "expected": "v11'b1<d+f+'"
+  },
+  {
+    "input": "C#",
+    "expected": "v11'c+1fg+'"
+  },
+  {
+    "input": "C＃",
+    "expected": "v11'c+1fg+'"
+  },
+  {
+    "input": "C♯",
+    "expected": "v11'c+1fg+'"
+  },
+  {
+    "input": "Db",
+    "expected": "v11'c+1fg+'"
+  },
+  {
+    "input": "D♭",
+    "expected": "v11'c+1fg+'"
+  },
+  {
+    "input": "Eb",
+    "expected": "v11'd+1ga+'"
+  },
+  {
+    "input": "F#",
+    "expected": "v11'f+1a+<c+'"
+  },
+  {
+    "input": "Gb",
+    "expected": "v11'f+1a+<c+'"
+  },
+  {
+    "input": "G#",
+    "expected": "v11'g+1<cd+'"
+  },
+  {
+    "input": "Ab",
+    "expected": "v11'g+1<cd+'"
+  },
+  {
+    "input": "Bb",
+    "expected": "v11'a+1<df'"
+  },
+  {
+    "input": "B♭",
+    "expected": "v11'a+1<df'"
+  },
+  {
+    "input": "Cmaj",
+    "expected": "v11'c1eg'"
+  },
+  {
+    "input": "CM",
+    "expected": "v11'c1eg'"
+  },
+  {
+    "input": "GM",
+    "expected": "v11'g1b<d'"
+  },
+  {
+    "input": "Cm",
+    "expected": "v11'c1d+g'"
+  },
+  {
+    "input": "Cmin",
+    "expected": "v11'c1d+g'"
+  },
+  {
+    "input": "Dm",
+    "expected": "v11'd1fa'"
+  },
+  {
+    "input": "Am",
+    "expected": "v11'a1<ce'"
+  },
+  {
+    "input": "Cm7",
+    "expected": "v11'c1d+ga+'"
+  },
+  {
+    "input": "Cmin7",
+    "expected": "v11'c1d+ga+'"
+  },
+  {
+    "input": "Cmaj7",
+    "expected": "v11'c1egb'"
+  },
+  {
+    "input": "CM7",
+    "expected": "v11'c1egb'"
+  },
+  {
+    "input": "Bmaj7",
+    "expected": "v11'b1<d+f+a+'"
+  },
+  {
+    "input": "C#maj7",
+    "expected": "v11'c+1fg+<c'"
+  },
+  {
+    "input": "C7",
+    "expected": "v11'c1ega+'"
+  },
+  {
+    "input": "G7",
+    "expected": "v11'g1b<df'"
+  },
+  {
+    "input": "Csus2",
+    "expected": "v11'c1dg'"
+  },
+  {
+    "input": "Csus4",
+    "expected": "v11'c1fg'"
+  },
+  {
+    "input": "Cdim",
+    "expected": "v11'c1d+f+'"
+  },
+  {
+    "input": "Caug",
+    "expected": "v11'c1eg+'"
+  },
+  {
+    "input": "C G",
+    "expected": "v11'c1eg''g1b<d'"
+  },
+  {
+    "input": "C F G C",
+    "expected": "v11'c1eg''f1a<c''g1b<d''c1eg'"
+  },
+  {
+    "input": "Cmaj GM",
+    "expected": "v11'c1eg''g1b<d'"
+  },
+  {
+    "input": "C - C",
+    "expected": "v11'c1eg''c1eg'"
+  },
+  {
+    "input": "C→C → C",
+    "expected": "v11'c1eg''c1eg''c1eg'"
+  },
+  {
+    "input": "C・C ・ C",
+    "expected": "v11'c1eg''c1eg''c1eg'"
+  },
+  {
+    "input": "F/C",
+    "expected": "v11'>c1fa<c'"
+  },
+  {
+    "input": "C/C",
+    "expected": "v11'>c1<ceg'"
+  },
+  {
+    "input": "C/E",
+    "expected": "v11'>e1<ceg'"
+  },
+  {
+    "input": "Dm G7 C",
+    "expected": "v11'd1fa''g1b<df''c1eg'"
+  }
+]

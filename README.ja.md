@@ -18,77 +18,57 @@
 
 このプロジェクトは、[chord2mml](https://github.com/cat2151/chord2mml)で Peggy.js + JavaScript で作っていたものを、**Rust + Tree-sitter** として新たに作り直したものです。
 
+**出力はJS版と互換**（例: `C` → `v11'c1eg'`）で、JS版の約100テストを仕様として段階的に移植しています（移植済みのケースは `chord2mml-core/tests/corpus/` のゴールデンコーパス参照）。
+
 ### 主な特徴
 
 - **Tree-sitterパーサー**: 堅牢で正確な構文解析
-- **CST→AST変換**: Tree-sitterが生成するCST（具象構文木）をAST（抽象構文木）に変換
-- **純粋なRustネイティブアプリケーション**: text to text の変換に特化
-- **CLIツール**: コマンドラインから直接利用可能
-- **ライブラリクレート**: Rustのネイティブアプリケーションから直接利用可能
+- **JS版互換の出力**: obsidian-plugin-mmlabc 等でそのまま利用できるMML形式
+- **ネイティブ + ブラウザ両対応**: CLI/ライブラリに加え、WASM + web-tree-sitter によるブラウザデモ
+- **ゴールデンコーパス**: JS版の実行結果を期待値とするテストを、ネイティブ・WASM両経路で共有
 
 ## アーキテクチャ
 
 ```
 chord2mml-rust/
-├── tree-sitter-chord/   # Tree-sitterグラマー定義
-├── chord2mml-core/      # Rustによる変換コアライブラリ（CST→AST→MML）
-└── chord2mml-cli/       # コマンドラインインターフェース
+├── tree-sitter-chord/   # Tree-sitterグラマー定義 + 文法WASM
+├── chord2mml-core/      # Rustによる変換コアライブラリ
+├── chord2mml-cli/       # コマンドラインインターフェース
+├── chord2mml-wasm/      # WASMバインディング（C依存なし）
+└── chord2mml-web/       # ブラウザデモ（web-tree-sitter + Vite）
 ```
 
 ### データフロー
 
+[tonejs-mml-to-json](https://github.com/cat2151/tonejs-mml-to-json) で実証済みのパターンを踏襲しています。パイプラインはJS版の4段構成を移植したものです。
+
 ```
-入力テキスト (例: "C-F-G-C")
-    ↓
-Tree-sitterパーサー
-    ↓
-CST (Concrete Syntax Tree)
-    ↓
-AST変換
-    ↓
-AST (Abstract Syntax Tree)
-    ↓
-MML生成
-    ↓
-出力MML (例: "'c;e;g' 'f;a;c' 'g;b;d' 'c;e;g'")
+[ネイティブ] 入力 → tree-sitter Rustクレート → CST
+[ブラウザ]   入力 → web-tree-sitter(JS) + tree-sitter-chord.wasm → CST(JSON)
+共通:       CST → cst_to_ast → イベント配列AST → ast2ast → ast2notes → notes2mml → MML
 ```
 
-### コンポーネント
-
-1. **tree-sitter-chord**: Tree-sitterグラマー定義
-   - コード記法の構文定義（C、Dm、G7など）
-   - コード進行のサポート（C-F-G-Cなど）
-
-2. **chord2mml-core**: コード進行をパースしてMMLに変換するRustライブラリ
-   - Tree-sitterによる構文解析
-   - CST（具象構文木）からAST（抽象構文木）への変換
-   - ASTからMMLへの変換
-   - ネイティブアプリケーションから利用可能
-
-3. **chord2mml-cli**: コマンドラインツール
-   - text to text の変換インターフェース
-   - 標準入力/引数からの入力サポート
+ポイント: tree-sitter の C 依存を Rust の WASM ビルドに含めないため、`chord2mml-core` はデフォルトで tree-sitter 非依存（`tree-sitter` feature をCLIが有効化）です。
 
 ## デモ
+
+### ブラウザ
+
+GitHub Pages: https://cat2151.github.io/chord2mml-rust/
 
 ### CLIツール
 
 ```bash
 # 単一のコード
 $ chord2mml "C"
-'c;e;g'
+v11'c1eg'
 
-# コード進行
+# コード進行（空白・" - "・→・・ で区切り。ハイフン区切りも当面利用可能）
+$ chord2mml "Dm G7 C"
+v11'd1fa''g1b<df''c1eg'
+
 $ chord2mml "C-F-G-C"
-'c;e;g' 'f;a;c' 'g;b;d' 'c;e;g'
-
-# マイナーコード
-$ chord2mml "Dm"
-'d;f;a'
-
-# 混合進行
-$ chord2mml "C-Dm-G-C"
-'c;e;g' 'd;f;a' 'g;b;d' 'c;e;g'
+v11'c1eg''f1a<c''g1b<d''c1eg'
 ```
 
 ## 使い方
@@ -97,18 +77,13 @@ $ chord2mml "C-Dm-G-C"
 
 ```bash
 # ビルド
-cd chord2mml-cli
-cargo build --release
+cargo build --release -p chord2mml-cli
 
 # 実行（引数から）
-chord2mml "C-F-G-C"
+chord2mml "Dm G7 C"
 
 # 実行（標準入力から）
-echo "C-F-G-C" | chord2mml
-
-# インタラクティブモード
-chord2mml
-# コード記法を入力してEnter
+echo "Dm G7 C" | chord2mml
 ```
 
 ### Rustライブラリとして
@@ -118,100 +93,45 @@ use chord2mml_core::convert;
 
 fn main() {
     // 単一のコード
-    let chord = "C";
-    let mml = convert(chord).unwrap();
-    println!("MML: {}", mml); // "'c;e;g'"
-    
+    let mml = convert("C").unwrap();
+    println!("MML: {}", mml); // "v11'c1eg'"
+
     // コード進行
-    let progression = "C-F-G-C";
-    let mml = convert(progression).unwrap();
-    println!("MML: {}", mml); // "'c;e;g' 'f;a;c' 'g;b;d' 'c;e;g'"
+    let mml = convert("Dm G7 C").unwrap();
+    println!("MML: {}", mml); // "v11'd1fa''g1b<df''c1eg'"
 }
 ```
 
-### ビルド方法
-
-#### Rustライブラリとコア
+### ビルド・テスト
 
 ```bash
-cd chord2mml-core
-cargo build --release
-cargo test
-```
+# ワークスペース全体（ネイティブ）
+cargo test --workspace --all-features
 
-#### CLIツール
+# WASM（C依存なしでビルドできることの確認）
+cargo build -p chord2mml-wasm --target wasm32-unknown-unknown --release
 
-```bash
-cd chord2mml-cli
-cargo build --release
-# バイナリは ../target/release/chord2mml に生成されます
-```
+# ブラウザ経路のテスト（web-tree-sitter + Rust WASM をNodeで実行）
+cd chord2mml-web && npm install && npm run build:wasm && npm test
 
-#### 例の実行
-
-```bash
-cd chord2mml-core
-cargo run --example basic
+# ブラウザ実動作テスト（headless Chromium）
+cd chord2mml-web && npm run build:web && npm run test:browser
 ```
 
 ## ロードマップ
 
-### Phase 1: Tree-sitterベースの基本実装 ✅
+JS版の約100テストを仕様とし、以下の順で移植を進めます（各ウェーブでネイティブ+WASM両経路のテストを維持）。
 
-- [x] Tree-sitterグラマーの定義
-- [x] 基本的なコード変換機能（C → c;e;g）
-- [x] コード進行のサポート（C-F-G-C）
-- [x] CST→AST→MML変換パイプライン
-- [x] CLIツールの実装
-- [x] 包括的なテストの追加
-
-### Phase 2: 元のchord2mmlテストの移植
-
-元の[chord2mml](https://github.com/cat2151/chord2mml)リポジトリにあるテストを移植し、
-以下の和音を網羅的にサポートします：
-
-**現在の実装状況**: メジャーコードとマイナーコードは完全に実装済み。その他のコードタイプはパーサーでの認識のみ対応しており、MML変換は未実装です。
-
-#### メジャー系コード
-- [x] C (ド・ミ・ソ)
-- [ ] C6 (ド・ミ・ソ・ラ)
-- [ ] CM7, Cmaj7 (ド・ミ・ソ・シ) ※パーサーのみ対応、MML変換未実装
-- [ ] Cadd9 (ド・ミ・ソ・レ)
-
-#### マイナー系コード
-- [x] Cm (ド・ミ♭・ソ)
-- [ ] Cm7 (ド・ミ♭・ソ・シ♭)
-
-#### セブンス系コード
-- [ ] C7 (ド・ミ・ソ・シ♭) ※パーサーのみ対応、MML変換未実装
-- [ ] C7sus4 (ド・ファ・ソ・シ♭)
-
-#### ディミニッシュ・オーギュメント系
-- [ ] Cdim (ド・ミ♭・ソ♭) ※パーサーのみ対応、MML変換未実装
-- [ ] Caug, C+, C(#5) (ド・ミ・ソ#) ※パーサーのみ対応、MML変換未実装
-
-#### サスペンド系
-- [ ] Csus4 (ド・ファ・ソ) ※パーサーのみ対応、MML変換未実装
-- [ ] Csus2 (ド・レ・ソ) ※パーサーのみ対応、MML変換未実装
-
-#### 転回形とベース指定
-- [ ] C/E (第一転回形: ミ・ソ・ド) ※パーサーのみ対応、MML変換未実装
-- [ ] C/G (第二転回形: ソ・ド・ミ) ※パーサーのみ対応、MML変換未実装
-- [ ] C/D (オンコード: レ・ド・ミ・ソ) ※パーサーのみ対応、MML変換未実装
-
-#### 機能拡張
-- [ ] オクターブ指定
-- [ ] リズム・音長指定
-- [x] 複数コードの連続入力(コード進行)
-
-### Phase 3: 高度な機能と統合
-
-- [ ] より複雑なコード進行のサポート
-- [ ] すべてのコードタイプの実装完了
-- [ ] WASM対応の再実装（必要に応じて）
-- [ ] パフォーマンス改善
-- [ ] エラーハンドリングの強化
-- [ ] ドキュメント整備
+- [x] **Phase 0**: WASM安全アーキテクチャ + CI + Pagesデプロイ復活
+- [x] **Phase 1**: JS版互換の出力形式（`v11'c1eg'`）とパイプライン4段化、基本コード
+  - メジャー/マイナー/maj7/min7/7/dim/aug/sus2/sus4、全角・半角の#♭、分数コード（ベース音）、コード進行
+- [ ] **Wave A**: テンション（6, 9, 11, 13）、7sus系、クォータル（4.N）
+- [ ] **Wave B**: 修飾（add, omit, ♭5, #5）、`-`表記のマイナー（`C-7`）
+- [ ] **Wave C**: オンコード（EonC）、ポリコード（US）、転回形（^N, 1st inv 等）
+- [ ] **Wave D**: ボイシング（drop2等）、ベースモード、オクターブ指定
+- [ ] **Wave E**: 小節と音長（`|`, `/ `）、度数記法、キー/スケール
+- [ ] **Wave F**: インラインMML/ABC、MIDIプログラムチェンジ、テンポ
+- [ ] **Wave G**: 方言プリプロセス（LLM生成コード進行対応）
 
 ## 開発方針
 
@@ -221,48 +141,20 @@ cargo run --example basic
 |------|---------------|-------------------|
 | パーサー | Peggy.js | Tree-sitter |
 | 言語 | JavaScript/TypeScript | Rust |
-| 実行環境 | ブラウザ専用 | ネイティブ（CLI） |
-| 変換フロー | PEG → AST → MML | Tree-sitter → CST → AST → MML |
-| ライブラリ利用 | 困難 | 容易（Rustクレート） |
+| 実行環境 | ブラウザ | ネイティブ（CLI）+ ブラウザ（WASM） |
+| 出力 | `v11'c1eg'` 形式 | 同じ（互換） |
 
 ### 設計思想
 
-1. **シンプルさ**: 複雑さを避け、メンテナンス性を重視
-2. **型安全性**: Rustの強力な型システムを活用
-3. **テスト駆動**: 包括的なテストカバレッジ
-4. **パフォーマンス**: Rustの高速性を活かした変換
-
-## 対象プラットフォーム
-
-- **Rust ライブラリ**: すべてのRustサポート環境
-- **CLIツール**: Linux, macOS, Windows
-
-## 技術スタック
-
-- **Rust**: 1.70以降
-- **Tree-sitter**: 構文解析エンジン
-- **tree-sitter-cli**: グラマー生成ツール
-
-## テスト
-
-```bash
-# Rustコアのテスト
-cd chord2mml-core
-cargo test
-
-# 全体のテスト
-cargo test --all
-
-# 例の実行
-cd chord2mml-core
-cargo run --example basic
-```
+1. **JS版テストが仕様**: 機能はJS版のテストに根拠を求める（ハルシネーション防止）
+2. **両経路の一致**: ネイティブとWASMで同一の意味論コード（cst_to_ast）を通す
+3. **テスト駆動**: ゴールデンコーパスによる網羅的検証
 
 ## ビルド要件
 
-- Rust 1.70以降
-- Node.js 18以降（tree-sitter-cli用）
-- tree-sitter-cli（グラマー生成用）
+- Rust 1.70以降（ネイティブビルドにはCコンパイラも必要）
+- Node.js 20以降（ブラウザデモ・WASM経路テスト用）
+- 文法WASMの再生成時のみ: tree-sitter-cli + docker または emscripten
 
 ## ライセンス
 
@@ -270,8 +162,8 @@ MIT License
 
 ## 関連プロジェクト
 
-- [chord2mml](https://github.com/cat2151/chord2mml) - オリジナルのJavaScript版
-- [tonejs-mml-to-json](https://github.com/cat2151/tonejs-mml-to-json) - MML解析ライブラリ
+- [chord2mml](https://github.com/cat2151/chord2mml) - オリジナルのJavaScript版（仕様の源泉）
+- [tonejs-mml-to-json](https://github.com/cat2151/tonejs-mml-to-json) - tree-sitter + WASM アーキテクチャの参照実装
 - [tonejs-json-sequencer](https://github.com/cat2151/tonejs-json-sequencer) - 音声再生ライブラリ
 
 ## 貢献
@@ -284,6 +176,5 @@ cat2151
 
 ## 参考リンク
 
-- [元のchord2mml](https://github.com/cat2151/chord2mml) - オリジナルのJavaScript版
 - [Tree-sitter](https://tree-sitter.github.io/tree-sitter/) - 構文解析ライブラリ
 - [EXAMPLES.md](EXAMPLES.md) - より詳しい使用例とアーキテクチャ説明

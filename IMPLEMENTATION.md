@@ -1,163 +1,37 @@
-# Implementation Summary - Issue #9
+# Implementation Summary
 
-## Overview
+現在の実装状態のサマリ。詳細なロードマップは [README.ja.md](README.ja.md)、
+エージェント向けの規約は [.github/copilot-instructions.md](.github/copilot-instructions.md) を参照。
 
-Successfully rebuilt the project as a **pure Rust native text-to-text application** using Tree-sitter for parsing, as requested in issue #9.
+## 方針（2026-07 再始動）
 
-## What Was Built
+- **JS版 [chord2mml](https://github.com/cat2151/chord2mml) の約100テストが唯一の仕様**。出力形式もJS版互換（`C` → `v11'c1eg'`）
+- 仕様は `chord2mml-core/tests/corpus/*.json` のゴールデンコーパスとして移植する。期待値はJS版を実際に実行して生成する
+- WASMアーキテクチャは [tonejs-mml-to-json](https://github.com/cat2151/tonejs-mml-to-json) の実証済みパターンに準拠（tree-sitterのC依存をRust WASMに含めない）
 
-### 1. Tree-sitter Grammar (`tree-sitter-chord/`)
-- Extended grammar to support:
-  - Single chords: `C`, `Dm`, `G7`, etc.
-  - Chord progressions: `C-F-G-C` (hyphen-separated)
-- Grammar generates CST (Concrete Syntax Tree) that captures the structure
+## パイプライン（JS版の4段構成を移植）
 
-### 2. Core Library (`chord2mml-core/`)
-- **Pure Rust native** implementation (removed WASM conditionals)
-- Implements the required flow:
-  1. **Input** → Tree-sitter Parser
-  2. **CST** (Concrete Syntax Tree) → AST Converter
-  3. **AST** (Abstract Syntax Tree) → MML Generator
-  4. **Output** (MML format like `'c;e;g'`)
+```
+[ネイティブ] 入力 → tree-sitter Rustクレート (parser.rs, feature "tree-sitter") → CST JSON化
+[ブラウザ]   入力 → web-tree-sitter(JS) + tree-sitter-chord.wasm → CST JSON (cst-serializer.js)
+共通:       CST JSON → cst_to_ast.rs → イベント配列AST → ast2ast.rs → ast2notes.rs → notes2mml.rs → MML
+```
 
-### 3. CLI Application (`chord2mml-cli/`)
-- Text-to-text conversion tool
-- Supports:
-  - Command-line arguments: `chord2mml "C-F-G-C"`
-  - Standard input (interactive mode)
-  - Pipeline processing: `echo "C" | chord2mml`
+- `cst_to_ast.rs`: ルートを半音数値(C=0..B=11)へ解決、クオリティをJS版の正規化文字列（`maj`, `min7`, `dim triad` 等）へ変換
+- `ast2ast.rs`: スラッシュコードのモード解決（デフォルト: chord over bass note）、小節→音長（小節なしは全音符=1）
+- `ast2notes.rs`: クオリティ→音程テーブル（JS版 getNotesWithoutOmit の移植）、ベース音の上へのスタック
+- `notes2mml.rs`: `v11` プレフィックス、`'...'` 囲み、`+`/`-`、`<`/`>`、音長数字（JS版 notesToMml の移植）
 
-## Examples
+## 検証
 
-### Single Chord
 ```bash
-$ chord2mml "C"
-'c;e;g'
+cargo test --workspace --all-features                                   # ネイティブ（コーパス含む）
+cargo build -p chord2mml-wasm --target wasm32-unknown-unknown --release # WASM安全性
+cd chord2mml-web && npm test                                            # WASM経路で同一コーパス
+cd chord2mml-web && npm run build:web && npm run test:browser           # 実ブラウザ(headless Chromium)
 ```
 
-### Chord Progression
-```bash
-$ chord2mml "C-F-G-C"
-'c;e;g' 'f;a;c' 'g;b;d' 'c;e;g'
-```
+## 実装済み / 未実装
 
-### Minor Chords
-```bash
-$ chord2mml "Dm"
-'d;f;a'
-
-$ chord2mml "C-Dm-G-C"
-'c;e;g' 'd;f;a' 'g;b;d' 'c;e;g'
-```
-
-## Architecture
-
-```
-Input: "C-F-G-C"
-    ↓
-Tree-sitter Parser (grammar.js)
-    ↓
-CST: chord_progression
-      ├── chord (C)
-      ├── chord (F)
-      ├── chord (G)
-      └── chord (C)
-    ↓
-AST Converter (parse_chord_node)
-    ↓
-AST: ChordProgression([
-       ASTChord { root: "C", quality: Major, ... },
-       ASTChord { root: "F", quality: Major, ... },
-       ASTChord { root: "G", quality: Major, ... },
-       ASTChord { root: "C", quality: Major, ... }
-     ])
-    ↓
-MML Generator (ast_to_mml)
-    ↓
-Output: "'c;e;g' 'f;a;c' 'g;b;d' 'c;e;g'"
-```
-
-## Key Features
-
-1. **Tree-sitter Based Parsing**: Robust, industry-standard parser
-2. **CST → AST → MML Pipeline**: Clean separation of concerns
-3. **Type-Safe AST**: Rust's type system ensures correctness
-4. **Error Handling**: Proper validation and error messages
-5. **Comprehensive Tests**: 9 unit tests + doc tests
-6. **Examples**: Runnable examples demonstrating usage
-
-## Files Modified/Created
-
-### New Files
-- `chord2mml-cli/` - New CLI application
-  - `Cargo.toml`
-  - `src/main.rs`
-  - `README.md`
-- `chord2mml-core/examples/basic.rs` - Example code
-- `EXAMPLES.md` - Comprehensive documentation
-- `IMPLEMENTATION.md` - This file
-
-### Modified Files
-- `tree-sitter-chord/grammar.js` - Extended for chord progressions
-- `chord2mml-core/src/lib.rs` - Complete rewrite using Tree-sitter
-- `chord2mml-core/Cargo.toml` - Removed WASM conditionals
-- `README.ja.md` - Updated to reflect new architecture
-- `Cargo.toml` - Added CLI to workspace
-
-### Removed Files
-- `chord2mml-core/src/lib.rs.backup` - Cleanup of old implementation
-
-## Testing
-
-All tests pass successfully:
-```bash
-$ cargo test --all
-running 9 tests (chord2mml-core)
-test result: ok. 9 passed; 0 failed
-
-running 1 test (tree-sitter-chord)
-test result: ok. 1 passed; 0 failed
-```
-
-## Build Status
-
-Successfully builds in release mode:
-```bash
-$ cargo build --all --release
-Finished `release` profile [optimized]
-```
-
-## Compatibility
-
-- **Rust**: 1.70 or later
-- **Platforms**: Linux, macOS, Windows
-- **Dependencies**:
-  - `tree-sitter` 0.20
-  - `anyhow` 1.0
-  - `thiserror` 1.0
-
-## What's Next (Future Work)
-
-As outlined in README.ja.md:
-
-### Phase 2: Extended Chord Support
-- Implement all chord types from original chord2mml
-- Extended tests from original repository
-
-### Phase 3: Advanced Features
-- WASM support (if needed)
-- Audio playback integration
-- Performance optimizations
-
-## Notes
-
-This implementation follows the agent instructions to:
-1. ✅ Use Tree-sitter for parsing
-2. ✅ Convert CST to AST
-3. ✅ Support single chords ("C")
-4. ✅ Support chord progressions ("C-F-G-C")
-5. ✅ Output MML format ("c;e;g")
-6. ✅ Create text-to-text Rust native application
-7. ✅ Discard old implementation to avoid confusion
-
-The existing WASM infrastructure (`chord2mml-wasm/`, `chord2mml-web/`) is preserved but not used in the current implementation, allowing for future integration if needed.
+- 実装済み: 基本コード（maj/min/maj7/min7/7/dim/aug/sus2/sus4）、全角半角#♭、分数コード、コード進行
+- 未実装: README のロードマップ Wave A〜G を参照（テンション、add/omit、転回形、drop、小節、度数、キー/スケール等）
