@@ -7,20 +7,26 @@
 ## Architecture
 
 ```
-tree-sitter-chord/   → Tree-sitter文法定義 (grammar.js)
-chord2mml-core/      → 変換コアライブラリ
-chord2mml-cli/       → CLIツール
-chord2mml-wasm/      → WASM用ラッパー（未完成）
+tree-sitter-chord/   → Tree-sitter文法定義 (grammar.js) + コミット済み文法WASM (tree-sitter-chord.wasm)
+chord2mml-core/      → 変換コアライブラリ（feature "tree-sitter" でネイティブパーサー有効化）
+chord2mml-cli/       → CLIツール（tree-sitter featureを有効化）
+chord2mml-wasm/      → WASM用ラッパー（default features、C依存なしでwasm32-unknown-unknownビルド可）
+chord2mml-web/       → ブラウザデモ（web-tree-sitter + Vite）
 ```
 
 ### Data Flow (重要)
+
+tonejs-mml-to-json の実証済みパターン。両経路とも意味論は `cst_to_ast.rs` に一本化されている:
 ```
-入力 → Tree-sitter Parser → CST → parser.rs → AST → mml.rs → MML出力
+[ネイティブ] 入力 → tree-sitter Rustクレート(parser.rs, feature "tree-sitter") → CST JSON化
+[ブラウザ]   入力 → web-tree-sitter(JS) + tree-sitter-chord.wasm → CST JSON (src/cst-serializer.js)
+共通:       CST JSON → cst_to_ast.rs → AST → mml.rs → MML出力
 ```
 
 各モジュールの責務:
 - [ast.rs](../chord2mml-core/src/ast.rs): `ASTChord`, `ChordQuality`などの型定義
-- [parser.rs](../chord2mml-core/src/parser.rs): Tree-sitter CST → AST変換
+- [cst_to_ast.rs](../chord2mml-core/src/cst_to_ast.rs): CST(JSON) → AST変換（共有意味論レイヤー、ここに文法の意味を実装する）
+- [parser.rs](../chord2mml-core/src/parser.rs): ネイティブ専用。tree-sitterでパースしCSTをJSON同形に変換して cst_to_ast へ渡す
 - [mml.rs](../chord2mml-core/src/mml.rs): AST → MML文字列生成
 - [note.rs](../chord2mml-core/src/note.rs): 音符の変換・転調ロジック
 
@@ -39,16 +45,28 @@ cd chord2mml-core && cargo run --example basic
 
 # CLI実行
 cargo run -p chord2mml-cli -- "C-F-G-C"
+
+# WASMビルド（default features、tree-sitterのC依存を含めないこと）
+cargo build -p chord2mml-wasm --target wasm32-unknown-unknown --release
+
+# ブラウザ経路のテスト（web-tree-sitter + Rust WASM をNodeで実行）
+cd chord2mml-web && npm install && npm run build:wasm && npm test
+
+# ブラウザ実動作テスト（headless Chromium）
+cd chord2mml-web && npm run build:web && npm run test:browser
+
+# 文法WASMの再生成（grammar.js変更時のみ。WSL等のdocker環境で実行しコミットする）
+cd tree-sitter-chord && npx tree-sitter-cli@0.20.8 build-wasm --docker
 ```
 
 ## Key Conventions
 
 ### コード追加時のパターン
 新しいコードタイプ（例: `Csus4`）を追加する場合:
-1. [grammar.js](../tree-sitter-chord/grammar.js) の `quality` に追加（必要なら）
-2. [parser.rs](../chord2mml-core/src/parser.rs) の `parse_chord_quality`/`parse_quality_text` に対応追加
+1. [grammar.js](../tree-sitter-chord/grammar.js) の `quality` に追加（必要なら）→ `tree-sitter generate` と文法WASM再生成
+2. [cst_to_ast.rs](../chord2mml-core/src/cst_to_ast.rs) の `parse_chord_quality` に対応追加
 3. [mml.rs](../chord2mml-core/src/mml.rs) の `chord_to_mml` にMML生成ロジック追加
-4. テストを追加
+4. テストを追加（ネイティブ + `chord2mml-web` のWASM経路テスト）
 
 ### MML出力形式
 - 単一コード: `'c;e;g'`（シングルクォートで囲み、セミコロン区切り）

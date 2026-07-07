@@ -5,20 +5,28 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "copy-libs": "node scripts/copy-libs.js",
     "build": "npm run build:wasm && npm run build:web",
     "build:wasm": "cd ../chord2mml-wasm && wasm-pack build --target web --out-dir ../chord2mml-web/public/wasm",
-    "build:web": "vite build",
-    "dev": "vite",
+    "build:web": "npm run copy-libs && vite build",
+    "dev": "npm run copy-libs && vite",
     "preview": "vite preview",
-    "test": "echo \"No tests yet\" && exit 0"
+    "test": "npm run copy-libs && node test/wasm-path-test.mjs",
+    "test:browser": "node test/browser-test.mjs"
   },
-  "keywords": ["chord", "mml", "music", "wasm", "rust"],
+  "keywords": [
+    "chord",
+    "mml",
+    "music",
+    "wasm",
+    "rust"
+  ],
   "author": "cat2151",
   "license": "MIT",
-  "dependencies": {
-  },
   "devDependencies": {
+    "playwright": "1.57",
     "typescript": "^5.3.0",
-    "vite": "^5.0.0"
+    "vite": "^5.0.0",
+    "web-tree-sitter": "^0.26.3"
   }
 }

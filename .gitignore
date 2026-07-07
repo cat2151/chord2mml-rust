@@ -30,6 +30,8 @@ target
 
 # WASM build outputs
 chord2mml-web/public/wasm/
+# Copied by chord2mml-web/scripts/copy-libs.js (source: tree-sitter-chord/tree-sitter-chord.wasm)
+chord2mml-web/public/tree-sitter-chord.wasm
 
 # Editor directories
 .vscode/
