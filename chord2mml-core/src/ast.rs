@@ -26,6 +26,16 @@ pub enum Event {
     /// inversion name ("root inv" | "1st inv" | "2nd inv" | "3rd inv");
     /// consumed by ast2notes
     ChangeInversionMode(String),
+    /// JS: `{event: "change open harmony mode to ..."}`; the String is
+    /// "close" | "drop2" | "drop4" | "drop2and4"; consumed by ast2notes
+    ChangeOpenHarmonyMode(String),
+    /// JS: `{event: "change bass play mode to ..."}`; the String is
+    /// "no bass" | "root"; read by ast2ast (chord rewriting) AND
+    /// ast2notes (inversion chords), like the JS state in both passes
+    ChangeBassPlayMode(String),
+    /// JS octave up/down events (upper/lower variants shift only one
+    /// register); consumed by ast2notes
+    OctaveShift { upper_delta: i32, lower_delta: i32 },
 }
 
 /// Slash-chord interpretation modes (JS slashMode state in ast2ast).

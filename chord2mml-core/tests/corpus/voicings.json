@@ -1,0 +1,186 @@
+[
+  {
+    "input": "drop2 C",
+    "expected": "v11'>e1<cg'"
+  },
+  {
+    "input": "drop-2 C",
+    "expected": "v11'>e1<cg'"
+  },
+  {
+    "input": "open triad C",
+    "expected": "v11'>e1<cg'"
+  },
+  {
+    "input": "drop4 Cmaj7",
+    "expected": "v11'>c1<egb'"
+  },
+  {
+    "input": "drop-4 Cmaj7",
+    "expected": "v11'>c1<egb'"
+  },
+  {
+    "input": "drop2and4 Cmaj7",
+    "expected": "v11'>c1g<eb'"
+  },
+  {
+    "input": "drop-2-and-4 Cmaj7",
+    "expected": "v11'>c1g<eb'"
+  },
+  {
+    "input": "close Cmaj7",
+    "expected": "v11'c1egb'"
+  },
+  {
+    "input": "close harmony Cmaj7",
+    "expected": "v11'c1egb'"
+  },
+  {
+    "input": "drop2 Cm7",
+    "expected": "v11'>g1<cd+a+'"
+  },
+  {
+    "input": "drop2 G7",
+    "expected": "v11'd1gb<f'"
+  },
+  {
+    "input": "drop4 C13",
+    "expected": "v11'>a+1<ceg<dfa'"
+  },
+  {
+    "input": "2nd inv drop2 Cmaj7",
+    "expected": "v11'c1gb<e'"
+  },
+  {
+    "input": "1st inv drop2 C",
+    "expected": "v11'>g1<e<c'"
+  },
+  {
+    "input": "drop4 Cmaj7 close Cmaj7",
+    "expected": "v11'>c1<egb''c1egb'"
+  },
+  {
+    "input": "Drop2 C",
+    "expected": "v11'>e1<cg'"
+  },
+  {
+    "input": "drop2, C",
+    "expected": "v11'>e1<cg'"
+  },
+  {
+    "input": "drop2 C/C",
+    "expected": "v11'>c1e<cg'"
+  },
+  {
+    "input": "1st inv C/C",
+    "expected": "v11'>c1eg<c'"
+  },
+  {
+    "input": "1st inv drop2 C/C",
+    "expected": "v11'>c1g<e<c'"
+  },
+  {
+    "input": "drop2 F/C",
+    "expected": "v11'>c1a<f<c'"
+  },
+  {
+    "input": "bass is root C",
+    "expected": "v11'>c1<ceg'"
+  },
+  {
+    "input": "bass plays root C",
+    "expected": "v11'>c1<ceg'"
+  },
+  {
+    "input": "bass play root C",
+    "expected": "v11'>c1<ceg'"
+  },
+  {
+    "input": "no bass C",
+    "expected": "v11'c1eg'"
+  },
+  {
+    "input": "bass is root C no bass C",
+    "expected": "v11'>c1<ceg''c1eg'"
+  },
+  {
+    "input": "bass is root Dm7",
+    "expected": "v11'>d1<dfa<c'"
+  },
+  {
+    "input": "bass is root G7 C7",
+    "expected": "v11'>g1<gb<df''>c1<cega+'"
+  },
+  {
+    "input": "bass is root, slash chord inversion, C/E",
+    "expected": "v11'>c1eg<c'"
+  },
+  {
+    "input": "bass is root EonC",
+    "expected": "v11'>c1eg+b'"
+  },
+  {
+    "input": "bass is root drop2 C",
+    "expected": "v11'>c1e<cg'"
+  },
+  {
+    "input": "C octave up C",
+    "expected": "v11'c1eg''<c1eg'"
+  },
+  {
+    "input": "C octave-down C",
+    "expected": "v11'c1eg''>c1eg'"
+  },
+  {
+    "input": "octave up C octave up C",
+    "expected": "v11'<c1eg''<<c1eg'"
+  },
+  {
+    "input": "Octave-Up C",
+    "expected": "v11'<c1eg'"
+  },
+  {
+    "input": "octave-up/ C/C",
+    "expected": "v11'>c1<<ceg'"
+  },
+  {
+    "input": "/octave-down C/C",
+    "expected": "v11'>>c1<<ceg'"
+  },
+  {
+    "input": "octave up/ C/C",
+    "expected": "v11'>c1<<ceg'"
+  },
+  {
+    "input": "octave down F/C",
+    "expected": "v11'>>c1fa<c'"
+  },
+  {
+    "input": "C,, C''",
+    "expected": "v11'>>c1eg''<<c1eg'"
+  },
+  {
+    "input": "C' C,",
+    "expected": "v11'<c1eg''>c1eg'"
+  },
+  {
+    "input": "C''/G",
+    "expected": "v11'>g1<<<ceg'"
+  },
+  {
+    "input": "C/G,,",
+    "expected": "v11'>>>g1<<<ceg'"
+  },
+  {
+    "input": "Dm' G7,",
+    "expected": "v11'<d1fa''>g1b<df'"
+  },
+  {
+    "input": "octave up C''",
+    "expected": "v11'<<<c1eg'"
+  },
+  {
+    "input": "octave up bass is root C",
+    "expected": "v11'c1<ceg'"
+  }
+]

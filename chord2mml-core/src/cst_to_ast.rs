@@ -77,6 +77,48 @@ pub fn cst_to_ast(root: &CSTNode) -> Result<Vec<Event>> {
             "mode_3rd_inv" => {
                 events.push(Event::ChangeInversionMode("3rd inv".to_string()))
             }
+            "mode_close" => {
+                events.push(Event::ChangeOpenHarmonyMode("close".to_string()))
+            }
+            "mode_drop2" => {
+                events.push(Event::ChangeOpenHarmonyMode("drop2".to_string()))
+            }
+            "mode_drop4" => {
+                events.push(Event::ChangeOpenHarmonyMode("drop4".to_string()))
+            }
+            "mode_drop2and4" => {
+                events.push(Event::ChangeOpenHarmonyMode("drop2and4".to_string()))
+            }
+            "mode_no_bass" => {
+                events.push(Event::ChangeBassPlayMode("no bass".to_string()))
+            }
+            "mode_bass_is_root" => {
+                events.push(Event::ChangeBassPlayMode("root".to_string()))
+            }
+            "octave_up" => events.push(Event::OctaveShift {
+                upper_delta: 1,
+                lower_delta: 1,
+            }),
+            "octave_up_upper" => events.push(Event::OctaveShift {
+                upper_delta: 1,
+                lower_delta: 0,
+            }),
+            "octave_up_lower" => events.push(Event::OctaveShift {
+                upper_delta: 0,
+                lower_delta: 1,
+            }),
+            "octave_down" => events.push(Event::OctaveShift {
+                upper_delta: -1,
+                lower_delta: -1,
+            }),
+            "octave_down_upper" => events.push(Event::OctaveShift {
+                upper_delta: -1,
+                lower_delta: 0,
+            }),
+            "octave_down_lower" => events.push(Event::OctaveShift {
+                upper_delta: 0,
+                lower_delta: -1,
+            }),
             other => return Err(anyhow!("Unexpected node type: {}", other)),
         }
     }
@@ -108,6 +150,11 @@ fn parse_chord_node(chord_node: &CSTNode) -> Result<Event> {
         None => None,
     };
 
+    let octave_offset = field_first(chord_node, "octave")
+        .and_then(|n| n.text.as_deref())
+        .map(parse_octave_offset)
+        .unwrap_or(0);
+
     // Slash chord (`/`, resolved to a mode by ast2ast) or on-chord
     // (`on`/`over`, always chord-over-bass-note), like the JS version.
     // An absent lower root inherits the upper root (JS: lowerRoot ??=
@@ -127,6 +174,10 @@ fn parse_chord_node(chord_node: &CSTNode) -> Result<Event> {
             Some(node) => Some(parse_inversion(node.text.as_deref().unwrap_or(""))?),
             None => None,
         };
+        let lower_octave_offset = field_first(bass_node, "octave")
+            .and_then(|n| n.text.as_deref())
+            .map(parse_octave_offset)
+            .unwrap_or(0);
 
         let slash = SlashChordEvent {
             upper_root: root,
@@ -135,8 +186,8 @@ fn parse_chord_node(chord_node: &CSTNode) -> Result<Event> {
             lower_root,
             lower_quality,
             lower_inversion,
-            upper_octave_offset: 0,
-            lower_octave_offset: 0,
+            upper_octave_offset: octave_offset,
+            lower_octave_offset,
             note_length: None,
         };
 
@@ -150,9 +201,17 @@ fn parse_chord_node(chord_node: &CSTNode) -> Result<Event> {
         root,
         quality,
         inversion,
-        octave_offset: 0,
+        octave_offset,
         note_length: None,
     }))
+}
+
+/// Parse a per-chord octave offset token: net of `'` (up) minus `,` (down)
+/// (JS OCTAVE_OFFSET).
+fn parse_octave_offset(text: &str) -> i32 {
+    let ups = text.chars().filter(|c| *c == '\'').count() as i32;
+    let downs = text.chars().filter(|c| *c == ',').count() as i32;
+    ups - downs
 }
 
 /// Map a `^N` token to the JS inversion name (`^0` cancels the current

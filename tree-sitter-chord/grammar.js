@@ -54,6 +54,18 @@ module.exports = grammar({
       $.mode_1st_inv,
       $.mode_2nd_inv,
       $.mode_3rd_inv,
+      $.mode_close,
+      $.mode_drop2,
+      $.mode_drop4,
+      $.mode_drop2and4,
+      $.mode_no_bass,
+      $.mode_bass_is_root,
+      $.octave_up,
+      $.octave_up_upper,
+      $.octave_up_lower,
+      $.octave_down,
+      $.octave_down_upper,
+      $.octave_down_lower,
     ),
 
     // Slash-chord mode directives (JS SLASH_CHORD_MODE_*)
@@ -69,22 +81,45 @@ module.exports = grammar({
     mode_2nd_inv: $ => directive('2nd inv'),
     mode_3rd_inv: $ => directive('3rd inv'),
 
+    // Open harmony mode directives (JS OPEN_HARMONY_MODE_*)
+    mode_close: $ => directive('close harmony', 'close'),
+    mode_drop2: $ => directive('drop2', 'drop-2', 'open triad'),
+    mode_drop4: $ => directive('drop4', 'drop-4'),
+    mode_drop2and4: $ => directive('drop2and4', 'drop-2-and-4'),
+
+    // Bass play mode directives (JS BASS_PLAY_MODE_*)
+    mode_no_bass: $ => directive('no bass'),
+    mode_bass_is_root: $ => directive('bass is root', 'bass plays root', 'bass play root'),
+
+    // Octave directives (JS OCTAVE_UP/DOWN with UPPER/LOWER variants:
+    // trailing "/" = upper only, leading "/" = lower only)
+    octave_up: $ => directive('octave up', 'octave-up'),
+    octave_up_upper: $ => token(new RegExp(`(${ci('octave up')}|${ci('octave-up')})/[,.]?`)),
+    octave_up_lower: $ => token(new RegExp(`/(${ci('octave up')}|${ci('octave-up')})[,.]?`)),
+    octave_down: $ => directive('octave down', 'octave-down'),
+    octave_down_upper: $ => token(new RegExp(`(${ci('octave down')}|${ci('octave-down')})/[,.]?`)),
+    octave_down_lower: $ => token(new RegExp(`/(${ci('octave down')}|${ci('octave-down')})[,.]?`)),
+
     // Progression separators (carry no meaning). Dynamic precedence
     // makes the separator reading win over "-" as the minor quality
     // when both produce a valid parse.
     separator: $ => prec.dynamic(1, choice('-', '→', '・')),
 
     // A chord: root + optional quality + optional ^N inversion +
-    // optional bass (slash chord or on-chord)
+    // optional octave offset + optional bass (slash chord or on-chord)
     chord: $ => seq(
       field('root', $.root),
       optional(field('quality', $.quality)),
       optional(field('inversion', $.chord_inversion)),
+      optional(field('octave', $.octave_offset)),
       optional(field('bass', choice($.bass, $.on_bass)))
     ),
 
     // Per-chord inversion: ^0 (cancel mode) .. ^3 (JS INVERSION)
     chord_inversion: $ => /\^[0-3]/,
+
+    // Per-chord octave offset: ' up, , down (JS OCTAVE_OFFSET = "'"* ","*)
+    octave_offset: $ => /'+,*|,+/,
 
     // Root note: C, D, E, F, G, A, B with optional accidentals
     root: $ => seq(
@@ -168,7 +203,8 @@ module.exports = grammar({
     _lower: $ => seq(
       field('root', $.root),
       optional(field('quality', $.quality)),
-      optional(field('inversion', $.chord_inversion))
+      optional(field('inversion', $.chord_inversion)),
+      optional(field('octave', $.octave_offset))
     ),
 
     // Slash chord bass: /lower (e.g. C/E, US C/G); resolved by the current

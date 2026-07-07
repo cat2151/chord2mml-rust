@@ -4,10 +4,11 @@
 //! each chord's note length from bar positions. Bass-play mode and bar
 //! handling arrive in later waves.
 
-use crate::ast::{Event, SlashChordMode};
+use crate::ast::{Event, SlashChordEvent, SlashChordMode};
 
 pub(crate) fn ast_to_ast(events: Vec<Event>) -> Vec<Event> {
     let mut slash_mode = SlashChordMode::ChordOverBassNote;
+    let mut bass_play_mode = "no bass".to_string();
 
     let mut result: Vec<Event> = Vec::with_capacity(events.len());
     for event in events {
@@ -18,6 +19,27 @@ pub(crate) fn ast_to_ast(events: Vec<Event>) -> Vec<Event> {
                 SlashChordMode::Inversion => Event::Inversion(slash),
                 SlashChordMode::Polychord => Event::Polychord(slash),
             }),
+            // Bass-play mode is state here AND in ast2notes (JS keeps the
+            // event in the list for both passes), so pass it through
+            Event::ChangeBassPlayMode(mode) => {
+                bass_play_mode = mode.clone();
+                result.push(Event::ChangeBassPlayMode(mode));
+            }
+            // JS astToAst: in bass-play-mode "root", a plain chord becomes
+            // chord-over-bass-note with upper = lower = the chord itself
+            Event::Chord(chord) if bass_play_mode == "root" => {
+                result.push(Event::ChordOverBassNote(SlashChordEvent {
+                    upper_root: chord.root,
+                    upper_quality: chord.quality.clone(),
+                    upper_inversion: chord.inversion.clone(),
+                    lower_root: chord.root,
+                    lower_quality: chord.quality,
+                    lower_inversion: chord.inversion,
+                    upper_octave_offset: chord.octave_offset,
+                    lower_octave_offset: chord.octave_offset,
+                    note_length: None,
+                }));
+            }
             other => result.push(other),
         }
     }
@@ -37,7 +59,11 @@ fn bar_to_note_length(events: &mut [Event]) {
             | Event::Inversion(slash)
             | Event::Polychord(slash)
             | Event::SlashChord(slash) => slash.note_length = Some(1),
-            Event::ChangeSlashChordMode(_) | Event::ChangeInversionMode(_) => {}
+            Event::ChangeSlashChordMode(_)
+            | Event::ChangeInversionMode(_)
+            | Event::ChangeOpenHarmonyMode(_)
+            | Event::ChangeBassPlayMode(_)
+            | Event::OctaveShift { .. } => {}
         }
     }
 }

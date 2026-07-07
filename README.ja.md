@@ -128,7 +128,7 @@ JS版の約100テストを仕様とし、以下の順で移植を進めます（
 - [x] **Wave A**: テンション（6, 9, 11, 13）、7sus系、クォータル（4.N）、maj9系（`maj7,add9`）
 - [x] **Wave B**: 修飾（add, omit, ♭5, #5）、`-`表記のマイナー（`C-`, `C-7`）
 - [x] **Wave C**: オンコード（EonC）、ポリコード（US）、転回形（^N, 1st inv 等）
-- [ ] **Wave D**: ボイシング（drop2等）、ベースモード、オクターブ指定
+- [x] **Wave D**: ボイシング（drop2/drop4/drop2and4/close/open triad）、ベースモード（bass is root）、オクターブ指定（octave up/down、`'`/`,`）
 - [ ] **Wave E**: 小節と音長（`|`, `/ `）、度数記法、キー/スケール
 - [ ] **Wave F**: インラインMML/ABC、MIDIプログラムチェンジ、テンポ
 - [ ] **Wave G**: 方言プリプロセス（LLM生成コード進行対応）

@@ -121,6 +121,13 @@ mod tests {
         }
 
         #[test]
+        fn test_lower_upper_collision_fails() {
+            // JS also errors on these (lower と upper が衝突)
+            assert!(convert("F,/C").is_err());
+            assert!(convert("/octave-up C/C").is_err());
+        }
+
+        #[test]
         fn test_convert_whitespace_trimmed() {
             let result = convert("  C  ").unwrap();
             assert_eq!(result, "v11'c1eg'");
