@@ -2,37 +2,66 @@
   "name": "chord",
   "rules": {
     "source_file": {
-      "type": "REPEAT",
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SEQ",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "chord"
+            },
+            {
+              "type": "REPEAT",
+              "content": {
+                "type": "SEQ",
+                "members": [
+                  {
+                    "type": "CHOICE",
+                    "members": [
+                      {
+                        "type": "SYMBOL",
+                        "name": "separator"
+                      },
+                      {
+                        "type": "BLANK"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "SYMBOL",
+                    "name": "chord"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "type": "BLANK"
+        }
+      ]
+    },
+    "separator": {
+      "type": "PREC_DYNAMIC",
+      "value": 1,
       "content": {
         "type": "CHOICE",
         "members": [
           {
-            "type": "SYMBOL",
-            "name": "chord"
+            "type": "STRING",
+            "value": "-"
           },
           {
-            "type": "SYMBOL",
-            "name": "separator"
+            "type": "STRING",
+            "value": "→"
+          },
+          {
+            "type": "STRING",
+            "value": "・"
           }
         ]
       }
-    },
-    "separator": {
-      "type": "CHOICE",
-      "members": [
-        {
-          "type": "STRING",
-          "value": "-"
-        },
-        {
-          "type": "STRING",
-          "value": "→"
-        },
-        {
-          "type": "STRING",
-          "value": "・"
-        }
-      ]
     },
     "chord": {
       "type": "SEQ",
@@ -136,6 +165,46 @@
       "type": "CHOICE",
       "members": [
         {
+          "type": "SEQ",
+          "members": [
+            {
+              "type": "FIELD",
+              "name": "base",
+              "content": {
+                "type": "SYMBOL",
+                "name": "quality_base"
+              }
+            },
+            {
+              "type": "REPEAT",
+              "content": {
+                "type": "FIELD",
+                "name": "modifier",
+                "content": {
+                  "type": "SYMBOL",
+                  "name": "quality_modifier"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "REPEAT1",
+          "content": {
+            "type": "FIELD",
+            "name": "modifier",
+            "content": {
+              "type": "SYMBOL",
+              "name": "quality_modifier"
+            }
+          }
+        }
+      ]
+    },
+    "quality_base": {
+      "type": "CHOICE",
+      "members": [
+        {
           "type": "PATTERN",
           "value": "4\\.[2-9]+"
         },
@@ -233,6 +302,10 @@
         },
         {
           "type": "STRING",
+          "value": "-7"
+        },
+        {
+          "type": "STRING",
           "value": "min"
         },
         {
@@ -246,6 +319,10 @@
         {
           "type": "STRING",
           "value": "m"
+        },
+        {
+          "type": "STRING",
+          "value": "-"
         },
         {
           "type": "STRING",
@@ -297,6 +374,35 @@
         }
       ]
     },
+    "quality_modifier": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "PATTERN",
+          "value": "\\(?add[0-9]+\\)?"
+        },
+        {
+          "type": "PATTERN",
+          "value": "\\(?(omit|o)[135]\\)?"
+        },
+        {
+          "type": "STRING",
+          "value": "(b5)"
+        },
+        {
+          "type": "STRING",
+          "value": "(-5)"
+        },
+        {
+          "type": "STRING",
+          "value": "(+5)"
+        },
+        {
+          "type": "STRING",
+          "value": "(#5)"
+        }
+      ]
+    },
     "bass": {
       "type": "SEQ",
       "members": [
@@ -321,7 +427,11 @@
       "value": "\\s"
     }
   ],
-  "conflicts": [],
+  "conflicts": [
+    [
+      "chord"
+    ]
+  ],
   "precedences": [],
   "externals": [],
   "inline": [],

@@ -1,0 +1,98 @@
+[
+  {
+    "input": "C(add2) Cadd9 Cadd4 Cadd11 Cadd6 Cadd13",
+    "expected": "v11'c1deg''c1eg<d''c1efg''c1eg<f''c1ega''c1eg<a'"
+  },
+  {
+    "input": "Cadd9",
+    "expected": "v11'c1eg<d'"
+  },
+  {
+    "input": "C(add9)",
+    "expected": "v11'c1eg<d'"
+  },
+  {
+    "input": "Dadd9",
+    "expected": "v11'd1f+a<e'"
+  },
+  {
+    "input": "Gadd11",
+    "expected": "v11'g1b<d<c'"
+  },
+  {
+    "input": "C(omit5) C(omit1) C(omit3) Comit5",
+    "expected": "v11'c1e''e1g''c1g''c1e'"
+  },
+  {
+    "input": "Co5",
+    "expected": "v11'c1e'"
+  },
+  {
+    "input": "C(o1)",
+    "expected": "v11'e1g'"
+  },
+  {
+    "input": "Cmaj7(omit3)",
+    "expected": "v11'c1gb'"
+  },
+  {
+    "input": "C(b5) C(-5)",
+    "expected": "v11'c1ef+''c1ef+'"
+  },
+  {
+    "input": "Caug C(#5) C(+5)",
+    "expected": "v11'c1eg+''c1eg+''c1eg+'"
+  },
+  {
+    "input": "Cm7(b5)",
+    "expected": "v11'c1d+f+a+'"
+  },
+  {
+    "input": "C7(b5)",
+    "expected": "v11'c1ef+a+'"
+  },
+  {
+    "input": "C7(#5)",
+    "expected": "v11'c1eg+a+'"
+  },
+  {
+    "input": "Dm7(b5)",
+    "expected": "v11'd1fg+<c'"
+  },
+  {
+    "input": "C(add9)(omit5)",
+    "expected": "v11'c1e<d'"
+  },
+  {
+    "input": "Cadd9omit5",
+    "expected": "v11'c1e<d'"
+  },
+  {
+    "input": "C7(b5)add9",
+    "expected": "v11'c1ef+a+<d'"
+  },
+  {
+    "input": "C- - C-",
+    "expected": "v11'c1d+g''c1d+g'"
+  },
+  {
+    "input": "C-7 - C-7",
+    "expected": "v11'c1d+ga+''c1d+ga+'"
+  },
+  {
+    "input": "A- - E-",
+    "expected": "v11'a1<ce''e1gb'"
+  },
+  {
+    "input": "C-7-D-7",
+    "expected": "v11'c1d+ga+''d1fa<c'"
+  },
+  {
+    "input": "C9(omit5)",
+    "expected": "v11'c1ea+<d'"
+  },
+  {
+    "input": "C6add9",
+    "expected": "v11'c1ega<d'"
+  }
+]

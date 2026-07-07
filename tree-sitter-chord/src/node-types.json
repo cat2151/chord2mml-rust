@@ -59,6 +59,37 @@
   {
     "type": "quality",
     "named": true,
+    "fields": {
+      "base": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "quality_base",
+            "named": true
+          }
+        ]
+      },
+      "modifier": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "quality_modifier",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "quality_base",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "quality_modifier",
+    "named": true,
     "fields": {}
   },
   {
@@ -116,11 +147,31 @@
     "named": false
   },
   {
+    "type": "(#5)",
+    "named": false
+  },
+  {
+    "type": "(+5)",
+    "named": false
+  },
+  {
+    "type": "(-5)",
+    "named": false
+  },
+  {
+    "type": "(b5)",
+    "named": false
+  },
+  {
     "type": "+",
     "named": false
   },
   {
     "type": "-",
+    "named": false
+  },
+  {
+    "type": "-7",
     "named": false
   },
   {

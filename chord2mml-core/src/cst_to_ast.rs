@@ -77,9 +77,7 @@ fn parse_chord_node(chord_node: &CSTNode) -> Result<Event> {
     let root = parse_root_node(root_node)?;
 
     let quality = match field_first(chord_node, "quality") {
-        Some(quality_node) => {
-            normalize_quality(quality_node.text.as_deref().unwrap_or(""))?
-        }
+        Some(quality_node) => parse_quality_node(quality_node)?,
         // Default to major when no explicit quality is present
         None => "maj".to_string(),
     };
@@ -145,6 +143,50 @@ fn parse_root_node(root_node: &CSTNode) -> Result<i32> {
     Ok(base + offset)
 }
 
+/// Compose a quality node (base + modifiers) into the JS chord2mml
+/// comma-joined quality string, e.g. "min7,flatted fifth" or
+/// "maj,add9,omit5" (modifiers-only qualities get the implicit "maj"
+/// base, matching JS MAJ_SHORT = "").
+fn parse_quality_node(quality_node: &CSTNode) -> Result<String> {
+    let base = field_first(quality_node, "base")
+        .and_then(|n| n.text.as_deref())
+        .unwrap_or("");
+    let mut quality = normalize_quality(base)?;
+
+    if let Some(modifiers) = quality_node.fields.get("modifier") {
+        for modifier in modifiers {
+            quality.push_str(&normalize_modifier(modifier.text.as_deref().unwrap_or(""))?);
+        }
+    }
+
+    Ok(quality)
+}
+
+/// Normalize a modifier token to its comma-prefixed JS quality-string form.
+fn normalize_modifier(modifier_str: &str) -> Result<String> {
+    let inner = modifier_str
+        .trim_start_matches('(')
+        .trim_end_matches(')');
+
+    match inner {
+        "b5" | "-5" => return Ok(",flatted fifth".to_string()),
+        "+5" | "#5" => return Ok(",augmented fifth".to_string()),
+        _ => {}
+    }
+    if let Some(n) = inner.strip_prefix("add") {
+        return Ok(format!(",add{}", n));
+    }
+    // "omit" before the short form "o" ("omit5" also starts with 'o')
+    if let Some(n) = inner.strip_prefix("omit") {
+        return Ok(format!(",omit{}", n));
+    }
+    if let Some(n) = inner.strip_prefix('o') {
+        return Ok(format!(",omit{}", n));
+    }
+
+    Err(anyhow!("Unknown quality modifier: {}", modifier_str))
+}
+
 /// Normalize a quality token to the JS chord2mml quality string.
 fn normalize_quality(quality_str: &str) -> Result<String> {
     // Quartal harmony is kept as literal text (JS QUARTAL_HARMONY)
@@ -154,8 +196,8 @@ fn normalize_quality(quality_str: &str) -> Result<String> {
 
     let normalized = match quality_str {
         "" | "M" | "maj" | "Maj" | "MAJ" => "maj",
-        "m" | "min" | "Min" | "MIN" => "min",
-        "m7" | "min7" | "Min7" | "MIN7" => "min7",
+        "m" | "-" | "min" | "Min" | "MIN" => "min",
+        "m7" | "-7" | "min7" | "Min7" | "MIN7" => "min7",
         "maj7" | "Maj7" | "MAJ7" | "M7" | "△" => "maj7",
         // JS MAJ9: maj9 family resolves to maj7 plus an added ninth
         "maj9" | "Maj9" | "MAJ9" | "M9" | "△9" | "maj(9)" | "Maj(9)" | "MAJ(9)" | "M(9)"
@@ -206,11 +248,33 @@ mod tests {
         }
     }
 
+    fn quality_node(base: Option<&str>, modifiers: &[&str]) -> CSTNode {
+        let mut fields = HashMap::new();
+        if let Some(b) = base {
+            fields.insert("base".to_string(), vec![leaf("quality_base", b)]);
+        }
+        if !modifiers.is_empty() {
+            fields.insert(
+                "modifier".to_string(),
+                modifiers
+                    .iter()
+                    .map(|m| leaf("quality_modifier", m))
+                    .collect(),
+            );
+        }
+        CSTNode {
+            node_type: "quality".to_string(),
+            text: None,
+            children: Vec::new(),
+            fields,
+        }
+    }
+
     fn chord_node(note: &str, accidentals: &[&str], quality: Option<&str>) -> CSTNode {
         let mut fields = HashMap::new();
         fields.insert("root".to_string(), vec![root_node(note, accidentals)]);
         if let Some(q) = quality {
-            fields.insert("quality".to_string(), vec![leaf("quality", q)]);
+            fields.insert("quality".to_string(), vec![quality_node(Some(q), &[])]);
         }
         CSTNode {
             node_type: "chord".to_string(),
@@ -265,13 +329,16 @@ mod tests {
     fn test_quality_normalization() {
         for (token, expected) in [
             ("m", "min"),
+            ("-", "min"),
             ("min", "min"),
             ("m7", "min7"),
+            ("-7", "min7"),
             ("min7", "min7"),
             ("maj7", "maj7"),
             ("M7", "maj7"),
             ("△", "maj7"),
             ("M", "maj"),
+            ("maj9", "maj7,add9"),
             ("dim", "dim triad"),
             ("aug", "aug"),
             ("7", "7"),
@@ -280,6 +347,29 @@ mod tests {
                 cst_to_ast(&source(vec![chord_node("C", &[], Some(token))])).unwrap();
             match &events[0] {
                 Event::Chord(c) => assert_eq!(c.quality, expected, "token {}", token),
+                _ => panic!("Expected Chord"),
+            }
+        }
+    }
+
+    #[test]
+    fn test_quality_modifiers() {
+        let cases: [(&str, Option<&str>, &[&str]); 5] = [
+            ("maj,add9", None, &["add9"]),
+            ("maj,flatted fifth", None, &["(b5)"]),
+            ("7,augmented fifth", Some("7"), &["(#5)"]),
+            ("min7,flatted fifth", Some("m7"), &["(b5)"]),
+            ("maj,add9,omit5", None, &["(add9)", "(omit5)"]),
+        ];
+        for (expected, base, modifiers) in cases {
+            let mut chord = chord_node("C", &[], None);
+            chord.fields.insert(
+                "quality".to_string(),
+                vec![quality_node(base, modifiers)],
+            );
+            let events = cst_to_ast(&source(vec![chord])).unwrap();
+            match &events[0] {
+                Event::Chord(c) => assert_eq!(c.quality, expected),
                 _ => panic!("Expected Chord"),
             }
         }
