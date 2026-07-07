@@ -8,9 +8,29 @@
     "type": "bass",
     "named": true,
     "fields": {
+      "inversion": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "chord_inversion",
+            "named": true
+          }
+        ]
+      },
+      "quality": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "quality",
+            "named": true
+          }
+        ]
+      },
       "root": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "root",
@@ -31,6 +51,20 @@
           {
             "type": "bass",
             "named": true
+          },
+          {
+            "type": "on_bass",
+            "named": true
+          }
+        ]
+      },
+      "inversion": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "chord_inversion",
+            "named": true
           }
         ]
       },
@@ -47,6 +81,42 @@
       "root": {
         "multiple": false,
         "required": true,
+        "types": [
+          {
+            "type": "root",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "on_bass",
+    "named": true,
+    "fields": {
+      "inversion": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "chord_inversion",
+            "named": true
+          }
+        ]
+      },
+      "quality": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "quality",
+            "named": true
+          }
+        ]
+      },
+      "root": {
+        "multiple": false,
+        "required": false,
         "types": [
           {
             "type": "root",
@@ -133,6 +203,34 @@
       "types": [
         {
           "type": "chord",
+          "named": true
+        },
+        {
+          "type": "mode_1st_inv",
+          "named": true
+        },
+        {
+          "type": "mode_2nd_inv",
+          "named": true
+        },
+        {
+          "type": "mode_3rd_inv",
+          "named": true
+        },
+        {
+          "type": "mode_chord_over_bass_note",
+          "named": true
+        },
+        {
+          "type": "mode_polychord",
+          "named": true
+        },
+        {
+          "type": "mode_root_inv",
+          "named": true
+        },
+        {
+          "type": "mode_slash_chord_inversion",
           "named": true
         },
         {
@@ -279,6 +377,10 @@
     "named": false
   },
   {
+    "type": "chord_inversion",
+    "named": true
+  },
+  {
     "type": "dim",
     "named": false
   },
@@ -315,8 +417,44 @@
     "named": false
   },
   {
+    "type": "mode_1st_inv",
+    "named": true
+  },
+  {
+    "type": "mode_2nd_inv",
+    "named": true
+  },
+  {
+    "type": "mode_3rd_inv",
+    "named": true
+  },
+  {
+    "type": "mode_chord_over_bass_note",
+    "named": true
+  },
+  {
+    "type": "mode_polychord",
+    "named": true
+  },
+  {
+    "type": "mode_root_inv",
+    "named": true
+  },
+  {
+    "type": "mode_slash_chord_inversion",
+    "named": true
+  },
+  {
     "type": "note",
     "named": true
+  },
+  {
+    "type": "on",
+    "named": false
+  },
+  {
+    "type": "over",
+    "named": false
   },
   {
     "type": "sus2",

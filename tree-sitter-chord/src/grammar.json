@@ -9,7 +9,7 @@
           "members": [
             {
               "type": "SYMBOL",
-              "name": "chord"
+              "name": "_event"
             },
             {
               "type": "REPEAT",
@@ -30,7 +30,7 @@
                   },
                   {
                     "type": "SYMBOL",
-                    "name": "chord"
+                    "name": "_event"
                   }
                 ]
               }
@@ -41,6 +41,92 @@
           "type": "BLANK"
         }
       ]
+    },
+    "_event": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "chord"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "mode_chord_over_bass_note"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "mode_slash_chord_inversion"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "mode_polychord"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "mode_root_inv"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "mode_1st_inv"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "mode_2nd_inv"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "mode_3rd_inv"
+        }
+      ]
+    },
+    "mode_chord_over_bass_note": {
+      "type": "TOKEN",
+      "content": {
+        "type": "PATTERN",
+        "value": "([cC][hH][oO][rR][dD] [oO][vV][eE][rR] [bB][aA][sS][sS] [nN][oO][tT][eE])[,.]?"
+      }
+    },
+    "mode_slash_chord_inversion": {
+      "type": "TOKEN",
+      "content": {
+        "type": "PATTERN",
+        "value": "([sS][lL][aA][sS][hH] [cC][hH][oO][rR][dD] [iI][nN][vV][eE][rR][sS][iI][oO][nN])[,.]?"
+      }
+    },
+    "mode_polychord": {
+      "type": "TOKEN",
+      "content": {
+        "type": "PATTERN",
+        "value": "([uU][pP][pP][eE][rR] [sS][tT][rR][uU][cC][tT][uU][rR][eE] [tT][rR][iI][aA][dD]|[uU][pP][pP][eE][rR] [sS][tT][rR][uU][cC][tT][uU][rR][eE]|[uU][sS][tT]|[uU][sS]|[pP][oO][lL][yY][cC][hH][oO][rR][dD]|[pP][oO][lL][yY])[,.]?"
+      }
+    },
+    "mode_root_inv": {
+      "type": "TOKEN",
+      "content": {
+        "type": "PATTERN",
+        "value": "([rR][oO][oO][tT] [iI][nN][vV])[,.]?"
+      }
+    },
+    "mode_1st_inv": {
+      "type": "TOKEN",
+      "content": {
+        "type": "PATTERN",
+        "value": "(1[sS][tT] [iI][nN][vV])[,.]?"
+      }
+    },
+    "mode_2nd_inv": {
+      "type": "TOKEN",
+      "content": {
+        "type": "PATTERN",
+        "value": "(2[nN][dD] [iI][nN][vV])[,.]?"
+      }
+    },
+    "mode_3rd_inv": {
+      "type": "TOKEN",
+      "content": {
+        "type": "PATTERN",
+        "value": "(3[rR][dD] [iI][nN][vV])[,.]?"
+      }
     },
     "separator": {
       "type": "PREC_DYNAMIC",
@@ -95,10 +181,35 @@
           "members": [
             {
               "type": "FIELD",
-              "name": "bass",
+              "name": "inversion",
               "content": {
                 "type": "SYMBOL",
-                "name": "bass"
+                "name": "chord_inversion"
+              }
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "FIELD",
+              "name": "bass",
+              "content": {
+                "type": "CHOICE",
+                "members": [
+                  {
+                    "type": "SYMBOL",
+                    "name": "bass"
+                  },
+                  {
+                    "type": "SYMBOL",
+                    "name": "on_bass"
+                  }
+                ]
               }
             },
             {
@@ -107,6 +218,10 @@
           ]
         }
       ]
+    },
+    "chord_inversion": {
+      "type": "PATTERN",
+      "value": "\\^[0-3]"
     },
     "root": {
       "type": "SEQ",
@@ -403,13 +518,9 @@
         }
       ]
     },
-    "bass": {
+    "_lower": {
       "type": "SEQ",
       "members": [
-        {
-          "type": "STRING",
-          "value": "/"
-        },
         {
           "type": "FIELD",
           "name": "root",
@@ -417,8 +528,99 @@
             "type": "SYMBOL",
             "name": "root"
           }
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "FIELD",
+              "name": "quality",
+              "content": {
+                "type": "SYMBOL",
+                "name": "quality"
+              }
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "FIELD",
+              "name": "inversion",
+              "content": {
+                "type": "SYMBOL",
+                "name": "chord_inversion"
+              }
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
         }
       ]
+    },
+    "bass": {
+      "type": "PREC_RIGHT",
+      "value": 0,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "STRING",
+            "value": "/"
+          },
+          {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "_lower"
+              },
+              {
+                "type": "BLANK"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "on_bass": {
+      "type": "PREC_RIGHT",
+      "value": 0,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "STRING",
+                "value": "on"
+              },
+              {
+                "type": "STRING",
+                "value": "over"
+              }
+            ]
+          },
+          {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "_lower"
+              },
+              {
+                "type": "BLANK"
+              }
+            ]
+          }
+        ]
+      }
     }
   },
   "extras": [
@@ -430,6 +632,9 @@
   "conflicts": [
     [
       "chord"
+    ],
+    [
+      "_lower"
     ]
   ],
   "precedences": [],
