@@ -10,22 +10,22 @@ A library and application that converts chord progressions into MML (Music Macro
 ## Note
 - WIP
 - Frequent breaking changes
-- Proceeding with AI automation to minimize user workload
-- Intending to develop an AI automation system for this purpose (or rather, using this repository for the development of an AI automation system)
-- The following content is mostly AI-generated, highly likely to contain errors, and may not align with user intent.
+- Intended to progress with AI automation to minimize user workload
+- I plan to develop an AI automation system for this purpose (or rather, use this repository for developing such a system)
+- The following content is mostly AI-generated and likely to contain errors or deviate from user intent.
 
 ## Overview
 
-This project is a complete rewrite of [chord2mml](https://github.com/cat2151/chord2mml), which was originally built with Peggy.js + JavaScript, now reimplemented as **Rust + Tree-sitter**.
+This project is a complete rewrite of the original [chord2mml](https://github.com/cat2151/chord2mml) (which was built with Peggy.js + JavaScript) using **Rust + Tree-sitter**.
 
-The **output is compatible with the JS version** (e.g., `C` → `v11'c1eg'`). Approximately 100 tests from the JS version are being gradually ported as specifications (refer to the golden corpus in `chord2mml-core/tests/corpus/` for ported cases).
+The **output is compatible with the JS version** (e.g., `C` → `v11'c1eg'`), and approximately 100 tests from the JS version are being gradually ported as specifications (refer to the golden corpus in `chord2mml-core/tests/corpus/` for ported cases).
 
 ### Key Features
 
-- **Tree-sitter Parser**: Robust and precise syntax parsing
-- **JS Version Compatible Output**: MML format directly usable by tools like obsidian-plugin-mmlabc
-- **Native + Browser Support**: In addition to CLI/library, includes a browser demo using WASM + web-tree-sitter
-- **Golden Corpus**: Tests that use the JS version's output as expected values, shared across both native and WASM paths
+- **Tree-sitter Parser**: Robust and accurate syntax analysis
+- **JS Version Compatible Output**: MML format directly usable by `obsidian-plugin-mmlabc` and similar tools
+- **Native + Browser Support**: In addition to CLI/library, a browser demo powered by WASM + web-tree-sitter
+- **Golden Corpus**: Tests where the execution results of the JS version serve as expected values, shared across both native and WASM paths.
 
 ## Architecture
 
@@ -40,15 +40,15 @@ chord2mml-rust/
 
 ### Data Flow
 
-This follows the proven pattern from [tonejs-mml-to-json](https://github.com/cat2151/tonejs-mml-to-json). The pipeline is a port of the JS version's 4-stage structure.
+This project follows the pattern proven by [tonejs-mml-to-json](https://github.com/cat2151/tonejs-mml-to-json). The pipeline is a port of the JS version's four-stage configuration.
 
 ```
-[Native] Input → tree-sitter Rust crate → CST
-[Browser]   Input → web-tree-sitter(JS) + tree-sitter-chord.wasm → CST(JSON)
-Common:       CST → cst_to_ast → Event Array AST → ast2ast → ast2notes → notes2mml → MML
+[Native]  Input → tree-sitter Rust crate → CST
+[Browser] Input → web-tree-sitter(JS) + tree-sitter-chord.wasm → CST(JSON)
+Common:   CST → cst_to_ast → Event Array AST → ast2ast → ast2notes → notes2mml → MML
 ```
 
-Key point: To avoid including tree-sitter's C dependency in the Rust WASM build, `chord2mml-core` is tree-sitter independent by default (the `tree-sitter` feature is enabled by the CLI).
+Key point: To avoid including Tree-sitter's C dependency in the Rust WASM build, `chord2mml-core` is Tree-sitter-independent by default (the `tree-sitter` feature is enabled by the CLI).
 
 ## Demo
 
@@ -63,7 +63,7 @@ GitHub Pages: https://cat2151.github.io/chord2mml-rust/
 $ chord2mml "C"
 v11'c1eg'
 
-# Chord progression (separated by spaces, " - ", or " → ". Hyphen separation is also temporarily available.)
+# Chord progression (separated by spaces, " - ", or "→". Hyphen separation is also temporarily available)
 $ chord2mml "Dm G7 C"
 v11'd1fa''g1b<df''c1eg'
 
@@ -105,10 +105,10 @@ fn main() {
 ### Build and Test
 
 ```bash
-# Whole workspace (native)
+# Entire workspace (native)
 cargo test --workspace --all-features
 
-# WASM (verify build without C dependency)
+# WASM (verify build without C dependencies)
 cargo build -p chord2mml-wasm --target wasm32-unknown-unknown --release
 
 # Browser path tests (run web-tree-sitter + Rust WASM with Node)
@@ -120,41 +120,41 @@ cd chord2mml-web && npm run build:web && npm run test:browser
 
 ## Roadmap
 
-Using approximately 100 tests from the JS version as specifications, porting will proceed in the following order (maintaining tests for both native and WASM paths in each wave).
+Using approximately 100 tests from the JS version as specification, porting will proceed in the following order (maintaining both native + WASM path tests in each wave).
 
-- [x] **Phase 0**: WASM-safe architecture + CI + Pages deployment restored
-- [x] **Phase 1**: JS version compatible output format (`v11'c1eg'`), 4-stage pipeline, basic chords
-  - Major/Minor/maj7/min7/7/dim/aug/sus2/sus4, full-width/half-width #♭, slash chords (bass note), chord progressions
-- [x] **Wave A**: Tensions (6, 9, 11, 13), 7sus family, Quartal (4.N), maj9 family (`maj7,add9`)
-- [ ] **Wave B**: Modifiers (add, omit, ♭5, #5), minor notation with `-` (`C-7`)
-- [ ] **Wave C**: On-chords (EonC), Polychords (US), Inversions (^N, 1st inv, etc.)
-- [ ] **Wave D**: Voicings (drop2, etc.), Bass mode, Octave specification
-- [ ] **Wave E**: Bars and note lengths (`|`, `/ `), Degree notation, Key/Scale
-- [ ] **Wave F**: Inline MML/ABC, MIDI program change, Tempo
+- [x] **Phase 0**: WASM-safe architecture + CI + Pages deployment revived
+- [x] **Phase 1**: JS version compatible output format (`v11'c1eg'`) and 4-stage pipeline, basic chords
+  - Major/minor/maj7/min7/7/dim/aug/sus2/sus4, full-width/half-width #♭, slash chords (bass note), chord progressions
+- [x] **Wave A**: Tensions (6, 9, 11, 13), 7sus family, Quartal (4.N), maj9 family (maj7,add9)
+- [x] **Wave B**: Modifiers (add, omit, ♭5, #5), minor denoted with '-' (C-, C-7)
+- [ ] **Wave C**: On-chords (EonC), polychords (US), inversions (^N, 1st inv, etc.)
+- [ ] **Wave D**: Voicings (drop2, etc.), bass mode, octave specification
+- [ ] **Wave E**: Measures and note lengths (`|`, `/ `), Nashville Number System, key/scale
+- [ ] **Wave F**: Inline MML/ABC, MIDI program change, tempo
 - [ ] **Wave G**: Dialect preprocessing (support for LLM-generated chord progressions)
 
-## Development Policy
+## Development Approach
 
-### Differences from the original chord2mml
+### Differences from original chord2mml
 
-| Item               | chord2mml (Old)     | chord2mml-rust (New)     |
-|--------------------|---------------------|--------------------------|
-| Parser             | Peggy.js            | Tree-sitter              |
-| Language           | JavaScript/TypeScript | Rust                     |
-| Runtime Environment| Browser             | Native (CLI) + Browser (WASM) |
-| Output             | `v11'c1eg'` format | Same (compatible)        |
+| Item        | chord2mml (Old)     | chord2mml-rust (New)     |
+|-------------|---------------------|--------------------------|
+| Parser      | Peggy.js            | Tree-sitter              |
+| Language    | JavaScript/TypeScript | Rust                     |
+| Environment | Browser             | Native (CLI) + Browser (WASM) |
+| Output      | `v11'c1eg'` format | Same (compatible)        |
 
 ### Design Philosophy
 
-1. **JS Version Tests as Specification**: Functionality is based on JS version tests (to prevent hallucinations)
-2. **Consistent Paths**: Native and WASM share the same semantic code (cst_to_ast)
-3. **Test-Driven**: Comprehensive validation using golden corpus
+1.  **JS Version Tests as Specification**: Features are based on JS version tests (to prevent hallucinations).
+2.  **Consistency Across Paths**: Native and WASM share the same semantic code (cst_to_ast).
+3.  **Test-Driven**: Comprehensive validation using a golden corpus.
 
 ## Build Requirements
 
 - Rust 1.70 or later (C compiler also required for native builds)
-- Node.js 20 or later (for browser demo and WASM path testing)
-- Only for grammar WASM regeneration: tree-sitter-cli + docker or emscripten
+- Node.js 20 or later (for browser demo and WASM path tests)
+- Only for regenerating grammar WASM: tree-sitter-cli + Docker or Emscripten
 
 ## License
 
@@ -162,7 +162,7 @@ MIT License
 
 ## Related Projects
 
-- [chord2mml](https://github.com/cat2151/chord2mml) - Original JavaScript version (source of specification)
+- [chord2mml](https://github.com/cat2151/chord2mml) - The original JavaScript version (source of specifications)
 - [tonejs-mml-to-json](https://github.com/cat2151/tonejs-mml-to-json) - Reference implementation for tree-sitter + WASM architecture
 - [tonejs-json-sequencer](https://github.com/cat2151/tonejs-json-sequencer) - Audio playback library
 
@@ -174,7 +174,7 @@ Issues and Pull Requests are welcome.
 
 cat2151
 
-## Reference Links
+## References
 
 - [Tree-sitter](https://tree-sitter.github.io/tree-sitter/) - Syntax parsing library
-- [EXAMPLES.md](EXAMPLES.md) - More detailed usage examples and architecture explanation
+- [EXAMPLES.md](EXAMPLES.md) - More detailed usage examples and architecture description
