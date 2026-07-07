@@ -1,9 +1,9 @@
 //! AST to concrete notes (port of chord2mml_ast2notes.ts).
 //!
 //! Converts each chord event into an array of semitone note offsets.
-//! The quality→interval table and the note-stacking rules are ported
-//! verbatim from the JS version; inversion / open-harmony / bass-play
-//! modes arrive in later waves (their hook points are kept).
+//! The quality→interval table and the note-stacking / inversion rules are
+//! ported verbatim from the JS version; open-harmony (drop2 etc.) and
+//! bass-play modes arrive in later waves (their hook points are kept).
 
 use anyhow::{anyhow, Result};
 
@@ -11,21 +11,35 @@ use crate::ast::{Event, NotesEvent};
 
 pub(crate) fn ast_to_notes(events: Vec<Event>) -> Result<Vec<NotesEvent>> {
     let mut result = Vec::new();
+    // JS state: inversionMode / openHarmonyMode / bassPlayMode
+    let mut inversion_mode = "root inv".to_string();
+    let open_harmony_mode = "close"; // Wave D
+    let bass_play_mode = "no bass"; // Wave D
 
     for event in events {
         match event {
             Event::Chord(chord) => {
-                let notes = get_notes_by_chord(chord.root, &chord.quality, chord.octave_offset)?;
+                let inversion = chord.inversion.as_deref().unwrap_or(&inversion_mode);
+                let notes = get_notes_by_chord(
+                    chord.root,
+                    &chord.quality,
+                    inversion,
+                    open_harmony_mode,
+                    chord.octave_offset,
+                )?;
                 result.push(NotesEvent {
                     notes,
                     note_length: chord.note_length,
                 });
             }
             Event::ChordOverBassNote(slash) => {
+                let inversion = slash.upper_inversion.as_deref().unwrap_or(&inversion_mode);
                 let notes = get_notes_by_chord_over_bass_note(
                     slash.upper_root,
                     &slash.upper_quality,
                     slash.lower_root,
+                    inversion,
+                    open_harmony_mode,
                     slash.upper_octave_offset,
                     slash.lower_octave_offset,
                 )?;
@@ -33,6 +47,45 @@ pub(crate) fn ast_to_notes(events: Vec<Event>) -> Result<Vec<NotesEvent>> {
                     notes,
                     note_length: slash.note_length,
                 });
+            }
+            Event::Inversion(slash) => {
+                let notes = get_notes_by_inversion_chord(
+                    slash.upper_root,
+                    &slash.upper_quality,
+                    slash.lower_root,
+                    bass_play_mode,
+                    slash.upper_octave_offset,
+                )?;
+                result.push(NotesEvent {
+                    notes,
+                    note_length: slash.note_length,
+                });
+            }
+            Event::Polychord(slash) => {
+                let upper_inversion =
+                    slash.upper_inversion.as_deref().unwrap_or(&inversion_mode);
+                let lower_inversion =
+                    slash.lower_inversion.as_deref().unwrap_or(&inversion_mode);
+                let notes = get_notes_by_polychord(
+                    slash.upper_root,
+                    &slash.upper_quality,
+                    upper_inversion,
+                    slash.lower_root,
+                    &slash.lower_quality,
+                    lower_inversion,
+                    slash.upper_octave_offset,
+                    slash.lower_octave_offset,
+                )?;
+                result.push(NotesEvent {
+                    notes,
+                    note_length: slash.note_length,
+                });
+            }
+            Event::ChangeInversionMode(mode) => inversion_mode = mode,
+            Event::ChangeSlashChordMode(_) => {
+                return Err(anyhow!(
+                    "ChangeSlashChordMode must be consumed by ast2ast before ast2notes"
+                ));
             }
             Event::SlashChord(_) => {
                 return Err(anyhow!(
@@ -45,27 +98,37 @@ pub(crate) fn ast_to_notes(events: Vec<Event>) -> Result<Vec<NotesEvent>> {
     Ok(result)
 }
 
-/// Port of getNotesByChord (inversion/open-harmony are no-ops until their wave).
-fn get_notes_by_chord(root: i32, quality: &str, octave_offset: i32) -> Result<Vec<i32>> {
+/// Port of getNotesByChord.
+fn get_notes_by_chord(
+    root: i32,
+    quality: &str,
+    inversion_mode: &str,
+    open_harmony_mode: &str,
+    octave_offset: i32,
+) -> Result<Vec<i32>> {
     let mut notes = get_notes_without_omit(root, quality)?;
+    notes = inversion_and_open_harmony(notes, inversion_mode, open_harmony_mode);
     key_shift_notes(&mut notes, octave_offset * 12);
     apply_omit(&mut notes, quality, root);
     Ok(notes)
 }
 
 /// Port of getNotesByChordOverBassNote: the bass a note below, the upper
-/// chord stacked strictly above it, and the whole voicing shifted down an
-/// octave.
+/// chord (inverted per the mode) stacked strictly above it, and the whole
+/// voicing shifted down an octave.
 fn get_notes_by_chord_over_bass_note(
     upper_root: i32,
     upper_quality: &str,
     lower_root: i32,
+    inversion_mode: &str,
+    open_harmony_mode: &str,
     octave_offset_upper: i32,
     octave_offset_lower: i32,
 ) -> Result<Vec<i32>> {
     let lower_notes = vec![lower_root];
 
     let mut upper_notes = get_notes_without_omit(upper_root, upper_quality)?;
+    upper_notes = inversion_and_open_harmony(upper_notes, inversion_mode, open_harmony_mode);
     key_shift_upper_notes(&mut upper_notes, &lower_notes);
     apply_omit(&mut upper_notes, upper_quality, upper_root);
 
@@ -80,6 +143,118 @@ fn get_notes_by_chord_over_bass_note(
     key_shift_notes(&mut notes, -12);
 
     Ok(notes)
+}
+
+/// Port of getNotesByInversionChord (slash-chord-inversion mode): invert
+/// the chord so the lower note becomes the bass. The bass-play-mode branch
+/// ("root") arrives with Wave D.
+fn get_notes_by_inversion_chord(
+    upper_root: i32,
+    upper_quality: &str,
+    lower_root: i32,
+    _bass_play_mode: &str,
+    octave_offset: i32,
+) -> Result<Vec<i32>> {
+    let mut notes = get_notes_without_omit(upper_root, upper_quality)?;
+    key_shift_notes(&mut notes, octave_offset * 12);
+    let mut notes = inversion_by_target_note(notes, lower_root)?;
+    apply_omit(&mut notes, upper_quality, upper_root);
+    Ok(notes)
+}
+
+/// Port of getNotesByPolychord: two full chords stacked, the lower
+/// structure shifted down an octave.
+#[allow(clippy::too_many_arguments)]
+fn get_notes_by_polychord(
+    upper_root: i32,
+    upper_quality: &str,
+    upper_inversion: &str,
+    lower_root: i32,
+    lower_quality: &str,
+    lower_inversion: &str,
+    octave_offset_upper: i32,
+    octave_offset_lower: i32,
+) -> Result<Vec<i32>> {
+    let mut upper_notes = get_notes_without_omit(upper_root, upper_quality)?;
+    let mut lower_notes = get_notes_without_omit(lower_root, lower_quality)?;
+
+    upper_notes = inversion_and_open_harmony(upper_notes, upper_inversion, "");
+    lower_notes = inversion_and_open_harmony(lower_notes, lower_inversion, "");
+
+    key_shift_upper_notes(&mut upper_notes, &lower_notes);
+    apply_omit(&mut upper_notes, upper_quality, upper_root);
+    apply_omit(&mut lower_notes, lower_quality, lower_root);
+
+    let mut notes = concat_lower_and_upper(
+        upper_notes,
+        octave_offset_upper,
+        lower_notes,
+        octave_offset_lower,
+    )?;
+
+    // Shift the register down to make room for the lower structure
+    key_shift_notes(&mut notes, -12);
+
+    Ok(notes)
+}
+
+/// Port of inversionAndOpenHarmony (drop2 etc. arrive with Wave D).
+fn inversion_and_open_harmony(
+    notes: Vec<i32>,
+    inversion_mode: &str,
+    _open_harmony_mode: &str,
+) -> Vec<i32> {
+    match inversion_mode {
+        "1st inv" => inversion_by_count(notes, 1),
+        "2nd inv" => inversion_by_count(notes, 2),
+        "3rd inv" => inversion_by_count(notes, 3),
+        _ => notes,
+    }
+}
+
+/// Port of inversionByCount: rotate the chord and lift wrapped notes.
+fn inversion_by_count(mut notes: Vec<i32>, count: usize) -> Vec<i32> {
+    for _ in 0..count {
+        if !notes.is_empty() {
+            let first = notes.remove(0);
+            notes.push(first);
+        }
+    }
+    adjust_notes_octave(&mut notes);
+    notes
+}
+
+/// Port of inversionByTargetNote: rotate until the target pitch class is
+/// the lowest note; errors if the chord does not contain it.
+fn inversion_by_target_note(mut notes: Vec<i32>, target_note: i32) -> Result<Vec<i32>> {
+    let target_class = target_note.rem_euclid(12);
+    for _ in 0..notes.len() {
+        if notes[0].rem_euclid(12) == target_class {
+            adjust_notes_octave(&mut notes);
+            return Ok(notes);
+        }
+        let first = notes.remove(0);
+        notes.push(first);
+    }
+    Err(anyhow!(
+        "Cannot invert {:?}: the chord does not contain {:?}. Specify a note contained in the chord.",
+        notes,
+        target_note
+    ))
+}
+
+/// Port of adjustNotesOctave: raise any note that is not higher than the
+/// previous one by octaves (bounded like the JS loop).
+fn adjust_notes_octave(notes: &mut [i32]) {
+    let mut old_note = -128;
+    for note in notes.iter_mut() {
+        let mut guard = -128;
+        while *note <= old_note && guard < 128 {
+            *note += 12;
+            guard += 12;
+        }
+        old_note = *note;
+    }
 }
 
 /// Port of getNotesWithoutOmit: base quality → intervals, then add /
@@ -216,15 +391,30 @@ fn concat_lower_and_upper(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ast::ChordEvent;
+    use crate::ast::{ChordEvent, SlashChordEvent};
 
     fn chord(root: i32, quality: &str) -> Event {
         Event::Chord(ChordEvent {
             root,
             quality: quality.to_string(),
+            inversion: None,
             octave_offset: 0,
             note_length: Some(1),
         })
+    }
+
+    fn slash(upper_root: i32, upper_quality: &str, lower_root: i32, lower_quality: &str) -> SlashChordEvent {
+        SlashChordEvent {
+            upper_root,
+            upper_quality: upper_quality.to_string(),
+            upper_inversion: None,
+            lower_root,
+            lower_quality: lower_quality.to_string(),
+            lower_inversion: None,
+            upper_octave_offset: 0,
+            lower_octave_offset: 0,
+            note_length: Some(1),
+        }
     }
 
     // Expected values from the JS test suite (ast2notes block)
@@ -255,18 +445,59 @@ mod tests {
     #[test]
     fn test_chord_over_bass_note() {
         // JS: F/C → [-12+0, -12+5, -12+9, -12+12]
-        use crate::ast::SlashChordEvent;
-        let result = ast_to_notes(vec![Event::ChordOverBassNote(SlashChordEvent {
-            upper_root: 5,
-            upper_quality: "maj".to_string(),
-            lower_root: 0,
-            lower_quality: "maj".to_string(),
-            upper_octave_offset: 0,
-            lower_octave_offset: 0,
-            note_length: Some(1),
-        })])
-        .unwrap();
+        let result =
+            ast_to_notes(vec![Event::ChordOverBassNote(slash(5, "maj", 0, "maj"))]).unwrap();
         assert_eq!(result[0].notes, vec![-12, -7, -3, 0]);
+    }
+
+    #[test]
+    fn test_inversion_chord() {
+        // JS: inversion C/G → [7, 12, 16]
+        let result = ast_to_notes(vec![Event::Inversion(slash(0, "maj", 7, "maj"))]).unwrap();
+        assert_eq!(result[0].notes, vec![7, 12, 16]);
+    }
+
+    #[test]
+    fn test_inversion_chord_target_missing_fails() {
+        // JS: slash chord inversion C/D throws (D not in the C major triad)
+        let result = ast_to_notes(vec![Event::Inversion(slash(0, "maj", 2, "maj"))]);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_polychord() {
+        // JS: polychord D/C → [0-12, 4-12, 7-12, 14-12, 18-12, 21-12]
+        let result = ast_to_notes(vec![Event::Polychord(slash(2, "maj", 0, "maj"))]).unwrap();
+        assert_eq!(result[0].notes, vec![-12, -8, -5, 2, 6, 9]);
+    }
+
+    #[test]
+    fn test_inversion_mode() {
+        // JS: 1st inv C → [4, 7, 12]
+        let result = ast_to_notes(vec![
+            Event::ChangeInversionMode("1st inv".to_string()),
+            chord(0, "maj"),
+        ])
+        .unwrap();
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].notes, vec![4, 7, 12]);
+    }
+
+    #[test]
+    fn test_caret_inversion_overrides_mode() {
+        // ^0 cancels the current inversion mode
+        let result = ast_to_notes(vec![
+            Event::ChangeInversionMode("1st inv".to_string()),
+            Event::Chord(ChordEvent {
+                root: 0,
+                quality: "maj".to_string(),
+                inversion: Some("root inv".to_string()),
+                octave_offset: 0,
+                note_length: Some(1),
+            }),
+        ])
+        .unwrap();
+        assert_eq!(result[0].notes, vec![0, 4, 7]);
     }
 
     #[test]

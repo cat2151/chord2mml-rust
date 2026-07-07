@@ -1,0 +1,190 @@
+[
+  {
+    "input": "EonC",
+    "expected": "v11'>c1eg+b'"
+  },
+  {
+    "input": "ConC",
+    "expected": "v11'>c1<ceg'"
+  },
+  {
+    "input": "CoverC",
+    "expected": "v11'>c1<ceg'"
+  },
+  {
+    "input": "EonC GonB",
+    "expected": "v11'>c1eg+b''>b1<gb<d'"
+  },
+  {
+    "input": "Am7onD",
+    "expected": "v11'>d1a<ceg'"
+  },
+  {
+    "input": "C - C/C - ConC - CoverC - C",
+    "expected": "v11'c1eg''>c1<ceg''>c1<ceg''>c1<ceg''c1eg'"
+  },
+  {
+    "input": "chord over bass note C/G",
+    "expected": "v11'>g1<ceg'"
+  },
+  {
+    "input": "US C/G",
+    "expected": "v11'>g1b<d<ceg'"
+  },
+  {
+    "input": "UST C/G",
+    "expected": "v11'>g1b<d<ceg'"
+  },
+  {
+    "input": "upper structure C/G",
+    "expected": "v11'>g1b<d<ceg'"
+  },
+  {
+    "input": "upper structure triad C/G",
+    "expected": "v11'>g1b<d<ceg'"
+  },
+  {
+    "input": "polychord C/G",
+    "expected": "v11'>g1b<d<ceg'"
+  },
+  {
+    "input": "poly C/G",
+    "expected": "v11'>g1b<d<ceg'"
+  },
+  {
+    "input": "Polychord C/G",
+    "expected": "v11'>g1b<d<ceg'"
+  },
+  {
+    "input": "polychord, C/G",
+    "expected": "v11'>g1b<d<ceg'"
+  },
+  {
+    "input": "polychord D/C",
+    "expected": "v11'>c1eg<df+a'"
+  },
+  {
+    "input": "US Cm/G",
+    "expected": "v11'>g1b<d<cd+g'"
+  },
+  {
+    "input": "poly C/G F/C",
+    "expected": "v11'>g1b<d<ceg''>c1eg<fa<c'"
+  },
+  {
+    "input": "polychord C/G chord over bass note C/G",
+    "expected": "v11'>g1b<d<ceg''>g1<ceg'"
+  },
+  {
+    "input": "slash chord inversion C/G",
+    "expected": "v11'g1<ce'"
+  },
+  {
+    "input": "slash chord inversion C/E",
+    "expected": "v11'e1g<c'"
+  },
+  {
+    "input": "slash chord inversion Cmaj7/B",
+    "expected": "v11'b1<ceg'"
+  },
+  {
+    "input": "slash chord inversion C/G F/C",
+    "expected": "v11'g1<ce''<c1fa'"
+  },
+  {
+    "input": "slash chord inversion C/G chord over bass note F/C",
+    "expected": "v11'g1<ce''>c1fa<c'"
+  },
+  {
+    "input": "root inv C",
+    "expected": "v11'c1eg'"
+  },
+  {
+    "input": "1st inv C",
+    "expected": "v11'e1g<c'"
+  },
+  {
+    "input": "2nd inv C",
+    "expected": "v11'g1<ce'"
+  },
+  {
+    "input": "3rd inv Cmaj7 root inv Cmaj7",
+    "expected": "v11'b1<ceg''c1egb'"
+  },
+  {
+    "input": "1st inv C C",
+    "expected": "v11'e1g<c''e1g<c'"
+  },
+  {
+    "input": "2nd inv Cmaj7",
+    "expected": "v11'g1b<ce'"
+  },
+  {
+    "input": "ROOT INV C",
+    "expected": "v11'c1eg'"
+  },
+  {
+    "input": "1st inv, C",
+    "expected": "v11'e1g<c'"
+  },
+  {
+    "input": "1st inv Dm",
+    "expected": "v11'f1a<d'"
+  },
+  {
+    "input": "2nd inv G7",
+    "expected": "v11'<d1fgb'"
+  },
+  {
+    "input": "C^1",
+    "expected": "v11'e1g<c'"
+  },
+  {
+    "input": "C^2",
+    "expected": "v11'g1<ce'"
+  },
+  {
+    "input": "CM7^3",
+    "expected": "v11'b1<ceg'"
+  },
+  {
+    "input": "C^0",
+    "expected": "v11'c1eg'"
+  },
+  {
+    "input": "Cmaj7^1",
+    "expected": "v11'e1gb<c'"
+  },
+  {
+    "input": "1st inv C^0 C",
+    "expected": "v11'c1eg''e1g<c'"
+  },
+  {
+    "input": "2nd inv C^1",
+    "expected": "v11'e1g<c'"
+  },
+  {
+    "input": "C^1/A",
+    "expected": "v11'>a1<eg<c'"
+  },
+  {
+    "input": "C^2/A",
+    "expected": "v11'>a1<g<ce'"
+  },
+  {
+    "input": "1st inv C/C",
+    "expected": "v11'>c1eg<c'"
+  },
+  {
+    "input": "1st inv C7(b5)",
+    "expected": "v11'e1f+a+<c'"
+  },
+  {
+    "input": "polychord Cm7/G",
+    "expected": "v11'>g1b<d<cd+ga+'"
+  },
+  {
+    "input": "1st inv C CM7^3 EonC",
+    "expected": "v11'e1g<c''b1<ceg''>c1g+b<e'"
+  }
+]

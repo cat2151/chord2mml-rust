@@ -13,6 +13,20 @@
 // Semantics (root numbers, quality normalization) live in
 // chord2mml-core/src/cst_to_ast.rs — this grammar only names the tokens.
 
+// Build a case-insensitive regex source for a literal (JS "..."i);
+// spaces stay literal single spaces, matching the PEG grammar.
+function ci(str) {
+  return str
+    .split('')
+    .map(c => (/[a-zA-Z]/.test(c) ? `[${c.toLowerCase()}${c.toUpperCase()}]` : c))
+    .join('');
+}
+
+// A mode directive: case-insensitive words with an optional trailing , or .
+function directive(...variants) {
+  return token(new RegExp(`(${variants.map(ci).join('|')})[,.]?`));
+}
+
 module.exports = grammar({
   name: 'chord',
 
@@ -20,27 +34,57 @@ module.exports = grammar({
 
   conflicts: $ => [
     [$.chord],
+    [$._lower],
   ],
 
   rules: {
-    // Entry point: chords with separators only between chords
+    // Entry point: events with separators only between events
     // (a trailing "-" must read as the minor quality, not a separator)
     source_file: $ => optional(seq(
-      $.chord,
-      repeat(seq(optional($.separator), $.chord))
+      $._event,
+      repeat(seq(optional($.separator), $._event))
     )),
+
+    _event: $ => choice(
+      $.chord,
+      $.mode_chord_over_bass_note,
+      $.mode_slash_chord_inversion,
+      $.mode_polychord,
+      $.mode_root_inv,
+      $.mode_1st_inv,
+      $.mode_2nd_inv,
+      $.mode_3rd_inv,
+    ),
+
+    // Slash-chord mode directives (JS SLASH_CHORD_MODE_*)
+    mode_chord_over_bass_note: $ => directive('chord over bass note'),
+    mode_slash_chord_inversion: $ => directive('slash chord inversion'),
+    mode_polychord: $ => directive(
+      'upper structure triad', 'upper structure', 'UST', 'US', 'polychord', 'poly'
+    ),
+
+    // Inversion mode directives (JS INVERSION_MODE_*)
+    mode_root_inv: $ => directive('root inv'),
+    mode_1st_inv: $ => directive('1st inv'),
+    mode_2nd_inv: $ => directive('2nd inv'),
+    mode_3rd_inv: $ => directive('3rd inv'),
 
     // Progression separators (carry no meaning). Dynamic precedence
     // makes the separator reading win over "-" as the minor quality
     // when both produce a valid parse.
     separator: $ => prec.dynamic(1, choice('-', '→', '・')),
 
-    // A chord consists of: root + optional quality + optional bass
+    // A chord: root + optional quality + optional ^N inversion +
+    // optional bass (slash chord or on-chord)
     chord: $ => seq(
       field('root', $.root),
       optional(field('quality', $.quality)),
-      optional(field('bass', $.bass))
+      optional(field('inversion', $.chord_inversion)),
+      optional(field('bass', choice($.bass, $.on_bass)))
     ),
+
+    // Per-chord inversion: ^0 (cancel mode) .. ^3 (JS INVERSION)
+    chord_inversion: $ => /\^[0-3]/,
 
     // Root note: C, D, E, F, G, A, B with optional accidentals
     root: $ => seq(
@@ -118,10 +162,22 @@ module.exports = grammar({
       '(#5)',
     ),
 
-    // Bass note: /root for slash chords (e.g. C/E)
-    bass: $ => seq(
-      '/',
-      field('root', $.root)
+    // Lower part of a slash chord / on-chord: root, quality, and inversion
+    // are all optional and inherit from the upper part (JS SLASH_CHORD /
+    // ON_CHORD: lowerRoot? lowerQuality? lowerInversion)
+    _lower: $ => seq(
+      field('root', $.root),
+      optional(field('quality', $.quality)),
+      optional(field('inversion', $.chord_inversion))
     ),
+
+    // Slash chord bass: /lower (e.g. C/E, US C/G); resolved by the current
+    // slash-chord mode. prec.right binds a following root as the lower part
+    // rather than starting a new chord.
+    bass: $ => prec.right(seq('/', optional($._lower))),
+
+    // On-chord bass: "on"/"over" + lower (e.g. EonC, CoverC); always
+    // chord-over-bass-note regardless of the slash-chord mode
+    on_bass: $ => prec.right(seq(choice('on', 'over'), optional($._lower))),
   }
 });

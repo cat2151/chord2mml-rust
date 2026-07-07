@@ -17,7 +17,7 @@ use anyhow::{anyhow, Result};
 use serde::Deserialize;
 use std::collections::HashMap;
 
-use crate::ast::{ChordEvent, Event, SlashChordEvent};
+use crate::ast::{ChordEvent, Event, SlashChordEvent, SlashChordMode};
 
 /// A Tree-sitter CST node in the JSON shape emitted by web-tree-sitter
 /// serialization (same shape as tonejs-mml-to-json's `nodeToCSTJson`):
@@ -56,6 +56,27 @@ pub fn cst_to_ast(root: &CSTNode) -> Result<Vec<Event>> {
         match child.node_type.as_str() {
             "chord" => events.push(parse_chord_node(child)?),
             "separator" => {} // progression separators carry no meaning
+            "mode_chord_over_bass_note" => events.push(Event::ChangeSlashChordMode(
+                SlashChordMode::ChordOverBassNote,
+            )),
+            "mode_slash_chord_inversion" => {
+                events.push(Event::ChangeSlashChordMode(SlashChordMode::Inversion))
+            }
+            "mode_polychord" => {
+                events.push(Event::ChangeSlashChordMode(SlashChordMode::Polychord))
+            }
+            "mode_root_inv" => {
+                events.push(Event::ChangeInversionMode("root inv".to_string()))
+            }
+            "mode_1st_inv" => {
+                events.push(Event::ChangeInversionMode("1st inv".to_string()))
+            }
+            "mode_2nd_inv" => {
+                events.push(Event::ChangeInversionMode("2nd inv".to_string()))
+            }
+            "mode_3rd_inv" => {
+                events.push(Event::ChangeInversionMode("3rd inv".to_string()))
+            }
             other => return Err(anyhow!("Unexpected node type: {}", other)),
         }
     }
@@ -82,32 +103,69 @@ fn parse_chord_node(chord_node: &CSTNode) -> Result<Event> {
         None => "maj".to_string(),
     };
 
-    // Slash chord (bass): resolved to a mode by ast2ast, like the JS version
-    if let Some(bass_node) = field_first(chord_node, "bass") {
-        let bass_root_node = field_first(bass_node, "root")
-            .or_else(|| bass_node.children.first())
-            .ok_or_else(|| anyhow!("No root found in bass"))?;
-        let lower_root = parse_root_node(bass_root_node)?;
+    let inversion = match field_first(chord_node, "inversion") {
+        Some(node) => Some(parse_inversion(node.text.as_deref().unwrap_or(""))?),
+        None => None,
+    };
 
-        return Ok(Event::SlashChord(SlashChordEvent {
+    // Slash chord (`/`, resolved to a mode by ast2ast) or on-chord
+    // (`on`/`over`, always chord-over-bass-note), like the JS version.
+    // An absent lower root inherits the upper root (JS: lowerRoot ??=
+    // upperRoot). An absent lower quality is "maj", NOT the upper quality:
+    // in the PEG grammar CHORD_QUALITY matches the empty string as "maj",
+    // so JS's `lowerQuality ??= upperQuality` never fires for quality.
+    if let Some(bass_node) = field_first(chord_node, "bass") {
+        let lower_root = match field_first(bass_node, "root") {
+            Some(node) => parse_root_node(node)?,
+            None => root,
+        };
+        let lower_quality = match field_first(bass_node, "quality") {
+            Some(node) => parse_quality_node(node)?,
+            None => "maj".to_string(),
+        };
+        let lower_inversion = match field_first(bass_node, "inversion") {
+            Some(node) => Some(parse_inversion(node.text.as_deref().unwrap_or(""))?),
+            None => None,
+        };
+
+        let slash = SlashChordEvent {
             upper_root: root,
             upper_quality: quality,
+            upper_inversion: inversion,
             lower_root,
-            // Lower quality defaults to the upper quality in the JS grammar
-            // when not written; a bare bass note only uses its root anyway.
-            lower_quality: "maj".to_string(),
+            lower_quality,
+            lower_inversion,
             upper_octave_offset: 0,
             lower_octave_offset: 0,
             note_length: None,
-        }));
+        };
+
+        return Ok(match bass_node.node_type.as_str() {
+            "on_bass" => Event::ChordOverBassNote(slash),
+            _ => Event::SlashChord(slash),
+        });
     }
 
     Ok(Event::Chord(ChordEvent {
         root,
         quality,
+        inversion,
         octave_offset: 0,
         note_length: None,
     }))
+}
+
+/// Map a `^N` token to the JS inversion name (`^0` cancels the current
+/// inversion mode back to root position).
+fn parse_inversion(text: &str) -> Result<String> {
+    Ok(match text {
+        "^0" => "root inv",
+        "^1" => "1st inv",
+        "^2" => "2nd inv",
+        "^3" => "3rd inv",
+        other => return Err(anyhow!("Unknown inversion: {}", other)),
+    }
+    .to_string())
 }
 
 /// Resolve a root node (note letter + accidentals) to a semitone offset.
@@ -301,6 +359,7 @@ mod tests {
             vec![Event::Chord(ChordEvent {
                 root: 0,
                 quality: "maj".to_string(),
+                inversion: None,
                 octave_offset: 0,
                 note_length: None,
             })]
@@ -395,13 +454,47 @@ mod tests {
             vec![Event::SlashChord(SlashChordEvent {
                 upper_root: 5,
                 upper_quality: "maj".to_string(),
+                upper_inversion: None,
                 lower_root: 0,
                 lower_quality: "maj".to_string(),
+                lower_inversion: None,
                 upper_octave_offset: 0,
                 lower_octave_offset: 0,
                 note_length: None,
             })]
         );
+    }
+
+    #[test]
+    fn test_mode_nodes() {
+        let events = cst_to_ast(&source(vec![
+            leaf("mode_polychord", "US"),
+            chord_node("C", &[], None),
+            leaf("mode_1st_inv", "1st inv"),
+        ]))
+        .unwrap();
+        assert_eq!(
+            events[0],
+            Event::ChangeSlashChordMode(SlashChordMode::Polychord)
+        );
+        assert_eq!(
+            events[2],
+            Event::ChangeInversionMode("1st inv".to_string())
+        );
+    }
+
+    #[test]
+    fn test_caret_inversion() {
+        let mut chord = chord_node("C", &[], None);
+        chord.fields.insert(
+            "inversion".to_string(),
+            vec![leaf("chord_inversion", "^2")],
+        );
+        let events = cst_to_ast(&source(vec![chord])).unwrap();
+        match &events[0] {
+            Event::Chord(c) => assert_eq!(c.inversion, Some("2nd inv".to_string())),
+            _ => panic!("Expected Chord"),
+        }
     }
 
     #[test]

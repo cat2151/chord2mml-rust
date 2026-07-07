@@ -13,9 +13,27 @@ pub enum Event {
     /// A slash chord as parsed (JS: `{event: "slash chord", ...}`);
     /// resolved by `ast2ast` into the current slash-chord mode.
     SlashChord(SlashChordEvent),
-    /// A slash chord resolved to chord-over-bass-note mode
-    /// (JS: `{event: "chord over bass note", ...}`)
+    /// A slash chord resolved to chord-over-bass-note mode, or an on-chord
+    /// like `EonC` which is this directly (JS: `{event: "chord over bass note"}`)
     ChordOverBassNote(SlashChordEvent),
+    /// A slash chord resolved to inversion mode (JS: `{event: "inversion"}`)
+    Inversion(SlashChordEvent),
+    /// A slash chord resolved to polychord mode (JS: `{event: "polychord"}`)
+    Polychord(SlashChordEvent),
+    /// JS: `{event: "change slash chord mode to ..."}`; consumed by ast2ast
+    ChangeSlashChordMode(SlashChordMode),
+    /// JS: `{event: "change inversion mode to ..."}`; the String is the
+    /// inversion name ("root inv" | "1st inv" | "2nd inv" | "3rd inv");
+    /// consumed by ast2notes
+    ChangeInversionMode(String),
+}
+
+/// Slash-chord interpretation modes (JS slashMode state in ast2ast).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum SlashChordMode {
+    ChordOverBassNote,
+    Inversion,
+    Polychord,
 }
 
 /// A plain chord event.
@@ -26,6 +44,9 @@ pub struct ChordEvent {
     pub root: i32,
     /// Normalized quality string, e.g. "maj", "min", "min7", "dim triad".
     pub quality: String,
+    /// Per-chord inversion from `^0`-`^3` ("root inv".."3rd inv");
+    /// None means "use the current inversion mode" (JS INVERSION = null).
+    pub inversion: Option<String>,
     /// Per-chord octave offset (`'` up / `,` down in the JS grammar).
     pub octave_offset: i32,
     /// Note length digit (1=whole, 2=half, 4=quarter, ...); assigned by
@@ -38,8 +59,10 @@ pub struct ChordEvent {
 pub struct SlashChordEvent {
     pub upper_root: i32,
     pub upper_quality: String,
+    pub upper_inversion: Option<String>,
     pub lower_root: i32,
     pub lower_quality: String,
+    pub lower_inversion: Option<String>,
     pub upper_octave_offset: i32,
     pub lower_octave_offset: i32,
     pub note_length: Option<u32>,
