@@ -1,0 +1,150 @@
+[
+  {
+    "input": "C6",
+    "expected": "v11'c1ega'"
+  },
+  {
+    "input": "C7",
+    "expected": "v11'c1ega+'"
+  },
+  {
+    "input": "C9",
+    "expected": "v11'c1ega+<d'"
+  },
+  {
+    "input": "C11",
+    "expected": "v11'c1ega+<df'"
+  },
+  {
+    "input": "C13",
+    "expected": "v11'c1ega+<dfa'"
+  },
+  {
+    "input": "D6",
+    "expected": "v11'd1f+ab'"
+  },
+  {
+    "input": "G9",
+    "expected": "v11'g1b<dfa'"
+  },
+  {
+    "input": "A13",
+    "expected": "v11'a1<c+egb<df+'"
+  },
+  {
+    "input": "E11",
+    "expected": "v11'e1g+b<df+a'"
+  },
+  {
+    "input": "F13",
+    "expected": "v11'f1a<cd+ga+<d'"
+  },
+  {
+    "input": "Bb9",
+    "expected": "v11'a+1<dfg+<c'"
+  },
+  {
+    "input": "C6 C7 C9 C11 C13",
+    "expected": "v11'c1ega''c1ega+''c1ega+<d''c1ega+<df''c1ega+<dfa'"
+  },
+  {
+    "input": "C7sus2",
+    "expected": "v11'c1dga+'"
+  },
+  {
+    "input": "C7sus4",
+    "expected": "v11'c1fga+'"
+  },
+  {
+    "input": "B7sus4",
+    "expected": "v11'b1<ef+a'"
+  },
+  {
+    "input": "F#7sus2",
+    "expected": "v11'f+1g+<c+e'"
+  },
+  {
+    "input": "Csus2 Csus4 C7sus2 C7sus4",
+    "expected": "v11'c1dg''c1fg''c1dga+''c1fga+'"
+  },
+  {
+    "input": "C4.2",
+    "expected": "v11'c1f'"
+  },
+  {
+    "input": "C4.3",
+    "expected": "v11'c1fa+'"
+  },
+  {
+    "input": "C4.4",
+    "expected": "v11'c1fa+<d+'"
+  },
+  {
+    "input": "C4.9",
+    "expected": "v11'c1fa+<d+g+<c+f+b<e'"
+  },
+  {
+    "input": "D4.5",
+    "expected": "v11'd1g<cfa+'"
+  },
+  {
+    "input": "G4.3",
+    "expected": "v11'g1<cf'"
+  },
+  {
+    "input": "Cmaj9",
+    "expected": "v11'c1egb<d'"
+  },
+  {
+    "input": "CM9",
+    "expected": "v11'c1egb<d'"
+  },
+  {
+    "input": "C△9",
+    "expected": "v11'c1egb<d'"
+  },
+  {
+    "input": "Cmaj(9)",
+    "expected": "v11'c1egb<d'"
+  },
+  {
+    "input": "CM(9)",
+    "expected": "v11'c1egb<d'"
+  },
+  {
+    "input": "C△(9)",
+    "expected": "v11'c1egb<d'"
+  },
+  {
+    "input": "C#maj9",
+    "expected": "v11'c+1fg+<cd+'"
+  },
+  {
+    "input": "C#M9",
+    "expected": "v11'c+1fg+<cd+'"
+  },
+  {
+    "input": "C#Maj9",
+    "expected": "v11'c+1fg+<cd+'"
+  },
+  {
+    "input": "C#△9",
+    "expected": "v11'c+1fg+<cd+'"
+  },
+  {
+    "input": "C#△(9)",
+    "expected": "v11'c+1fg+<cd+'"
+  },
+  {
+    "input": "Gmaj9",
+    "expected": "v11'g1b<df+a'"
+  },
+  {
+    "input": "C6 G7 C13",
+    "expected": "v11'c1ega''g1b<df''c1ega+<dfa'"
+  },
+  {
+    "input": "C4.3→F4.3",
+    "expected": "v11'c1fa+''f1a+<d+'"
+  }
+]

@@ -147,12 +147,26 @@ fn parse_root_node(root_node: &CSTNode) -> Result<i32> {
 
 /// Normalize a quality token to the JS chord2mml quality string.
 fn normalize_quality(quality_str: &str) -> Result<String> {
+    // Quartal harmony is kept as literal text (JS QUARTAL_HARMONY)
+    if quality_str.starts_with("4.") {
+        return Ok(quality_str.to_string());
+    }
+
     let normalized = match quality_str {
-        "" | "M" | "maj" => "maj",
-        "m" | "min" => "min",
-        "m7" | "min7" => "min7",
-        "maj7" | "Maj7" | "M7" | "△" => "maj7",
+        "" | "M" | "maj" | "Maj" | "MAJ" => "maj",
+        "m" | "min" | "Min" | "MIN" => "min",
+        "m7" | "min7" | "Min7" | "MIN7" => "min7",
+        "maj7" | "Maj7" | "MAJ7" | "M7" | "△" => "maj7",
+        // JS MAJ9: maj9 family resolves to maj7 plus an added ninth
+        "maj9" | "Maj9" | "MAJ9" | "M9" | "△9" | "maj(9)" | "Maj(9)" | "MAJ(9)" | "M(9)"
+        | "△(9)" => "maj7,add9",
+        "6" => "6",
         "7" => "7",
+        "9" => "9",
+        "11" => "11",
+        "13" => "13",
+        "7sus2" => "7sus2",
+        "7sus4" => "7sus4",
         "dim" => "dim triad",
         "aug" | "+" => "aug",
         "sus4" => "sus4",
