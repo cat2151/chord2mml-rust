@@ -9,8 +9,8 @@
 import { readFile, readdir } from 'fs/promises';
 import { fileURLToPath } from 'url';
 import { Parser, Language } from 'web-tree-sitter';
-import init, { convert_cst } from '../public/wasm/chord2mml_wasm.js';
-import { nodeToCSTJson } from '../src/cst-serializer.js';
+import init, { convert_cst, preprocess_candidates } from '../public/wasm/chord2mml_wasm.js';
+import { convertWithPreprocess } from '../src/convert.js';
 
 const corpusDir = new URL('../../chord2mml-core/tests/corpus/', import.meta.url);
 const corpusFiles = (await readdir(corpusDir)).filter((f) => f.endsWith('.json')).sort();
@@ -40,19 +40,13 @@ async function main() {
 
   let failed = 0;
   let passed = 0;
+  const wasm = { convert_cst, preprocess_candidates };
   for (const { input, expected } of cases) {
-    const tree = parser.parse(input);
-    if (!tree || tree.rootNode.hasError) {
-      console.error(`✗ ${input}: parse error`);
-      failed++;
-      continue;
-    }
-    const cstJson = nodeToCSTJson(tree.rootNode);
     let actual;
     try {
-      actual = convert_cst(JSON.stringify(cstJson));
+      actual = convertWithPreprocess(parser, wasm, input);
     } catch (e) {
-      console.error(`✗ ${input}: convert error: ${e}`);
+      console.error(`✗ ${input}: ${e}`);
       failed++;
       continue;
     }

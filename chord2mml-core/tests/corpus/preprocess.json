@@ -1,0 +1,102 @@
+[
+  {
+    "input": "1-3",
+    "expected": "v11'c1eg''e1g+b'"
+  },
+  {
+    "input": "1-4-5-1",
+    "expected": "v11'c1eg''f1a<c''g1b<d''c1eg'"
+  },
+  {
+    "input": "I-IV-V",
+    "expected": "v11'c1eg''f1a<c''g1b<d'"
+  },
+  {
+    "input": "I-IV-V-I",
+    "expected": "v11'c1eg''f1a<c''g1b<d''c1eg'"
+  },
+  {
+    "input": "bII-I",
+    "expected": "v11'c+1fg+''c1eg'"
+  },
+  {
+    "input": "ii",
+    "expected": "v11'd1fa'"
+  },
+  {
+    "input": "vii",
+    "expected": "v11'b1<df+'"
+  },
+  {
+    "input": "iii",
+    "expected": "v11'e1gb'"
+  },
+  {
+    "input": "iv",
+    "expected": "v11'f1g+<c'"
+  },
+  {
+    "input": "v",
+    "expected": "v11'g1a+<d'"
+  },
+  {
+    "input": "i",
+    "expected": "v11'c1d+g'"
+  },
+  {
+    "input": "vi",
+    "expected": "v11'a1<ce'"
+  },
+  {
+    "input": "ii V I",
+    "expected": "v11'd1fa''g1b<d''c1eg'"
+  },
+  {
+    "input": "i iv v",
+    "expected": "v11'c1d+g''f1g+<c''g1a+<d'"
+  },
+  {
+    "input": "ii7",
+    "expected": "v11'd1fa<c'"
+  },
+  {
+    "input": "vi7",
+    "expected": "v11'a1<ceg'"
+  },
+  {
+    "input": "ii-V-I",
+    "expected": "v11'd1fa''g1b<d''c1eg'"
+  },
+  {
+    "input": "i-bVI-bIII-bVII",
+    "expected": "v11'c1d+g''g+1<cd+''d+1ga+''a+1<df'"
+  },
+  {
+    "input": "vi-IV-I-V",
+    "expected": "v11'a1<ce''f1a<c''c1eg''g1b<d'"
+  },
+  {
+    "input": "C-7",
+    "expected": "v11'c1d+ga+'"
+  },
+  {
+    "input": "F#-7",
+    "expected": "v11'f+1a<c+e'"
+  },
+  {
+    "input": "C-7-D-7",
+    "expected": "v11'c1d+ga+''d1fa<c'"
+  },
+  {
+    "input": "B♭-7",
+    "expected": "v11'a+1<c+fg+'"
+  },
+  {
+    "input": "ii-V-IM7",
+    "expected": "v11'd1fa''g1b<d''c1egb'"
+  },
+  {
+    "input": "key=D ii-V-I",
+    "expected": "v11'e1gb''a1<c+e''d1f+a'"
+  }
+]

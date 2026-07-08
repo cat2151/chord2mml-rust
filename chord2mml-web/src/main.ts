@@ -3,10 +3,10 @@
 // Parsing pipeline (tonejs-mml-to-json pattern):
 //   input → web-tree-sitter (JS) + tree-sitter-chord.wasm → CST JSON
 //         → chord2mml-wasm convert_cst (Rust) → MML
-import init, { convert_cst } from '../public/wasm/chord2mml_wasm.js';
+import init, { convert_cst, preprocess_candidates } from '../public/wasm/chord2mml_wasm.js';
 import { Parser, Language } from 'web-tree-sitter';
 import treeSitterWasmUrl from 'web-tree-sitter/web-tree-sitter.wasm?url';
-import { nodeToCSTJson } from './cst-serializer.js';
+import { convertWithPreprocess } from './convert.js';
 
 // Simple audio sequencer using Web Audio API
 interface AudioSequencer {
@@ -130,15 +130,7 @@ function convertChord(input: string): string {
     if (!parser) {
         throw new Error('パーサー未初期化');
     }
-    const tree = parser.parse(input);
-    if (!tree) {
-        throw new Error('パースに失敗しました');
-    }
-    if (tree.rootNode.hasError) {
-        throw new Error(`コード表記を解釈できません: ${input}`);
-    }
-    const cstJson = nodeToCSTJson(tree.rootNode);
-    return convert_cst(JSON.stringify(cstJson));
+    return convertWithPreprocess(parser, { convert_cst, preprocess_candidates }, input);
 }
 
 async function updateOutput(chord: string) {

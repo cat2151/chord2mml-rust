@@ -25,6 +25,16 @@ pub fn convert_cst(cst_json: &str) -> Result<String, JsValue> {
     chord2mml_core::convert_cst(cst_json).map_err(|e| JsValue::from_str(&e.to_string()))
 }
 
+/// Return all dialect-rewrite candidates for an input as a JSON string
+/// array, in trial order (the original first). The JavaScript side parses
+/// each candidate with web-tree-sitter and converts the first one that
+/// succeeds — the same brute-force contract as the JS chord2mml.parse.
+#[wasm_bindgen]
+pub fn preprocess_candidates(input: &str) -> String {
+    serde_json::to_string(&chord2mml_core::preprocess_candidates(input))
+        .unwrap_or_else(|_| "[]".to_string())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
