@@ -8,7 +8,7 @@
 コード進行をMML（Music Macro Language）に変換するライブラリ・アプリケーション。Rustで書かれています。
 
 ## 注意
-- 破壊的変更を頻繁に行う
+- 破壊的変更を頻繁に行います。
 - 以降の文章はAI生成を含みます。誤りやuserの意図と違うものを含む可能性があります。
 
 ## 概要
@@ -16,6 +16,10 @@
 このプロジェクトは、[chord2mml](https://github.com/cat2151/chord2mml)で Peggy.js + JavaScript で作っていたものを、**Rust + Tree-sitter** として新たに作り直したものです。
 
 **出力はJS版と互換**（例: `C` → `v11'c1eg'`）で、JS版の約100テストを仕様として段階的に移植をしました。移植したケースは `chord2mml-core/tests/corpus/` のゴールデンコーパスを参照ください。
+
+### これまでの課題と、このプロジェクトが目指すこと
+- [chord2mml](https://github.com/cat2151/chord2mml)は、localでRustでコード進行を鳴らしたいときには、利用が困難でした。
+- そのため、このプロジェクトで、Rust + Tree-sitter で作り直すことにしました。
 
 ### 主な特徴
 
