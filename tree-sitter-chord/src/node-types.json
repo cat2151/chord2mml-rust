@@ -1,10 +1,5 @@
 [
   {
-    "type": "accidental",
-    "named": true,
-    "fields": {}
-  },
-  {
     "type": "bass",
     "named": true,
     "fields": {
@@ -196,19 +191,19 @@
     "type": "root",
     "named": true,
     "fields": {
-      "accidental": {
-        "multiple": true,
+      "degree": {
+        "multiple": false,
         "required": false,
         "types": [
           {
-            "type": "accidental",
+            "type": "degree",
             "named": true
           }
         ]
       },
       "note": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "note",
@@ -232,7 +227,19 @@
       "required": false,
       "types": [
         {
+          "type": "bar",
+          "named": true
+        },
+        {
+          "type": "bar_slash",
+          "named": true
+        },
+        {
           "type": "chord",
+          "named": true
+        },
+        {
+          "type": "key",
           "named": true
         },
         {
@@ -312,15 +319,15 @@
           "named": true
         },
         {
+          "type": "scale",
+          "named": true
+        },
+        {
           "type": "separator",
           "named": true
         }
       ]
     }
-  },
-  {
-    "type": "#",
-    "named": false
   },
   {
     "type": "(#5)",
@@ -451,16 +458,28 @@
     "named": false
   },
   {
-    "type": "b",
-    "named": false
+    "type": "bar",
+    "named": true
+  },
+  {
+    "type": "bar_slash",
+    "named": true
   },
   {
     "type": "chord_inversion",
     "named": true
   },
   {
+    "type": "degree",
+    "named": true
+  },
+  {
     "type": "dim",
     "named": false
+  },
+  {
+    "type": "key",
+    "named": true
   },
   {
     "type": "m",
@@ -587,6 +606,10 @@
     "named": false
   },
   {
+    "type": "scale",
+    "named": true
+  },
+  {
     "type": "sus2",
     "named": false
   },
@@ -611,19 +634,7 @@
     "named": false
   },
   {
-    "type": "♭",
-    "named": false
-  },
-  {
-    "type": "♯",
-    "named": false
-  },
-  {
     "type": "・",
-    "named": false
-  },
-  {
-    "type": "＃",
     "named": false
   }
 ]

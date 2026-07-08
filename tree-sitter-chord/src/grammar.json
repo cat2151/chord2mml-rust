@@ -124,8 +124,49 @@
         {
           "type": "SYMBOL",
           "name": "octave_down_lower"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "bar"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "bar_slash"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "key"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "scale"
         }
       ]
+    },
+    "bar": {
+      "type": "STRING",
+      "value": "|"
+    },
+    "bar_slash": {
+      "type": "TOKEN",
+      "content": {
+        "type": "PATTERN",
+        "value": "\\/[ \\t]"
+      }
+    },
+    "key": {
+      "type": "TOKEN",
+      "content": {
+        "type": "PATTERN",
+        "value": "[kK][eE][yY][ =:]?[A-G][#＃♯]*[b♭]*([mM][iI][nN][oO][rR]|m)?[,.]?"
+      }
+    },
+    "scale": {
+      "type": "TOKEN",
+      "content": {
+        "type": "PATTERN",
+        "value": "([iI][oO][nN][iI][aA][nN]|[dD][oO][rR][iI][aA][nN]|[pP][hH][rR][yY][gG][iI][aA][nN]|[lL][yY][dD][iI][aA][nN]|[mM][iI][xX][oO][lL][yY][dD][iI][aA][nN]|[aA][eE][oO][lL][iI][aA][nN]|[lL][oO][cC][rR][iI][aA][nN])[,.]?"
+      }
     },
     "mode_chord_over_bass_note": {
       "type": "TOKEN",
@@ -376,7 +417,7 @@
       "value": "'+,*|,+"
     },
     "root": {
-      "type": "SEQ",
+      "type": "CHOICE",
       "members": [
         {
           "type": "FIELD",
@@ -387,46 +428,28 @@
           }
         },
         {
-          "type": "REPEAT",
+          "type": "FIELD",
+          "name": "degree",
           "content": {
-            "type": "FIELD",
-            "name": "accidental",
-            "content": {
-              "type": "SYMBOL",
-              "name": "accidental"
-            }
+            "type": "SYMBOL",
+            "name": "degree"
           }
         }
       ]
     },
     "note": {
-      "type": "PATTERN",
-      "value": "[A-G]"
+      "type": "TOKEN",
+      "content": {
+        "type": "PATTERN",
+        "value": "[A-G][#＃♯]*[b♭]*"
+      }
     },
-    "accidental": {
-      "type": "CHOICE",
-      "members": [
-        {
-          "type": "STRING",
-          "value": "#"
-        },
-        {
-          "type": "STRING",
-          "value": "＃"
-        },
-        {
-          "type": "STRING",
-          "value": "♯"
-        },
-        {
-          "type": "STRING",
-          "value": "b"
-        },
-        {
-          "type": "STRING",
-          "value": "♭"
-        }
-      ]
+    "degree": {
+      "type": "TOKEN",
+      "content": {
+        "type": "PATTERN",
+        "value": "[#＃♯]*[b♭]*(VII|III|VI|IV|II|V|I|[1-7])"
+      }
     },
     "quality": {
       "type": "CHOICE",

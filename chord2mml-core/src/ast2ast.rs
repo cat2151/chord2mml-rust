@@ -48,23 +48,64 @@ pub(crate) fn ast_to_ast(events: Vec<Event>) -> Vec<Event> {
     result
 }
 
-/// Port of bar2noteLength: chords start as whole notes (1); bar events
-/// (later wave) divide each bar's length among its chords. Without bars,
-/// every chord keeps note length 1, matching the JS behavior.
+/// Port of bar2noteLength: chords start as whole notes (1). Each bar (`|`)
+/// divides the whole note among its chords (4 chords → quarter notes);
+/// a bar slash (`/ `) halves the bar, so each side's chords divide a half
+/// note. Without any bar events, every chord keeps note length 1.
 fn bar_to_note_length(events: &mut [Event]) {
-    for event in events.iter_mut() {
-        match event {
-            Event::Chord(chord) => chord.note_length = Some(1),
-            Event::ChordOverBassNote(slash)
-            | Event::Inversion(slash)
-            | Event::Polychord(slash)
-            | Event::SlashChord(slash) => slash.note_length = Some(1),
-            Event::ChangeSlashChordMode(_)
-            | Event::ChangeInversionMode(_)
-            | Event::ChangeOpenHarmonyMode(_)
-            | Event::ChangeBassPlayMode(_)
-            | Event::OctaveShift { .. } => {}
+    let mut bar_count = 0;
+    let mut total_note_length: u32 = 1;
+    let mut chord_indexes: Vec<usize> = Vec::new();
+
+    for i in 0..events.len() {
+        match &events[i] {
+            Event::Chord(_)
+            | Event::ChordOverBassNote(_)
+            | Event::Inversion(_)
+            | Event::Polychord(_)
+            | Event::SlashChord(_) => {
+                set_note_length(&mut events[i], 1);
+                chord_indexes.push(i);
+            }
+            Event::Bar => {
+                bar_count += 1;
+                update_note_lengths(events, &chord_indexes, total_note_length);
+                chord_indexes.clear();
+                total_note_length = 1; // whole note
+            }
+            Event::BarSlash => {
+                bar_count += 1; // also counts when there is no plain bar
+                total_note_length = 2; // each half of the bar is a half note
+                update_note_lengths(events, &chord_indexes, total_note_length);
+                chord_indexes.clear();
+            }
+            _ => {}
         }
+    }
+
+    // Trailing chords (no bar line after them)
+    if bar_count > 0 {
+        update_note_lengths(events, &chord_indexes, total_note_length);
+    }
+}
+
+/// Port of updateAstNoteLength: e.g. 4 chords in a bar → note length 4
+/// (quarter notes); 2 chords in a half bar (total 2) also → 4.
+fn update_note_lengths(events: &mut [Event], chord_indexes: &[usize], total_note_length: u32) {
+    let note_length = chord_indexes.len() as u32 * total_note_length;
+    for &i in chord_indexes {
+        set_note_length(&mut events[i], note_length);
+    }
+}
+
+fn set_note_length(event: &mut Event, note_length: u32) {
+    match event {
+        Event::Chord(chord) => chord.note_length = Some(note_length),
+        Event::ChordOverBassNote(slash)
+        | Event::Inversion(slash)
+        | Event::Polychord(slash)
+        | Event::SlashChord(slash) => slash.note_length = Some(note_length),
+        _ => {}
     }
 }
 
