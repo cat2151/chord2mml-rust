@@ -7,9 +7,9 @@
 
 use anyhow::{anyhow, Result};
 
-use crate::ast::{Event, NotesEvent};
+use crate::ast::{Event, NotesEvent, OutEvent};
 
-pub(crate) fn ast_to_notes(events: Vec<Event>) -> Result<Vec<NotesEvent>> {
+pub(crate) fn ast_to_notes(events: Vec<Event>) -> Result<Vec<OutEvent>> {
     let mut result = Vec::new();
     // JS state: inversionMode / openHarmonyMode / bassPlayMode /
     // octaveOffsetUpper / octaveOffsetLower
@@ -30,10 +30,10 @@ pub(crate) fn ast_to_notes(events: Vec<Event>) -> Result<Vec<NotesEvent>> {
                     &open_harmony_mode,
                     octave_offset_upper + chord.octave_offset,
                 )?;
-                result.push(NotesEvent {
+                result.push(OutEvent::Notes(NotesEvent {
                     notes,
                     note_length: chord.note_length,
-                });
+                    }));
             }
             Event::ChordOverBassNote(slash) => {
                 let inversion = slash.upper_inversion.as_deref().unwrap_or(&inversion_mode);
@@ -46,10 +46,10 @@ pub(crate) fn ast_to_notes(events: Vec<Event>) -> Result<Vec<NotesEvent>> {
                     octave_offset_upper + slash.upper_octave_offset,
                     octave_offset_lower + slash.lower_octave_offset,
                 )?;
-                result.push(NotesEvent {
+                result.push(OutEvent::Notes(NotesEvent {
                     notes,
                     note_length: slash.note_length,
-                });
+                    }));
             }
             Event::Inversion(slash) => {
                 let notes = get_notes_by_inversion_chord(
@@ -59,10 +59,10 @@ pub(crate) fn ast_to_notes(events: Vec<Event>) -> Result<Vec<NotesEvent>> {
                     &bass_play_mode,
                     octave_offset_upper + slash.upper_octave_offset,
                 )?;
-                result.push(NotesEvent {
+                result.push(OutEvent::Notes(NotesEvent {
                     notes,
                     note_length: slash.note_length,
-                });
+                    }));
             }
             Event::Polychord(slash) => {
                 let upper_inversion =
@@ -79,11 +79,16 @@ pub(crate) fn ast_to_notes(events: Vec<Event>) -> Result<Vec<NotesEvent>> {
                     octave_offset_upper + slash.upper_octave_offset,
                     octave_offset_lower + slash.lower_octave_offset,
                 )?;
-                result.push(NotesEvent {
+                result.push(OutEvent::Notes(NotesEvent {
                     notes,
                     note_length: slash.note_length,
-                });
+                    }));
             }
+            Event::Bar => result.push(OutEvent::Bar),
+            // Bar slashes were consumed by ast2ast's note-length pass
+            Event::BarSlash => {}
+            Event::Key { offset } => result.push(OutEvent::Key { offset }),
+            Event::Scale { offsets } => result.push(OutEvent::Scale { offsets }),
             Event::ChangeInversionMode(mode) => inversion_mode = mode,
             Event::ChangeOpenHarmonyMode(mode) => open_harmony_mode = mode,
             Event::ChangeBassPlayMode(mode) => bass_play_mode = mode,
@@ -472,6 +477,13 @@ mod tests {
     use super::*;
     use crate::ast::{ChordEvent, SlashChordEvent};
 
+    fn notes_of(out: &OutEvent) -> Vec<i32> {
+        match out {
+            OutEvent::Notes(n) => n.notes.clone(),
+            other => panic!("Expected Notes, got {:?}", other),
+        }
+    }
+
     fn chord(root: i32, quality: &str) -> Event {
         Event::Chord(ChordEvent {
             root,
@@ -500,25 +512,25 @@ mod tests {
     #[test]
     fn test_c_major_notes() {
         let result = ast_to_notes(vec![chord(0, "maj")]).unwrap();
-        assert_eq!(result[0].notes, vec![0, 4, 7]);
+        assert_eq!(*notes_of(&result[0]), vec![0, 4, 7]);
     }
 
     #[test]
     fn test_d_major_notes() {
         let result = ast_to_notes(vec![chord(2, "maj")]).unwrap();
-        assert_eq!(result[0].notes, vec![2, 6, 9]);
+        assert_eq!(*notes_of(&result[0]), vec![2, 6, 9]);
     }
 
     #[test]
     fn test_c_major7_notes() {
         let result = ast_to_notes(vec![chord(0, "maj7")]).unwrap();
-        assert_eq!(result[0].notes, vec![0, 4, 7, 11]);
+        assert_eq!(*notes_of(&result[0]), vec![0, 4, 7, 11]);
     }
 
     #[test]
     fn test_g_major_notes() {
         let result = ast_to_notes(vec![chord(7, "maj")]).unwrap();
-        assert_eq!(result[0].notes, vec![7, 11, 14]);
+        assert_eq!(*notes_of(&result[0]), vec![7, 11, 14]);
     }
 
     #[test]
@@ -526,14 +538,14 @@ mod tests {
         // JS: F/C → [-12+0, -12+5, -12+9, -12+12]
         let result =
             ast_to_notes(vec![Event::ChordOverBassNote(slash(5, "maj", 0, "maj"))]).unwrap();
-        assert_eq!(result[0].notes, vec![-12, -7, -3, 0]);
+        assert_eq!(*notes_of(&result[0]), vec![-12, -7, -3, 0]);
     }
 
     #[test]
     fn test_inversion_chord() {
         // JS: inversion C/G → [7, 12, 16]
         let result = ast_to_notes(vec![Event::Inversion(slash(0, "maj", 7, "maj"))]).unwrap();
-        assert_eq!(result[0].notes, vec![7, 12, 16]);
+        assert_eq!(*notes_of(&result[0]), vec![7, 12, 16]);
     }
 
     #[test]
@@ -547,7 +559,7 @@ mod tests {
     fn test_polychord() {
         // JS: polychord D/C → [0-12, 4-12, 7-12, 14-12, 18-12, 21-12]
         let result = ast_to_notes(vec![Event::Polychord(slash(2, "maj", 0, "maj"))]).unwrap();
-        assert_eq!(result[0].notes, vec![-12, -8, -5, 2, 6, 9]);
+        assert_eq!(*notes_of(&result[0]), vec![-12, -8, -5, 2, 6, 9]);
     }
 
     #[test]
@@ -559,7 +571,7 @@ mod tests {
         ])
         .unwrap();
         assert_eq!(result.len(), 1);
-        assert_eq!(result[0].notes, vec![4, 7, 12]);
+        assert_eq!(*notes_of(&result[0]), vec![4, 7, 12]);
     }
 
     #[test]
@@ -576,7 +588,7 @@ mod tests {
             }),
         ])
         .unwrap();
-        assert_eq!(result[0].notes, vec![0, 4, 7]);
+        assert_eq!(*notes_of(&result[0]), vec![0, 4, 7]);
     }
 
     #[test]
@@ -584,3 +596,6 @@ mod tests {
         assert!(ast_to_notes(vec![chord(0, "xyz")]).is_err());
     }
 }
+
+
+

@@ -52,10 +52,24 @@ pub fn cst_to_ast(root: &CSTNode) -> Result<Vec<Event>> {
     }
 
     let mut events = Vec::new();
+    // The key state transposes subsequent degree roots (JS gKey, mutated
+    // while parsing; here resolved sequentially over the event stream)
+    let mut g_key: i32 = 0;
     for child in &root.children {
         match child.node_type.as_str() {
-            "chord" => events.push(parse_chord_node(child)?),
+            "chord" => events.push(parse_chord_node(child, g_key)?),
             "separator" => {} // progression separators carry no meaning
+            "bar" => events.push(Event::Bar),
+            "bar_slash" => events.push(Event::BarSlash),
+            "key" => {
+                let offset = parse_key_offset(child.text.as_deref().unwrap_or(""))?;
+                g_key = offset;
+                events.push(Event::Key { offset });
+            }
+            "scale" => {
+                let offsets = parse_scale_offsets(child.text.as_deref().unwrap_or(""))?;
+                events.push(Event::Scale { offsets });
+            }
             "mode_chord_over_bass_note" => events.push(Event::ChangeSlashChordMode(
                 SlashChordMode::ChordOverBassNote,
             )),
@@ -134,10 +148,10 @@ fn field_first<'a>(node: &'a CSTNode, name: &str) -> Option<&'a CSTNode> {
     node.fields.get(name).and_then(|nodes| nodes.first())
 }
 
-fn parse_chord_node(chord_node: &CSTNode) -> Result<Event> {
+fn parse_chord_node(chord_node: &CSTNode, g_key: i32) -> Result<Event> {
     let root_node =
         field_first(chord_node, "root").ok_or_else(|| anyhow!("No root node found"))?;
-    let root = parse_root_node(root_node)?;
+    let root = parse_root_node(root_node, g_key)?;
 
     let quality = match field_first(chord_node, "quality") {
         Some(quality_node) => parse_quality_node(quality_node)?,
@@ -163,7 +177,7 @@ fn parse_chord_node(chord_node: &CSTNode) -> Result<Event> {
     // so JS's `lowerQuality ??= upperQuality` never fires for quality.
     if let Some(bass_node) = field_first(chord_node, "bass") {
         let lower_root = match field_first(bass_node, "root") {
-            Some(node) => parse_root_node(node)?,
+            Some(node) => parse_root_node(node, g_key)?,
             None => root,
         };
         let lower_quality = match field_first(bass_node, "quality") {
@@ -227,37 +241,124 @@ fn parse_inversion(text: &str) -> Result<String> {
     .to_string())
 }
 
-/// Resolve a root node (note letter + accidentals) to a semitone offset.
-/// C=0, D=2, E=4, F=5, G=7, A=9, B=11, +1 per sharp, -1 per flat
-/// (not normalized mod 12, matching the JS grammar).
-fn parse_root_node(root_node: &CSTNode) -> Result<i32> {
-    let note = field_first(root_node, "note")
+/// Resolve a root node to a semitone offset (not normalized mod 12,
+/// matching the JS grammar):
+/// - Note token ("C#", "B♭", ...): C=0, D=2, E=4, F=5, G=7, A=9, B=11,
+///   +1 per sharp / -1 per flat
+/// - Degree token ("bII", "#IV", "1", ...): Ionian offset of the numeral
+///   + accidentals + the key (JS ROOT_DEGREE — degrees always use the
+///   Ionian offsets; the scale only affects sharp/flat spelling downstream)
+fn parse_root_node(root_node: &CSTNode, g_key: i32) -> Result<i32> {
+    if let Some(degree_text) = field_first(root_node, "degree").and_then(|n| n.text.as_deref())
+    {
+        let (accidentals, numeral) = split_accidentals(degree_text);
+        let index = match numeral {
+            "I" | "1" => 0,
+            "II" | "2" => 1,
+            "III" | "3" => 2,
+            "IV" | "4" => 3,
+            "V" | "5" => 4,
+            "VI" | "6" => 5,
+            "VII" | "7" => 6,
+            other => return Err(anyhow!("Unknown degree: {}", other)),
+        };
+        const IONIAN: [i32; 7] = [0, 2, 4, 5, 7, 9, 11];
+        return Ok(IONIAN[index] + accidentals + g_key);
+    }
+
+    let note_text = field_first(root_node, "note")
         .and_then(|n| n.text.as_deref())
         .ok_or_else(|| anyhow!("No note found in root"))?;
 
-    let base = match note {
-        "C" => 0,
-        "D" => 2,
-        "E" => 4,
-        "F" => 5,
-        "G" => 7,
-        "A" => 9,
-        "B" => 11,
-        other => return Err(anyhow!("Unknown note: {}", other)),
+    let mut chars = note_text.chars();
+    let base = match chars.next() {
+        Some('C') => 0,
+        Some('D') => 2,
+        Some('E') => 4,
+        Some('F') => 5,
+        Some('G') => 7,
+        Some('A') => 9,
+        Some('B') => 11,
+        other => return Err(anyhow!("Unknown note: {:?}", other)),
+    };
+    let (accidentals, rest) = split_accidentals(chars.as_str());
+    if !rest.is_empty() {
+        return Err(anyhow!("Unexpected note suffix: {}", note_text));
+    }
+
+    Ok(base + accidentals)
+}
+
+/// Split leading accidentals off a token text; returns (net offset, rest).
+fn split_accidentals(text: &str) -> (i32, &str) {
+    let mut offset = 0;
+    let mut rest = text;
+    while let Some(c) = rest.chars().next() {
+        match c {
+            '#' | '＃' | '♯' => offset += 1,
+            'b' | '♭' => offset -= 1,
+            _ => break,
+        }
+        rest = &rest[c.len_utf8()..];
+    }
+    (offset, rest)
+}
+
+/// Parse a key directive token ("key"i [ =:]? [A-G] SHARP* FLAT*
+/// ("minor"i/"m")? [,.]?) into the key's semitone offset. The minor
+/// suffix is accepted but does not change the offset (JS KEY_EVENT).
+fn parse_key_offset(text: &str) -> Result<i32> {
+    // Skip "key" (case-insensitive) and the optional delimiter
+    let rest = &text[3..];
+    let rest = rest.strip_prefix([' ', '=', ':']).unwrap_or(rest);
+
+    let mut chars = rest.chars();
+    let root = chars
+        .next()
+        .ok_or_else(|| anyhow!("Key directive missing root: {}", text))?;
+    let base = match root {
+        'C' => 0,
+        'D' => 2,
+        'E' => 4,
+        'F' => 5,
+        'G' => 7,
+        'A' => 9,
+        'B' => 11,
+        other => return Err(anyhow!("Unknown key root: {}", other)),
     };
 
-    let mut offset = 0;
-    if let Some(accidentals) = root_node.fields.get("accidental") {
-        for acc in accidentals {
-            match acc.text.as_deref() {
-                Some("#") | Some("＃") | Some("♯") => offset += 1,
-                Some("b") | Some("♭") => offset -= 1,
-                other => return Err(anyhow!("Unknown accidental: {:?}", other)),
-            }
+    let mut offset = base;
+    for c in chars {
+        match c {
+            '#' | '＃' | '♯' => offset += 1,
+            'b' | '♭' => offset -= 1,
+            // minor suffix and trailing punctuation are ignored
+            _ => break,
         }
     }
 
-    Ok(base + offset)
+    Ok(offset)
+}
+
+/// Parse a scale directive token into its interval offsets (JS
+/// getOffsetsByScale over the seven church modes).
+fn parse_scale_offsets(text: &str) -> Result<Vec<i32>> {
+    let word: String = text
+        .chars()
+        .filter(|c| c.is_ascii_alphabetic())
+        .collect::<String>()
+        .to_lowercase();
+    let offsets: &[i32] = match word.as_str() {
+        "ionian" => &[0, 2, 4, 5, 7, 9, 11],
+        "dorian" => &[0, 2, 3, 5, 7, 9, 10],
+        "phrygian" => &[0, 1, 3, 5, 7, 8, 10],
+        "lydian" => &[0, 2, 4, 6, 7, 9, 11],
+        "mixolydian" => &[0, 2, 4, 5, 7, 9, 10],
+        "aeolian" => &[0, 2, 3, 5, 7, 8, 10],
+        "locrian" => &[0, 1, 3, 5, 6, 8, 10],
+        other => return Err(anyhow!("Unknown scale: {}", other)),
+    };
+    Ok(offsets.to_vec())
 }
 
 /// Compose a quality node (base + modifiers) into the JS chord2mml
@@ -349,17 +450,12 @@ mod tests {
     }
 
     fn root_node(note: &str, accidentals: &[&str]) -> CSTNode {
+        let text = format!("{}{}", note, accidentals.concat());
         let mut fields = HashMap::new();
-        fields.insert("note".to_string(), vec![leaf("note", note)]);
-        if !accidentals.is_empty() {
-            fields.insert(
-                "accidental".to_string(),
-                accidentals.iter().map(|a| leaf("accidental", a)).collect(),
-            );
-        }
+        fields.insert("note".to_string(), vec![leaf("note", &text)]);
         CSTNode {
             node_type: "root".to_string(),
-            text: Some(format!("{}{}", note, accidentals.concat())),
+            text: Some(text),
             children: Vec::new(),
             fields,
         }

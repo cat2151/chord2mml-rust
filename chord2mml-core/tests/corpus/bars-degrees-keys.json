@@ -1,0 +1,186 @@
+[
+  {
+    "input": "C | C",
+    "expected": "v11'c1eg'/*|*/'c1eg'"
+  },
+  {
+    "input": "C | C C | C C C C",
+    "expected": "v11'c1eg'/*|*/'c2eg''c2eg'/*|*/'c4eg''c4eg''c4eg''c4eg'"
+  },
+  {
+    "input": "C / C C",
+    "expected": "v11'c2eg''c4eg''c4eg'"
+  },
+  {
+    "input": "C C / C",
+    "expected": "v11'c4eg''c4eg''c2eg'"
+  },
+  {
+    "input": "C | C C / C C",
+    "expected": "v11'c1eg'/*|*/'c4eg''c4eg''c4eg''c4eg'"
+  },
+  {
+    "input": "Dm G7 | C C",
+    "expected": "v11'd2fa''g2b<df'/*|*/'c2eg''c2eg'"
+  },
+  {
+    "input": "C | C |",
+    "expected": "v11'c1eg'/*|*/'c1eg'/*|*/"
+  },
+  {
+    "input": "C C C | C",
+    "expected": "v11'c3eg''c3eg''c3eg'/*|*/'c1eg'"
+  },
+  {
+    "input": "I",
+    "expected": "v11'c1eg'"
+  },
+  {
+    "input": "IV V I",
+    "expected": "v11'f1a<c''g1b<d''c1eg'"
+  },
+  {
+    "input": "1 4 5 1",
+    "expected": "v11'c1eg''f1a<c''g1b<d''c1eg'"
+  },
+  {
+    "input": "1M7 2m7 3m7 4M7 56 57 6m7 7m7(b5)",
+    "expected": "v11'c1egb''d1fa<c''e1gb<d''f1a<ce''g1b<de''g1b<df''a1<ceg''b1<dfa'"
+  },
+  {
+    "input": "bII",
+    "expected": "v11'c+1fg+'"
+  },
+  {
+    "input": "#IV",
+    "expected": "v11'f+1a+<c+'"
+  },
+  {
+    "input": "bVII",
+    "expected": "v11'a+1<df'"
+  },
+  {
+    "input": "IIm7 V7 IM7",
+    "expected": "v11'd1fa<c''g1b<df''c1egb'"
+  },
+  {
+    "input": "I-IV-V",
+    "expected": "v11'c1eg''f1a<c''g1b<d'"
+  },
+  {
+    "input": "I/V",
+    "expected": "v11'>g1<ceg'"
+  },
+  {
+    "input": "V7onI",
+    "expected": "v11'>c1gb<df'"
+  },
+  {
+    "input": "US I/V",
+    "expected": "v11'>g1b<d<ceg'"
+  },
+  {
+    "input": "1st inv I",
+    "expected": "v11'e1g<c'"
+  },
+  {
+    "input": "drop2 IM7",
+    "expected": "v11'>g1<ceb'"
+  },
+  {
+    "input": "key=D I",
+    "expected": "v11'd1f+a'"
+  },
+  {
+    "input": "Key=F IV",
+    "expected": "v11'b-1<df'"
+  },
+  {
+    "input": "key=C I",
+    "expected": "v11'c1eg'"
+  },
+  {
+    "input": "Key=Am Im",
+    "expected": "v11'a1<ce'"
+  },
+  {
+    "input": "Key:Aminor Im",
+    "expected": "v11'a1<ce'"
+  },
+  {
+    "input": "Key=A Ionian Im",
+    "expected": "v11'a1<ce'"
+  },
+  {
+    "input": "key=G I IV V",
+    "expected": "v11'g1b<d''<c1eg''<d1f+a'"
+  },
+  {
+    "input": "key=Bb I",
+    "expected": "v11'b-1<df'"
+  },
+  {
+    "input": "key=F# I",
+    "expected": "v11'g-1b-<d-'"
+  },
+  {
+    "input": "KEY=D II",
+    "expected": "v11'e1g+b'"
+  },
+  {
+    "input": "key=D I key=E I",
+    "expected": "v11'd1f+a''e1g+b'"
+  },
+  {
+    "input": "key=D C",
+    "expected": "v11'c1eg'"
+  },
+  {
+    "input": "Dorian I",
+    "expected": "v11'c1eg'"
+  },
+  {
+    "input": "Phrygian bII",
+    "expected": "v11'd-1fa-'"
+  },
+  {
+    "input": "Aeolian IIm(b5)",
+    "expected": "v11'd1fa-'"
+  },
+  {
+    "input": "Aeolian bVI bVII",
+    "expected": "v11'a-1<ce-''b-1<df'"
+  },
+  {
+    "input": "Mixolydian bVII",
+    "expected": "v11'b-1<df'"
+  },
+  {
+    "input": "Lydian I",
+    "expected": "v11'c1eg'"
+  },
+  {
+    "input": "Locrian I",
+    "expected": "v11'c1eg'"
+  },
+  {
+    "input": "key=D Phrygian bII",
+    "expected": "v11'e-1gb-'"
+  },
+  {
+    "input": "Key=F I IV",
+    "expected": "v11'f1a<c''b-1<df'"
+  },
+  {
+    "input": "key=Db I",
+    "expected": "v11'd-1fa-'"
+  },
+  {
+    "input": "C | key=F IV IV",
+    "expected": "v11'c1eg'/*|*/'b-2<df''b-2<df'"
+  },
+  {
+    "input": "Aeolian bVI | bVII bVII",
+    "expected": "v11'a-1<ce-'/*|*/'b-2<df''b-2<df'"
+  }
+]

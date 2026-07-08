@@ -66,7 +66,30 @@ module.exports = grammar({
       $.octave_down,
       $.octave_down_upper,
       $.octave_down_lower,
+      $.bar,
+      $.bar_slash,
+      $.key,
+      $.scale,
     ),
+
+    // Bar line (JS BAR); note lengths derive from chords per bar
+    bar: $ => '|',
+
+    // Half-bar divider (JS BAR_SLASH = "/ ": the slash needs a following
+    // space, which distinguishes it from a slash-chord "/")
+    bar_slash: $ => token(/\/[ \t]/),
+
+    // Key directive (JS KEY: "key"i [ =:]? [A-G] SHARP* FLAT* ("minor"i/"m")? [,.]?);
+    // parsed from the token text in cst_to_ast
+    key: $ => token(new RegExp(
+      `${ci('key')}[ =:]?[A-G][#＃♯]*[b♭]*(${ci('minor')}|m)?[,.]?`
+    )),
+
+    // Scale directive (JS SCALE: the seven church modes, case-insensitive)
+    scale: $ => token(new RegExp(
+      `(${['ionian', 'dorian', 'phrygian', 'lydian', 'mixolydian', 'aeolian', 'locrian']
+        .map(ci).join('|')})[,.]?`
+    )),
 
     // Slash-chord mode directives (JS SLASH_CHORD_MODE_*)
     mode_chord_over_bass_note: $ => directive('chord over bass note'),
@@ -121,17 +144,24 @@ module.exports = grammar({
     // Per-chord octave offset: ' up, , down (JS OCTAVE_OFFSET = "'"* ","*)
     octave_offset: $ => /'+,*|,+/,
 
-    // Root note: C, D, E, F, G, A, B with optional accidentals
-    root: $ => seq(
+    // Root: a note letter with accidentals, or a degree with accidentals
+    // (JS ROOT = ROOT_CDEFGAB / ROOT_DEGREE). Each is a single token, so
+    // accidentals must touch the letter/numeral exactly like the PEG
+    // grammar ("C #IV" is C then #IV, "C# IV" is C# then IV). The parts
+    // are decomposed from the token text in cst_to_ast.rs.
+    root: $ => choice(
       field('note', $.note),
-      repeat(field('accidental', $.accidental))
+      field('degree', $.degree),
     ),
 
-    // Note names
-    note: $ => /[A-G]/,
+    // Note name with accidentals: sharps then flats, half- or full-width
+    // (JS ROOT_CDEFGAB = [A-G] SHARP* FLAT*)
+    note: $ => token(/[A-G][#＃♯]*[b♭]*/),
 
-    // Accidentals: sharp (#, ＃, ♯) or flat (b, ♭); half- and full-width
-    accidental: $ => choice('#', '＃', '♯', 'b', '♭'),
+    // Degree numeral with leading accidentals, key-relative
+    // (JS ROOT_DEGREE = SHARP* FLAT* (VII/III/VI/IV/II/V/I/[1-7]);
+    // the token DFA picks the longest match, so VI never reads as V + I)
+    degree: $ => token(/[#＃♯]*[b♭]*(VII|III|VI|IV|II|V|I|[1-7])/),
 
     // Chord quality: a base followed by modifiers, or modifiers alone
     // (JS CHORD_QUALITY: base (OMIT_N / ADD_N / FLATTED_FIFTH /

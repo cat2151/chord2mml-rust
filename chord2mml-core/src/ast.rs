@@ -36,6 +36,29 @@ pub enum Event {
     /// JS octave up/down events (upper/lower variants shift only one
     /// register); consumed by ast2notes
     OctaveShift { upper_delta: i32, lower_delta: i32 },
+    /// JS: `{event: "bar"}` (`|`); read by ast2ast for note lengths and
+    /// rendered as `/*|*/` by notes2mml
+    Bar,
+    /// JS: `{event: "bar slash"}` (`/ `), a half-bar divider; read by
+    /// ast2ast for note lengths, then dropped
+    BarSlash,
+    /// JS: `{event: "key", ...}`; the offset is the key root as semitones
+    /// (degrees are resolved against it in cst_to_ast; notes2mml uses it
+    /// for sharp/flat spelling)
+    Key { offset: i32 },
+    /// JS: `{event: "scale", offsets}`; used by notes2mml for sharp/flat
+    /// spelling only
+    Scale { offsets: Vec<i32> },
+}
+
+/// Output of `ast2notes`, consumed by `notes2mml` (mirrors what the JS
+/// notesToMml switch handles).
+#[derive(Debug, Clone, PartialEq)]
+pub enum OutEvent {
+    Notes(NotesEvent),
+    Bar,
+    Key { offset: i32 },
+    Scale { offsets: Vec<i32> },
 }
 
 /// Slash-chord interpretation modes (JS slashMode state in ast2ast).

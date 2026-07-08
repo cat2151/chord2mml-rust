@@ -28,13 +28,13 @@ mod notes2mml;
 mod parser;
 
 // Re-export public types for external use
-pub use ast::{ChordEvent, Event, NotesEvent, SlashChordEvent};
+pub use ast::{ChordEvent, Event, NotesEvent, OutEvent, SlashChordEvent};
 
 /// Run the shared pipeline stages after parsing.
 fn events_to_mml(events: Vec<Event>) -> Result<String> {
     let events = ast2ast::ast_to_ast(events);
     let note_events = ast2notes::ast_to_notes(events)?;
-    Ok(notes2mml::notes_to_mml(&note_events))
+    notes2mml::notes_to_mml(&note_events)
 }
 
 /// Convert a chord notation or chord progression to MML (Music Macro
