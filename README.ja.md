@@ -168,14 +168,6 @@ MIT License
 - [tonejs-mml-to-json](https://github.com/cat2151/tonejs-mml-to-json) - tree-sitter + WASM アーキテクチャの参照実装
 - [tonejs-json-sequencer](https://github.com/cat2151/tonejs-json-sequencer) - 音声再生ライブラリ
 
-## 貢献
-
-Issue や Pull Request を歓迎します。
-
-## 作者
-
-cat2151
-
 ## 参考リンク
 
 - [Tree-sitter](https://tree-sitter.github.io/tree-sitter/) - 構文解析ライブラリ
