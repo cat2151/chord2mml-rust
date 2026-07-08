@@ -76,6 +76,54 @@
         {
           "type": "SYMBOL",
           "name": "mode_3rd_inv"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "mode_close"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "mode_drop2"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "mode_drop4"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "mode_drop2and4"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "mode_no_bass"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "mode_bass_is_root"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "octave_up"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "octave_up_upper"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "octave_up_lower"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "octave_down"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "octave_down_upper"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "octave_down_lower"
         }
       ]
     },
@@ -126,6 +174,90 @@
       "content": {
         "type": "PATTERN",
         "value": "(3[rR][dD] [iI][nN][vV])[,.]?"
+      }
+    },
+    "mode_close": {
+      "type": "TOKEN",
+      "content": {
+        "type": "PATTERN",
+        "value": "([cC][lL][oO][sS][eE] [hH][aA][rR][mM][oO][nN][yY]|[cC][lL][oO][sS][eE])[,.]?"
+      }
+    },
+    "mode_drop2": {
+      "type": "TOKEN",
+      "content": {
+        "type": "PATTERN",
+        "value": "([dD][rR][oO][pP]2|[dD][rR][oO][pP]-2|[oO][pP][eE][nN] [tT][rR][iI][aA][dD])[,.]?"
+      }
+    },
+    "mode_drop4": {
+      "type": "TOKEN",
+      "content": {
+        "type": "PATTERN",
+        "value": "([dD][rR][oO][pP]4|[dD][rR][oO][pP]-4)[,.]?"
+      }
+    },
+    "mode_drop2and4": {
+      "type": "TOKEN",
+      "content": {
+        "type": "PATTERN",
+        "value": "([dD][rR][oO][pP]2[aA][nN][dD]4|[dD][rR][oO][pP]-2-[aA][nN][dD]-4)[,.]?"
+      }
+    },
+    "mode_no_bass": {
+      "type": "TOKEN",
+      "content": {
+        "type": "PATTERN",
+        "value": "([nN][oO] [bB][aA][sS][sS])[,.]?"
+      }
+    },
+    "mode_bass_is_root": {
+      "type": "TOKEN",
+      "content": {
+        "type": "PATTERN",
+        "value": "([bB][aA][sS][sS] [iI][sS] [rR][oO][oO][tT]|[bB][aA][sS][sS] [pP][lL][aA][yY][sS] [rR][oO][oO][tT]|[bB][aA][sS][sS] [pP][lL][aA][yY] [rR][oO][oO][tT])[,.]?"
+      }
+    },
+    "octave_up": {
+      "type": "TOKEN",
+      "content": {
+        "type": "PATTERN",
+        "value": "([oO][cC][tT][aA][vV][eE] [uU][pP]|[oO][cC][tT][aA][vV][eE]-[uU][pP])[,.]?"
+      }
+    },
+    "octave_up_upper": {
+      "type": "TOKEN",
+      "content": {
+        "type": "PATTERN",
+        "value": "([oO][cC][tT][aA][vV][eE] [uU][pP]|[oO][cC][tT][aA][vV][eE]-[uU][pP])\\/[,.]?"
+      }
+    },
+    "octave_up_lower": {
+      "type": "TOKEN",
+      "content": {
+        "type": "PATTERN",
+        "value": "\\/([oO][cC][tT][aA][vV][eE] [uU][pP]|[oO][cC][tT][aA][vV][eE]-[uU][pP])[,.]?"
+      }
+    },
+    "octave_down": {
+      "type": "TOKEN",
+      "content": {
+        "type": "PATTERN",
+        "value": "([oO][cC][tT][aA][vV][eE] [dD][oO][wW][nN]|[oO][cC][tT][aA][vV][eE]-[dD][oO][wW][nN])[,.]?"
+      }
+    },
+    "octave_down_upper": {
+      "type": "TOKEN",
+      "content": {
+        "type": "PATTERN",
+        "value": "([oO][cC][tT][aA][vV][eE] [dD][oO][wW][nN]|[oO][cC][tT][aA][vV][eE]-[dD][oO][wW][nN])\\/[,.]?"
+      }
+    },
+    "octave_down_lower": {
+      "type": "TOKEN",
+      "content": {
+        "type": "PATTERN",
+        "value": "\\/([oO][cC][tT][aA][vV][eE] [dD][oO][wW][nN]|[oO][cC][tT][aA][vV][eE]-[dD][oO][wW][nN])[,.]?"
       }
     },
     "separator": {
@@ -197,6 +329,22 @@
           "members": [
             {
               "type": "FIELD",
+              "name": "octave",
+              "content": {
+                "type": "SYMBOL",
+                "name": "octave_offset"
+              }
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "FIELD",
               "name": "bass",
               "content": {
                 "type": "CHOICE",
@@ -222,6 +370,10 @@
     "chord_inversion": {
       "type": "PATTERN",
       "value": "\\^[0-3]"
+    },
+    "octave_offset": {
+      "type": "PATTERN",
+      "value": "'+,*|,+"
     },
     "root": {
       "type": "SEQ",
@@ -554,6 +706,22 @@
               "content": {
                 "type": "SYMBOL",
                 "name": "chord_inversion"
+              }
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "FIELD",
+              "name": "octave",
+              "content": {
+                "type": "SYMBOL",
+                "name": "octave_offset"
               }
             },
             {

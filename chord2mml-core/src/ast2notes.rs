@@ -11,10 +11,13 @@ use crate::ast::{Event, NotesEvent};
 
 pub(crate) fn ast_to_notes(events: Vec<Event>) -> Result<Vec<NotesEvent>> {
     let mut result = Vec::new();
-    // JS state: inversionMode / openHarmonyMode / bassPlayMode
+    // JS state: inversionMode / openHarmonyMode / bassPlayMode /
+    // octaveOffsetUpper / octaveOffsetLower
     let mut inversion_mode = "root inv".to_string();
-    let open_harmony_mode = "close"; // Wave D
-    let bass_play_mode = "no bass"; // Wave D
+    let mut open_harmony_mode = "close".to_string();
+    let mut bass_play_mode = "no bass".to_string();
+    let mut octave_offset_upper = 0;
+    let mut octave_offset_lower = 0;
 
     for event in events {
         match event {
@@ -24,8 +27,8 @@ pub(crate) fn ast_to_notes(events: Vec<Event>) -> Result<Vec<NotesEvent>> {
                     chord.root,
                     &chord.quality,
                     inversion,
-                    open_harmony_mode,
-                    chord.octave_offset,
+                    &open_harmony_mode,
+                    octave_offset_upper + chord.octave_offset,
                 )?;
                 result.push(NotesEvent {
                     notes,
@@ -39,9 +42,9 @@ pub(crate) fn ast_to_notes(events: Vec<Event>) -> Result<Vec<NotesEvent>> {
                     &slash.upper_quality,
                     slash.lower_root,
                     inversion,
-                    open_harmony_mode,
-                    slash.upper_octave_offset,
-                    slash.lower_octave_offset,
+                    &open_harmony_mode,
+                    octave_offset_upper + slash.upper_octave_offset,
+                    octave_offset_lower + slash.lower_octave_offset,
                 )?;
                 result.push(NotesEvent {
                     notes,
@@ -53,8 +56,8 @@ pub(crate) fn ast_to_notes(events: Vec<Event>) -> Result<Vec<NotesEvent>> {
                     slash.upper_root,
                     &slash.upper_quality,
                     slash.lower_root,
-                    bass_play_mode,
-                    slash.upper_octave_offset,
+                    &bass_play_mode,
+                    octave_offset_upper + slash.upper_octave_offset,
                 )?;
                 result.push(NotesEvent {
                     notes,
@@ -73,8 +76,8 @@ pub(crate) fn ast_to_notes(events: Vec<Event>) -> Result<Vec<NotesEvent>> {
                     slash.lower_root,
                     &slash.lower_quality,
                     lower_inversion,
-                    slash.upper_octave_offset,
-                    slash.lower_octave_offset,
+                    octave_offset_upper + slash.upper_octave_offset,
+                    octave_offset_lower + slash.lower_octave_offset,
                 )?;
                 result.push(NotesEvent {
                     notes,
@@ -82,6 +85,15 @@ pub(crate) fn ast_to_notes(events: Vec<Event>) -> Result<Vec<NotesEvent>> {
                 });
             }
             Event::ChangeInversionMode(mode) => inversion_mode = mode,
+            Event::ChangeOpenHarmonyMode(mode) => open_harmony_mode = mode,
+            Event::ChangeBassPlayMode(mode) => bass_play_mode = mode,
+            Event::OctaveShift {
+                upper_delta,
+                lower_delta,
+            } => {
+                octave_offset_upper += upper_delta;
+                octave_offset_lower += lower_delta;
+            }
             Event::ChangeSlashChordMode(_) => {
                 return Err(anyhow!(
                     "ChangeSlashChordMode must be consumed by ast2ast before ast2notes"
@@ -146,20 +158,39 @@ fn get_notes_by_chord_over_bass_note(
 }
 
 /// Port of getNotesByInversionChord (slash-chord-inversion mode): invert
-/// the chord so the lower note becomes the bass. The bass-play-mode branch
-/// ("root") arrives with Wave D.
+/// the chord so the lower note becomes the bass. In bass-play-mode "root",
+/// the chord root is also played as a bass note below the inversion.
 fn get_notes_by_inversion_chord(
     upper_root: i32,
     upper_quality: &str,
     lower_root: i32,
-    _bass_play_mode: &str,
+    bass_play_mode: &str,
     octave_offset: i32,
 ) -> Result<Vec<i32>> {
-    let mut notes = get_notes_without_omit(upper_root, upper_quality)?;
-    key_shift_notes(&mut notes, octave_offset * 12);
-    let mut notes = inversion_by_target_note(notes, lower_root)?;
-    apply_omit(&mut notes, upper_quality, upper_root);
-    Ok(notes)
+    if bass_play_mode == "root" {
+        // The upper root serves as the bass note
+        let lower_notes = vec![upper_root];
+
+        let upper_notes = get_notes_without_omit(upper_root, upper_quality)?;
+        let mut upper_notes = inversion_by_target_note(upper_notes, lower_root)?;
+        apply_omit(&mut upper_notes, upper_quality, upper_root);
+
+        // Non-slash chord in bass-is-root: the octave offset applies to
+        // upper and lower alike (JS comment in getNotesByInversionChord)
+        let mut notes =
+            concat_lower_and_upper(upper_notes, octave_offset, lower_notes, octave_offset)?;
+
+        // Shift the register down to make room for the bass note
+        key_shift_notes(&mut notes, -12);
+
+        Ok(notes)
+    } else {
+        let mut notes = get_notes_without_omit(upper_root, upper_quality)?;
+        key_shift_notes(&mut notes, octave_offset * 12);
+        let mut notes = inversion_by_target_note(notes, lower_root)?;
+        apply_omit(&mut notes, upper_quality, upper_root);
+        Ok(notes)
+    }
 }
 
 /// Port of getNotesByPolychord: two full chords stacked, the lower
@@ -198,18 +229,66 @@ fn get_notes_by_polychord(
     Ok(notes)
 }
 
-/// Port of inversionAndOpenHarmony (drop2 etc. arrive with Wave D).
+/// Port of inversionAndOpenHarmony.
 fn inversion_and_open_harmony(
     notes: Vec<i32>,
     inversion_mode: &str,
-    _open_harmony_mode: &str,
+    open_harmony_mode: &str,
 ) -> Vec<i32> {
-    match inversion_mode {
+    let notes = match inversion_mode {
         "1st inv" => inversion_by_count(notes, 1),
         "2nd inv" => inversion_by_count(notes, 2),
         "3rd inv" => inversion_by_count(notes, 3),
         _ => notes,
+    };
+
+    match open_harmony_mode {
+        "drop2" => drop2(notes),
+        "drop4" => drop4(notes),
+        "drop2and4" => drop2and4(notes),
+        _ => notes,
     }
+}
+
+/// Port of drop2: move the second-highest voice down an octave to the front.
+fn drop2(mut notes: Vec<i32>) -> Vec<i32> {
+    if notes.len() < 2 {
+        return notes;
+    }
+    let idx = notes.len() - 2;
+    let second_last = notes[idx] - 12;
+    notes.remove(idx);
+    notes.insert(0, second_last);
+    notes
+}
+
+/// Port of drop4: move the fourth-highest voice down an octave to the front.
+fn drop4(mut notes: Vec<i32>) -> Vec<i32> {
+    if notes.len() < 4 {
+        return notes;
+    }
+    let idx = notes.len() - 4;
+    let fourth_last = notes[idx] - 12;
+    notes.remove(idx);
+    notes.insert(0, fourth_last);
+    notes
+}
+
+/// Port of drop2and4 (index arithmetic follows the JS splices exactly:
+/// the second removal index is computed after the first removal).
+fn drop2and4(mut notes: Vec<i32>) -> Vec<i32> {
+    if notes.len() < 4 {
+        return notes;
+    }
+    let second_last = notes[notes.len() - 2] - 12;
+    let fourth_last = notes[notes.len() - 4] - 12;
+    let idx2 = notes.len() - 2;
+    notes.remove(idx2);
+    let idx4 = notes.len() + 1 - 4; // after the drop2 removal, so +1
+    notes.remove(idx4);
+    notes.insert(0, second_last);
+    notes.insert(0, fourth_last);
+    notes
 }
 
 /// Port of inversionByCount: rotate the chord and lift wrapped notes.

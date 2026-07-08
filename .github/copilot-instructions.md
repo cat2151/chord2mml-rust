@@ -88,8 +88,8 @@ fn test_convert_c_major() {
 
 ## Current Implementation Status
 
-**実装済み（Phase 1 + Wave A/B/C）**: maj / min / maj7 / min7 / 7 / dim / aug / sus2 / sus4 / 6 / 9 / 11 / 13 / 7sus2 / 7sus4 / クォータル(4.N) / maj9系(maj7,add9)、`-`/`-7`表記マイナー、修飾（add/omit/(b5)/(#5)等）、全角半角の #♭、分数コード、オンコード（EonC/CoverC）、スラッシュコードモード（chord over bass note / slash chord inversion / polychord・US・UST等）、転回形（^0-^3、root/1st/2nd/3rd invモード）、コード進行（空白・` - `・`→`・`・`・スペースなしハイフン区切り）
-**未実装（Wave D〜G で移植予定）**: drop系ボイシング、ベースモード（bass is root）、オクターブ指定、小節・音長、度数記法、キー/スケール、インラインMML、MIDI PC、方言プリプロセス — 詳細は README のロードマップ参照
+**実装済み（Phase 1 + Wave A〜D）**: maj / min / maj7 / min7 / 7 / dim / aug / sus2 / sus4 / 6 / 9 / 11 / 13 / 7sus2 / 7sus4 / クォータル(4.N) / maj9系(maj7,add9)、`-`/`-7`表記マイナー、修飾（add/omit/(b5)/(#5)等）、全角半角の #♭、分数コード、オンコード（EonC/CoverC）、スラッシュコードモード（chord over bass note / slash chord inversion / polychord・US・UST等）、転回形（^0-^3、root/1st/2nd/3rd invモード）、ボイシング（drop2/drop4/drop2and4/close/open triad）、ベースモード（bass is root / no bass）、オクターブ（octave up/down 指令・upper/lower限定・コード単位の `'`/`,`）、コード進行（空白・` - `・`→`・`・`・スペースなしハイフン区切り）
+**未実装（Wave E〜G で移植予定）**: 小節・音長（`|`, `/ `）、度数記法、キー/スケール、インラインMML/ABC、MIDI PC、テンポ、方言プリプロセス — 詳細は README のロードマップ参照
 
 ### 期待値の生成方法（重要）
 JS版リポジトリの `dist/` は **src より古い**（2026-07-08 確認）。コーパス期待値は必ず**最新 src を esbuild でバンドルして**生成すること（`src/chord2mml.ts` をエントリに、`chord2mml_chord2ast.cjs` → `.mjs` 差し替えプラグイン付き）。dist から生成すると仕様が汚染される。

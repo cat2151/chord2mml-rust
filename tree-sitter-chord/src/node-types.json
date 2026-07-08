@@ -18,6 +18,16 @@
           }
         ]
       },
+      "octave": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "octave_offset",
+            "named": true
+          }
+        ]
+      },
       "quality": {
         "multiple": false,
         "required": false,
@@ -68,6 +78,16 @@
           }
         ]
       },
+      "octave": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "octave_offset",
+            "named": true
+          }
+        ]
+      },
       "quality": {
         "multiple": false,
         "required": false,
@@ -100,6 +120,16 @@
         "types": [
           {
             "type": "chord_inversion",
+            "named": true
+          }
+        ]
+      },
+      "octave": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "octave_offset",
             "named": true
           }
         ]
@@ -218,7 +248,31 @@
           "named": true
         },
         {
+          "type": "mode_bass_is_root",
+          "named": true
+        },
+        {
           "type": "mode_chord_over_bass_note",
+          "named": true
+        },
+        {
+          "type": "mode_close",
+          "named": true
+        },
+        {
+          "type": "mode_drop2",
+          "named": true
+        },
+        {
+          "type": "mode_drop2and4",
+          "named": true
+        },
+        {
+          "type": "mode_drop4",
+          "named": true
+        },
+        {
+          "type": "mode_no_bass",
           "named": true
         },
         {
@@ -231,6 +285,30 @@
         },
         {
           "type": "mode_slash_chord_inversion",
+          "named": true
+        },
+        {
+          "type": "octave_down",
+          "named": true
+        },
+        {
+          "type": "octave_down_lower",
+          "named": true
+        },
+        {
+          "type": "octave_down_upper",
+          "named": true
+        },
+        {
+          "type": "octave_up",
+          "named": true
+        },
+        {
+          "type": "octave_up_lower",
+          "named": true
+        },
+        {
+          "type": "octave_up_upper",
           "named": true
         },
         {
@@ -429,7 +507,31 @@
     "named": true
   },
   {
+    "type": "mode_bass_is_root",
+    "named": true
+  },
+  {
     "type": "mode_chord_over_bass_note",
+    "named": true
+  },
+  {
+    "type": "mode_close",
+    "named": true
+  },
+  {
+    "type": "mode_drop2",
+    "named": true
+  },
+  {
+    "type": "mode_drop2and4",
+    "named": true
+  },
+  {
+    "type": "mode_drop4",
+    "named": true
+  },
+  {
+    "type": "mode_no_bass",
     "named": true
   },
   {
@@ -446,6 +548,34 @@
   },
   {
     "type": "note",
+    "named": true
+  },
+  {
+    "type": "octave_down",
+    "named": true
+  },
+  {
+    "type": "octave_down_lower",
+    "named": true
+  },
+  {
+    "type": "octave_down_upper",
+    "named": true
+  },
+  {
+    "type": "octave_offset",
+    "named": true
+  },
+  {
+    "type": "octave_up",
+    "named": true
+  },
+  {
+    "type": "octave_up_lower",
+    "named": true
+  },
+  {
+    "type": "octave_up_upper",
     "named": true
   },
   {
