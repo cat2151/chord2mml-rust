@@ -89,6 +89,7 @@ pub(crate) fn ast_to_notes(events: Vec<Event>) -> Result<Vec<OutEvent>> {
             Event::BarSlash => {}
             Event::Key { offset } => result.push(OutEvent::Key { offset }),
             Event::Scale { offsets } => result.push(OutEvent::Scale { offsets }),
+            Event::InlineMml(mml) => result.push(OutEvent::InlineMml(mml)),
             Event::ChangeInversionMode(mode) => inversion_mode = mode,
             Event::ChangeOpenHarmonyMode(mode) => open_harmony_mode = mode,
             Event::ChangeBassPlayMode(mode) => bass_play_mode = mode,

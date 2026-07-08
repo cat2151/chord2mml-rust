@@ -239,7 +239,19 @@
           "named": true
         },
         {
+          "type": "inline_abc",
+          "named": true
+        },
+        {
+          "type": "inline_mml",
+          "named": true
+        },
+        {
           "type": "key",
+          "named": true
+        },
+        {
+          "type": "midi_pc",
           "named": true
         },
         {
@@ -324,6 +336,10 @@
         },
         {
           "type": "separator",
+          "named": true
+        },
+        {
+          "type": "tempo",
           "named": true
         }
       ]
@@ -478,6 +494,14 @@
     "named": false
   },
   {
+    "type": "inline_abc",
+    "named": true
+  },
+  {
+    "type": "inline_mml",
+    "named": true
+  },
+  {
     "type": "key",
     "named": true
   },
@@ -504,6 +528,10 @@
   {
     "type": "maj9",
     "named": false
+  },
+  {
+    "type": "midi_pc",
+    "named": true
   },
   {
     "type": "min",
@@ -616,6 +644,10 @@
   {
     "type": "sus4",
     "named": false
+  },
+  {
+    "type": "tempo",
+    "named": true
   },
   {
     "type": "→",

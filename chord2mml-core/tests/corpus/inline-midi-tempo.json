@@ -1,0 +1,186 @@
+[
+  {
+    "input": "/*@48*/",
+    "expected": "v11@48"
+  },
+  {
+    "input": "/*@48 * / * *** /// */",
+    "expected": "v11@48 * / * *** /// "
+  },
+  {
+    "input": "/*/*CDEFG*/*/",
+    "expected": "v11/*CDEFG*/"
+  },
+  {
+    "input": "/*/* CDEFG * / * *** /// */*/",
+    "expected": "v11/* CDEFG * / * *** /// */"
+  },
+  {
+    "input": "/*t90*/ C",
+    "expected": "v11t90'c1eg'"
+  },
+  {
+    "input": "C /*x*/ C",
+    "expected": "v11'c1eg'x'c1eg'"
+  },
+  {
+    "input": "BPM 120",
+    "expected": "v11t120"
+  },
+  {
+    "input": "BPM120",
+    "expected": "v11t120"
+  },
+  {
+    "input": "bpm120",
+    "expected": "v11t120"
+  },
+  {
+    "input": "Tempo120",
+    "expected": "v11t120"
+  },
+  {
+    "input": "tempo 90",
+    "expected": "v11t90"
+  },
+  {
+    "input": "Bpm120,",
+    "expected": "v11t120"
+  },
+  {
+    "input": "BPM120 C F G C",
+    "expected": "v11t120'c1eg''f1a<c''g1b<d''c1eg'"
+  },
+  {
+    "input": "Strings Ensemble 2",
+    "expected": "v11@49"
+  },
+  {
+    "input": "Strings2 Str.2 Choir",
+    "expected": "v11@49@49@52"
+  },
+  {
+    "input": "Strings 1",
+    "expected": "v11@48"
+  },
+  {
+    "input": "Piano 1",
+    "expected": "v11@000"
+  },
+  {
+    "input": "Piano1",
+    "expected": "v11@000"
+  },
+  {
+    "input": "Pf",
+    "expected": "v11@000"
+  },
+  {
+    "input": "Grand Piano",
+    "expected": "v11@000"
+  },
+  {
+    "input": "Flute",
+    "expected": "v11@073"
+  },
+  {
+    "input": "flute",
+    "expected": "v11@073"
+  },
+  {
+    "input": "FLUTE",
+    "expected": "v11@073"
+  },
+  {
+    "input": "Cello",
+    "expected": "v11@042"
+  },
+  {
+    "input": "Voice",
+    "expected": "v11@085"
+  },
+  {
+    "input": "Voice Aahs",
+    "expected": "v11@52"
+  },
+  {
+    "input": "Lead 1",
+    "expected": "v11@080"
+  },
+  {
+    "input": "Square",
+    "expected": "v11@080"
+  },
+  {
+    "input": "Pad 4",
+    "expected": "v11@091"
+  },
+  {
+    "input": "Pad4",
+    "expected": "v11@091"
+  },
+  {
+    "input": "New age",
+    "expected": "v11@088"
+  },
+  {
+    "input": "Church Org 2",
+    "expected": "v11@019"
+  },
+  {
+    "input": "Accordion",
+    "expected": "v11@021"
+  },
+  {
+    "input": "Honky-tonk",
+    "expected": "v11@003"
+  },
+  {
+    "input": "Sci-fi",
+    "expected": "v11@103"
+  },
+  {
+    "input": "Dist.Gt",
+    "expected": "v11@030"
+  },
+  {
+    "input": "DistortionGt.",
+    "expected": "v11@030"
+  },
+  {
+    "input": "Gt.Harmonics",
+    "expected": "v11@031"
+  },
+  {
+    "input": "Bass and lead",
+    "expected": "v11@087"
+  },
+  {
+    "input": "Bag pipe",
+    "expected": "v11@109"
+  },
+  {
+    "input": "Gunshot",
+    "expected": "v11@127"
+  },
+  {
+    "input": "Chor.",
+    "expected": "v11@52"
+  },
+  {
+    "input": "Piano 1 C F G C",
+    "expected": "v11@000'c1eg''f1a<c''g1b<d''c1eg'"
+  },
+  {
+    "input": "Flute C | G G",
+    "expected": "v11@073'c1eg'/*|*/'g2b<d''g2b<d'"
+  },
+  {
+    "input": "Choir Am F C G",
+    "expected": "v11@52'a1<ce''f1a<c''c1eg''g1b<d'"
+  },
+  {
+    "input": "BPM 90 Piano 2 Dm G7 C",
+    "expected": "v11t90@001'd1fa''g1b<df''c1eg'"
+  }
+]

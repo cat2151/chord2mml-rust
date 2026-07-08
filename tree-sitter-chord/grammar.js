@@ -27,6 +27,88 @@ function directive(...variants) {
   return token(new RegExp(`(${variants.map(ci).join('|')})[,.]?`));
 }
 
+// Build the regex source for a GM instrument alias: case-insensitive,
+// '~' marks an optional whitespace gap (PEG `_`), other specials escaped.
+function inst(name) {
+  return name
+    .split('')
+    .map(c => {
+      if (/[a-zA-Z]/.test(c)) return `[${c.toLowerCase()}${c.toUpperCase()}]`;
+      if (c === '~') return '[ \\t\\n\\r]*';
+      return c.replace(/[.*+?^${}()|[\]\\/-]/g, '\\$&');
+    })
+    .join('');
+}
+
+// GM instrument name aliases (JS PC000-PC127). The alias → program number
+// mapping lives in chord2mml-core/src/cst_to_ast.rs (GM_PROGRAM_ALIASES,
+// checked in PC order like the JS ordered choice — e.g. "Choir" is @52,
+// not Pad 4); keep both lists in sync.
+const GM_INSTRUMENT_ALIASES = [
+  'piano~1', 'acoustic grand piano', 'grand piano', 'pf',
+  'piano~2', 'bright acoustic piano',
+  'piano~3', 'electric grand piano',
+  'honky-tonk piano', 'honky-tonk',
+  'e.piano~1', 'electric piano 1', 'rhodes', 'wurlitzer',
+  'e.piano~2', 'electric piano 2', 'fm piano',
+  'harpsichord',
+  'clav.', 'clavinet',
+  'celesta',
+  'glockenspl', 'glockenspiel',
+  'music box',
+  'vibraphone',
+  'marimba',
+  'xylophone',
+  'tubularbell', 'tubular bells',
+  'santur', 'dulcimer',
+  'organ~1', 'drawbar organ',
+  'organ~2', 'percussive organ',
+  'organ~3', 'rock organ',
+  'church org~1', 'church org~2', 'church org~3', 'church organ',
+  'reed organ',
+  'accordion~f', 'accordion~l', 'accordion',
+  'harmonica',
+  'bandoneon',
+  'nylon gt.', 'acoustic guitar (nylon)',
+  'steel gt.', 'acoustic guitar (steel)',
+  'jazz gt.', 'electric guitar (jazz)',
+  'clean gt.', 'electric guitar (clean)',
+  'muted gt.', 'electric guitar (muted)',
+  'overdrive~gt', 'electric guitar (overdrive)',
+  'dist.gt.', 'dist.gt', 'distortiongt.', 'distortiongt', 'electric guitar (distortion)',
+  'gt.harmonix', 'gt.harmonics', 'electric guitar (harmonics)',
+  'acoustic bass',
+  'electric bass (finger)', 'electric bass (picked)', 'electric bass (fretless)',
+  'slap bass 1', 'slap bass 2', 'synth bass 1', 'synth bass 2',
+  'violin', 'viola', 'cello', 'contrabass',
+  'tremolo strings', 'pizzicato strings', 'orchestral harp', 'timpani',
+  'strings~ensemble~1', 'strings~1', 'str.~1',
+  'strings~ensemble~2', 'strings~2', 'str.~2',
+  'synth strings 1', 'synth strings 2',
+  'voice aahs', 'choir aahs', 'choir', 'chor.',
+  'voice oohs', 'synth voice', 'orchestra hit',
+  'trumpet', 'trombone', 'tuba', 'muted trumpet', 'french horn',
+  'brass section', 'synth brass 1', 'synth brass 2',
+  'soprano sax', 'alto sax', 'tenor sax', 'baritone sax',
+  'oboe', 'english horn', 'bassoon', 'clarinet',
+  'piccolo', 'flute', 'recorder', 'pan flute', 'blown bottle',
+  'shakuhachi', 'whistle', 'ocarina',
+  'lead~1', 'square', 'lead~2', 'sawtooth', 'lead~3', 'calliope',
+  'lead~4', 'chiff', 'lead~5', 'charang', 'lead~6', 'voice',
+  'lead~7', 'fifths', 'lead~8', 'bass and lead',
+  'pad~1', 'new age', 'pad~2', 'warm', 'pad~3', 'polysynth',
+  'pad~4', 'pad~5', 'bowed glass', 'pad~6', 'metallic',
+  'pad~7', 'halo', 'pad~8', 'sweep',
+  'fx~1', 'rain', 'fx~2', 'soundtrack', 'fx~3', 'crystal',
+  'fx~4', 'atmosphere', 'fx~5', 'brightness', 'fx~6', 'goblins',
+  'fx~7', 'echoes', 'fx~8', 'sci-fi',
+  'sitar', 'banjo', 'shamisen', 'koto', 'kalimba', 'bag pipe',
+  'fiddle', 'shanai', 'tinkle bell', 'agogo', 'steel drums',
+  'woodblock', 'taiko', 'melodic tom', 'synth drum', 'reverse cymbal',
+  'guitar fret noise', 'breath noise', 'seashore', 'bird tweet',
+  'telephone ring', 'helicopter', 'applause', 'gunshot',
+];
+
 module.exports = grammar({
   name: 'chord',
 
@@ -70,7 +152,29 @@ module.exports = grammar({
       $.bar_slash,
       $.key,
       $.scale,
+      $.inline_abc,
+      $.inline_mml,
+      $.tempo,
+      $.midi_pc,
     ),
+
+    // Inline ABC (JS INLINE_ABC: "/*/*" ... "*/*/"); listed before
+    // inline_mml but the token DFA's longest match decides anyway
+    inline_abc: $ => token(/\/\*\/\*([^*/]|\*[^/]|\/)+\*\/\*\//),
+
+    // Inline MML passthrough (JS INLINE_MML: "/*" ... "*/")
+    inline_mml: $ => token(/\/\*([^*/]|\*[^/]|\/)+\*\//),
+
+    // Tempo (JS TEMPO: ("BPM"i / "TEMPO"i) _ [0-9]+ [,.]?)
+    tempo: $ => token(new RegExp(
+      `(${ci('bpm')}|${ci('tempo')})[ \\t\\n\\r]*[0-9]+[,.]?`
+    )),
+
+    // MIDI program change by GM instrument name (JS PC000-PC127);
+    // one token for all aliases, resolved to @NNN in cst_to_ast.rs
+    midi_pc: $ => token(new RegExp(
+      `(${GM_INSTRUMENT_ALIASES.map(inst).join('|')})[,.]?`
+    )),
 
     // Bar line (JS BAR); note lengths derive from chords per bar
     bar: $ => '|',
