@@ -49,6 +49,9 @@ pub enum Event {
     /// JS: `{event: "scale", offsets}`; used by notes2mml for sharp/flat
     /// spelling only
     Scale { offsets: Vec<i32> },
+    /// JS: `{event: "inline mml", mml}` — raw MML passed through verbatim
+    /// (inline `/*...*/`, inline ABC, tempo `t120`, MIDI PC `@NNN`)
+    InlineMml(String),
 }
 
 /// Output of `ast2notes`, consumed by `notes2mml` (mirrors what the JS
@@ -59,6 +62,7 @@ pub enum OutEvent {
     Bar,
     Key { offset: i32 },
     Scale { offsets: Vec<i32> },
+    InlineMml(String),
 }
 
 /// Slash-chord interpretation modes (JS slashMode state in ast2ast).

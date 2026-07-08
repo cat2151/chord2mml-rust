@@ -36,6 +36,10 @@ pub(crate) fn notes_to_mml(events: &[OutEvent]) -> Result<String> {
                 mml.push_str("/*|*/");
                 continue;
             }
+            OutEvent::InlineMml(inline) => {
+                mml.push_str(inline);
+                continue;
+            }
             OutEvent::Key { offset } => {
                 key_offset = *offset;
                 is_sharp =

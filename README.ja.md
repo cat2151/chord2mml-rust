@@ -130,7 +130,7 @@ JS版の約100テストを仕様とし、以下の順で移植を進めます（
 - [x] **Wave C**: オンコード（EonC）、ポリコード（US）、転回形（^N, 1st inv 等）
 - [x] **Wave D**: ボイシング（drop2/drop4/drop2and4/close/open triad）、ベースモード（bass is root）、オクターブ指定（octave up/down、`'`/`,`）
 - [x] **Wave E**: 小節と音長（`|`, `/ `）、度数記法（ローマ数字/アラビア数字）、キー/スケール（教会旋法・シャープ/フラット綴り）
-- [ ] **Wave F**: インラインMML/ABC、MIDIプログラムチェンジ、テンポ
+- [x] **Wave F**: インラインMML/ABC、MIDIプログラムチェンジ（GM音色名 PC000-127）、テンポ（BPM/Tempo）
 - [ ] **Wave G**: 方言プリプロセス（LLM生成コード進行対応）
 
 ## 開発方針

@@ -89,7 +89,8 @@ fn test_convert_c_major() {
 ## Current Implementation Status
 
 **実装済み（Phase 1 + Wave A〜E）**: maj / min / maj7 / min7 / 7 / dim / aug / sus2 / sus4 / 6 / 9 / 11 / 13 / 7sus2 / 7sus4 / クォータル(4.N) / maj9系(maj7,add9)、`-`/`-7`表記マイナー、修飾（add/omit/(b5)/(#5)等）、全角半角の #♭、分数コード、オンコード（EonC/CoverC）、スラッシュコードモード（chord over bass note / slash chord inversion / polychord・US・UST等）、転回形（^0-^3、root/1st/2nd/3rd invモード）、ボイシング（drop2/drop4/drop2and4/close/open triad）、ベースモード（bass is root / no bass）、オクターブ（octave up/down 指令・upper/lower限定・コード単位の `'`/`,`）、小節と音長（`|`・`/ ` 半小節 → 音長自動決定、barは `/*|*/` 出力）、度数記法（ローマ数字/アラビア数字、#/b前置、常にIonianオフセット+キー）、キー（`key=X`、度数を移調・綴りに影響）、スケール（教会旋法7種、綴りのみに影響）、コード進行（空白・` - `・`→`・`・`・スペースなしハイフン区切り）
-**未実装（Wave F〜G で移植予定）**: インラインMML/ABC、MIDIプログラムチェンジ（GM音色名）、テンポ（BPM）、方言プリプロセス — 詳細は README のロードマップ参照
+**実装済み（Wave F）**: インラインMML（`/*...*/`）・インラインABC（`/*/*...*/*/`）、MIDIプログラムチェンジ（GM音色名 PC000-127。エイリアス表は grammar.js の GM_INSTRUMENT_ALIASES と cst_to_ast.rs の GM_PROGRAM_ALIASES の2箇所にあり**要同期**。`Choir` は JS の順序どおり @52）、テンポ（`BPM`/`Tempo` + 数値 → `tNNN`）
+**未実装（Wave G で移植予定）**: 方言プリプロセス（LLM生成コード進行対応の総当たりパース）— 詳細は README のロードマップ参照
 
 ### 期待値の生成方法（重要）
 JS版リポジトリの `dist/` は **src より古い**（2026-07-08 確認）。コーパス期待値は必ず**最新 src を esbuild でバンドルして**生成すること（`src/chord2mml.ts` をエントリに、`chord2mml_chord2ast.cjs` → `.mjs` 差し替えプラグイン付き）。dist から生成すると仕様が汚染される。

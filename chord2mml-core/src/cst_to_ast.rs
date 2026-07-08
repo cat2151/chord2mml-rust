@@ -133,6 +133,32 @@ pub fn cst_to_ast(root: &CSTNode) -> Result<Vec<Event>> {
                 upper_delta: 0,
                 lower_delta: -1,
             }),
+            "inline_mml" => {
+                let text = child.text.as_deref().unwrap_or("");
+                // Strip the /* and */ delimiters (ASCII, so byte slicing is safe)
+                let inner = &text[2..text.len() - 2];
+                events.push(Event::InlineMml(inner.to_string()));
+            }
+            "inline_abc" => {
+                let text = child.text.as_deref().unwrap_or("");
+                // Strip /*/* and */*/ and re-wrap as a single /*...*/
+                let inner = &text[4..text.len() - 4];
+                events.push(Event::InlineMml(format!("/*{}*/", inner)));
+            }
+            "tempo" => {
+                let digits: String = child
+                    .text
+                    .as_deref()
+                    .unwrap_or("")
+                    .chars()
+                    .filter(|c| c.is_ascii_digit())
+                    .collect();
+                events.push(Event::InlineMml(format!("t{}", digits)));
+            }
+            "midi_pc" => {
+                let mml = parse_midi_pc(child.text.as_deref().unwrap_or(""))?;
+                events.push(Event::InlineMml(mml));
+            }
             other => return Err(anyhow!("Unexpected node type: {}", other)),
         }
     }
@@ -338,6 +364,170 @@ fn parse_key_offset(text: &str) -> Result<i32> {
     }
 
     Ok(offset)
+}
+
+/// GM instrument aliases → MML program change, in JS PC000-PC127 order
+/// (the ordered choice matters: "Choir" is @52, not Pad 4's @091).
+/// Alias forms are lowercase with all whitespace removed; the token list
+/// lives in tree-sitter-chord/grammar.js (GM_INSTRUMENT_ALIASES) — keep
+/// both in sync. @48/@49/@52 are two-digit in the JS grammar; all others
+/// are three-digit.
+const GM_PROGRAM_ALIASES: &[(&[&str], &str)] = &[
+    (&["piano1", "acousticgrandpiano", "grandpiano", "pf"], "@000"),
+    (&["piano2", "brightacousticpiano"], "@001"),
+    (&["piano3", "electricgrandpiano"], "@002"),
+    (&["honky-tonk", "honky-tonkpiano"], "@003"),
+    (&["e.piano1", "electricpiano1", "rhodes", "wurlitzer"], "@004"),
+    (&["e.piano2", "electricpiano2", "fmpiano"], "@005"),
+    (&["harpsichord"], "@006"),
+    (&["clav.", "clavinet"], "@007"),
+    (&["celesta"], "@008"),
+    (&["glockenspl", "glockenspiel"], "@009"),
+    (&["musicbox"], "@010"),
+    (&["vibraphone"], "@011"),
+    (&["marimba"], "@012"),
+    (&["xylophone"], "@013"),
+    (&["tubularbell", "tubularbells"], "@014"),
+    (&["santur", "dulcimer"], "@015"),
+    (&["organ1", "drawbarorgan"], "@016"),
+    (&["organ2", "percussiveorgan"], "@017"),
+    (&["organ3", "rockorgan"], "@018"),
+    (&["churchorg1", "churchorg2", "churchorg3", "churchorgan"], "@019"),
+    (&["reedorgan"], "@020"),
+    (&["accordionf", "accordionl", "accordion"], "@021"),
+    (&["harmonica"], "@022"),
+    (&["bandoneon"], "@023"),
+    (&["nylongt.", "acousticguitar(nylon)"], "@024"),
+    (&["steelgt.", "acousticguitar(steel)"], "@025"),
+    (&["jazzgt.", "electricguitar(jazz)"], "@026"),
+    (&["cleangt.", "electricguitar(clean)"], "@027"),
+    (&["mutedgt.", "electricguitar(muted)"], "@028"),
+    (&["overdrivegt", "electricguitar(overdrive)"], "@029"),
+    (
+        &["dist.gt.", "dist.gt", "distortiongt.", "distortiongt", "electricguitar(distortion)"],
+        "@030",
+    ),
+    (&["gt.harmonix", "gt.harmonics", "electricguitar(harmonics)"], "@031"),
+    (&["acousticbass"], "@032"),
+    (&["electricbass(finger)"], "@033"),
+    (&["electricbass(picked)"], "@034"),
+    (&["electricbass(fretless)"], "@035"),
+    (&["slapbass1"], "@036"),
+    (&["slapbass2"], "@037"),
+    (&["synthbass1"], "@038"),
+    (&["synthbass2"], "@039"),
+    (&["violin"], "@040"),
+    (&["viola"], "@041"),
+    (&["cello"], "@042"),
+    (&["contrabass"], "@043"),
+    (&["tremolostrings"], "@044"),
+    (&["pizzicatostrings"], "@045"),
+    (&["orchestralharp"], "@046"),
+    (&["timpani"], "@047"),
+    (&["stringsensemble1", "strings1", "str.1"], "@48"),
+    (&["stringsensemble2", "strings2", "str.2"], "@49"),
+    (&["synthstrings1"], "@050"),
+    (&["synthstrings2"], "@051"),
+    (&["voiceaahs", "choiraahs", "choir", "chor."], "@52"),
+    (&["voiceoohs"], "@053"),
+    (&["synthvoice"], "@054"),
+    (&["orchestrahit"], "@055"),
+    (&["trumpet"], "@056"),
+    (&["trombone"], "@057"),
+    (&["tuba"], "@058"),
+    (&["mutedtrumpet"], "@059"),
+    (&["frenchhorn"], "@060"),
+    (&["brasssection"], "@061"),
+    (&["synthbrass1"], "@062"),
+    (&["synthbrass2"], "@063"),
+    (&["sopranosax"], "@064"),
+    (&["altosax"], "@065"),
+    (&["tenorsax"], "@066"),
+    (&["baritonesax"], "@067"),
+    (&["oboe"], "@068"),
+    (&["englishhorn"], "@069"),
+    (&["bassoon"], "@070"),
+    (&["clarinet"], "@071"),
+    (&["piccolo"], "@072"),
+    (&["flute"], "@073"),
+    (&["recorder"], "@074"),
+    (&["panflute"], "@075"),
+    (&["blownbottle"], "@076"),
+    (&["shakuhachi"], "@077"),
+    (&["whistle"], "@078"),
+    (&["ocarina"], "@079"),
+    (&["lead1", "square"], "@080"),
+    (&["lead2", "sawtooth"], "@081"),
+    (&["lead3", "calliope"], "@082"),
+    (&["lead4", "chiff"], "@083"),
+    (&["lead5", "charang"], "@084"),
+    (&["lead6", "voice"], "@085"),
+    (&["lead7", "fifths"], "@086"),
+    (&["lead8", "bassandlead"], "@087"),
+    (&["pad1", "newage"], "@088"),
+    (&["pad2", "warm"], "@089"),
+    (&["pad3", "polysynth"], "@090"),
+    (&["pad4", "choir"], "@091"),
+    (&["pad5", "bowedglass"], "@092"),
+    (&["pad6", "metallic"], "@093"),
+    (&["pad7", "halo"], "@094"),
+    (&["pad8", "sweep"], "@095"),
+    (&["fx1", "rain"], "@096"),
+    (&["fx2", "soundtrack"], "@097"),
+    (&["fx3", "crystal"], "@098"),
+    (&["fx4", "atmosphere"], "@099"),
+    (&["fx5", "brightness"], "@100"),
+    (&["fx6", "goblins"], "@101"),
+    (&["fx7", "echoes"], "@102"),
+    (&["fx8", "sci-fi"], "@103"),
+    (&["sitar"], "@104"),
+    (&["banjo"], "@105"),
+    (&["shamisen"], "@106"),
+    (&["koto"], "@107"),
+    (&["kalimba"], "@108"),
+    (&["bagpipe"], "@109"),
+    (&["fiddle"], "@110"),
+    (&["shanai"], "@111"),
+    (&["tinklebell"], "@112"),
+    (&["agogo"], "@113"),
+    (&["steeldrums"], "@114"),
+    (&["woodblock"], "@115"),
+    (&["taiko"], "@116"),
+    (&["melodictom"], "@117"),
+    (&["synthdrum"], "@118"),
+    (&["reversecymbal"], "@119"),
+    (&["guitarfretnoise"], "@120"),
+    (&["breathnoise"], "@121"),
+    (&["seashore"], "@122"),
+    (&["birdtweet"], "@123"),
+    (&["telephonering"], "@124"),
+    (&["helicopter"], "@125"),
+    (&["applause"], "@126"),
+    (&["gunshot"], "@127"),
+];
+
+/// Resolve a GM instrument name token to its @NNN program change,
+/// checking PC000-PC127 in order like the JS ordered choice.
+fn parse_midi_pc(text: &str) -> Result<String> {
+    let normalized: String = text
+        .chars()
+        .filter(|c| !c.is_whitespace())
+        .collect::<String>()
+        .to_lowercase();
+
+    for candidate in [normalized.as_str()]
+        .into_iter()
+        // the token allows one trailing , or . after the alias
+        .chain(normalized.strip_suffix([',', '.']))
+    {
+        for (aliases, mml) in GM_PROGRAM_ALIASES {
+            if aliases.contains(&candidate) {
+                return Ok((*mml).to_string());
+            }
+        }
+    }
+
+    Err(anyhow!("Unknown instrument name: {}", text))
 }
 
 /// Parse a scale directive token into its interval offsets (JS
