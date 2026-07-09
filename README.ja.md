@@ -20,6 +20,7 @@
 ### これまでの課題と、このプロジェクトが目指すこと
 - [chord2mml](https://github.com/cat2151/chord2mml)は、localでRustでコード進行を鳴らしたいときには、利用が困難でした。
 - そのため、このプロジェクトで、Rust + Tree-sitter で作り直すことにしました。
+- 結果、  https://github.com/cat2151/clap-mml-render-tui/blob/main/README.ja.md で役立っています（コマンドライン引数にコード進行文字列を与えるだけでコード進行を即座に鳴らせる）
 
 ### 主な特徴
 
