@@ -22,8 +22,3 @@ web-sys = { workspace = true, features = ["console"] }
 
 [dev-dependencies]
 wasm-bindgen-test.workspace = true
-
-[profile.release]
-opt-level = "z"     # Optimize for size
-lto = true          # Enable Link Time Optimization
-codegen-units = 1   # Reduce parallel code generation for better optimization

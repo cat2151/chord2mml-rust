@@ -250,7 +250,7 @@ fn parse_inversion(text: &str) -> Result<String> {
 ///   +1 per sharp / -1 per flat
 /// - Degree token ("bII", "#IV", "1", ...): Ionian offset of the numeral
 ///   + accidentals + the key (JS ROOT_DEGREE — degrees always use the
-///   Ionian offsets; the scale only affects sharp/flat spelling downstream)
+///     Ionian offsets; the scale only affects sharp/flat spelling downstream)
 fn parse_root_node(root_node: &CSTNode, g_key: i32) -> Result<i32> {
     if let Some(degree_text) = field_first(root_node, "degree").and_then(|n| n.text.as_deref()) {
         let (accidentals, numeral) = split_accidentals(degree_text);

@@ -99,13 +99,16 @@ pub fn preprocess_candidates(input: &str) -> Vec<String> {
     candidates
 }
 
+type Transform = fn(&str) -> String;
+type TransformSequence = Vec<Transform>;
+
 /// JS getAllCombinations order for two transforms:
 /// [], [f0], [f1], then the permutations of [f0, f1].
-fn transform_sequences() -> Vec<Vec<fn(&str) -> String>> {
+fn transform_sequences() -> Vec<TransformSequence> {
     let n = TRANSFORMS.len();
-    let mut subsets: Vec<Vec<fn(&str) -> String>> = Vec::new();
+    let mut subsets: Vec<TransformSequence> = Vec::new();
     for mask in 0..(1u32 << n) {
-        let seq: Vec<fn(&str) -> String> = (0..n)
+        let seq: TransformSequence = (0..n)
             .filter(|j| mask & (1 << j) != 0)
             .map(|j| TRANSFORMS[j])
             .collect();
@@ -124,9 +127,9 @@ fn transform_sequences() -> Vec<Vec<fn(&str) -> String>> {
 }
 
 fn permute(
-    remaining: &[fn(&str) -> String],
-    current: &mut Vec<fn(&str) -> String>,
-    out: &mut Vec<Vec<fn(&str) -> String>>,
+    remaining: &[Transform],
+    current: &mut TransformSequence,
+    out: &mut Vec<TransformSequence>,
 ) {
     if remaining.is_empty() {
         out.push(current.clone());
