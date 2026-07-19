@@ -22,7 +22,7 @@ use crate::cst_to_ast::{cst_to_ast, CSTNode};
 pub(crate) fn parse_to_ast(input: &str) -> Result<Vec<Event>> {
     let mut parser = Parser::new();
     parser
-        .set_language(tree_sitter_chord::language())
+        .set_language(&tree_sitter_chord::language())
         .map_err(|e| anyhow!("Failed to set TreeSitter language: {}", e))?;
 
     let tree = parser
