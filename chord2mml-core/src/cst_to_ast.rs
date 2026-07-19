@@ -37,8 +37,8 @@ pub struct CSTNode {
 
 /// Convert a CST serialized as JSON into the event-array AST.
 pub fn cst_json_to_ast(cst_json: &str) -> Result<Vec<Event>> {
-    let root: CSTNode = serde_json::from_str(cst_json)
-        .map_err(|e| anyhow!("Failed to parse CST JSON: {}", e))?;
+    let root: CSTNode =
+        serde_json::from_str(cst_json).map_err(|e| anyhow!("Failed to parse CST JSON: {}", e))?;
     cst_to_ast(&root)
 }
 
@@ -76,39 +76,17 @@ pub fn cst_to_ast(root: &CSTNode) -> Result<Vec<Event>> {
             "mode_slash_chord_inversion" => {
                 events.push(Event::ChangeSlashChordMode(SlashChordMode::Inversion))
             }
-            "mode_polychord" => {
-                events.push(Event::ChangeSlashChordMode(SlashChordMode::Polychord))
-            }
-            "mode_root_inv" => {
-                events.push(Event::ChangeInversionMode("root inv".to_string()))
-            }
-            "mode_1st_inv" => {
-                events.push(Event::ChangeInversionMode("1st inv".to_string()))
-            }
-            "mode_2nd_inv" => {
-                events.push(Event::ChangeInversionMode("2nd inv".to_string()))
-            }
-            "mode_3rd_inv" => {
-                events.push(Event::ChangeInversionMode("3rd inv".to_string()))
-            }
-            "mode_close" => {
-                events.push(Event::ChangeOpenHarmonyMode("close".to_string()))
-            }
-            "mode_drop2" => {
-                events.push(Event::ChangeOpenHarmonyMode("drop2".to_string()))
-            }
-            "mode_drop4" => {
-                events.push(Event::ChangeOpenHarmonyMode("drop4".to_string()))
-            }
-            "mode_drop2and4" => {
-                events.push(Event::ChangeOpenHarmonyMode("drop2and4".to_string()))
-            }
-            "mode_no_bass" => {
-                events.push(Event::ChangeBassPlayMode("no bass".to_string()))
-            }
-            "mode_bass_is_root" => {
-                events.push(Event::ChangeBassPlayMode("root".to_string()))
-            }
+            "mode_polychord" => events.push(Event::ChangeSlashChordMode(SlashChordMode::Polychord)),
+            "mode_root_inv" => events.push(Event::ChangeInversionMode("root inv".to_string())),
+            "mode_1st_inv" => events.push(Event::ChangeInversionMode("1st inv".to_string())),
+            "mode_2nd_inv" => events.push(Event::ChangeInversionMode("2nd inv".to_string())),
+            "mode_3rd_inv" => events.push(Event::ChangeInversionMode("3rd inv".to_string())),
+            "mode_close" => events.push(Event::ChangeOpenHarmonyMode("close".to_string())),
+            "mode_drop2" => events.push(Event::ChangeOpenHarmonyMode("drop2".to_string())),
+            "mode_drop4" => events.push(Event::ChangeOpenHarmonyMode("drop4".to_string())),
+            "mode_drop2and4" => events.push(Event::ChangeOpenHarmonyMode("drop2and4".to_string())),
+            "mode_no_bass" => events.push(Event::ChangeBassPlayMode("no bass".to_string())),
+            "mode_bass_is_root" => events.push(Event::ChangeBassPlayMode("root".to_string())),
             "octave_up" => events.push(Event::OctaveShift {
                 upper_delta: 1,
                 lower_delta: 1,
@@ -175,8 +153,7 @@ fn field_first<'a>(node: &'a CSTNode, name: &str) -> Option<&'a CSTNode> {
 }
 
 fn parse_chord_node(chord_node: &CSTNode, g_key: i32) -> Result<Event> {
-    let root_node =
-        field_first(chord_node, "root").ok_or_else(|| anyhow!("No root node found"))?;
+    let root_node = field_first(chord_node, "root").ok_or_else(|| anyhow!("No root node found"))?;
     let root = parse_root_node(root_node, g_key)?;
 
     let quality = match field_first(chord_node, "quality") {
@@ -275,8 +252,7 @@ fn parse_inversion(text: &str) -> Result<String> {
 ///   + accidentals + the key (JS ROOT_DEGREE — degrees always use the
 ///   Ionian offsets; the scale only affects sharp/flat spelling downstream)
 fn parse_root_node(root_node: &CSTNode, g_key: i32) -> Result<i32> {
-    if let Some(degree_text) = field_first(root_node, "degree").and_then(|n| n.text.as_deref())
-    {
+    if let Some(degree_text) = field_first(root_node, "degree").and_then(|n| n.text.as_deref()) {
         let (accidentals, numeral) = split_accidentals(degree_text);
         let index = match numeral {
             "I" | "1" => 0,
@@ -373,11 +349,17 @@ fn parse_key_offset(text: &str) -> Result<i32> {
 /// both in sync. @48/@49/@52 are two-digit in the JS grammar; all others
 /// are three-digit.
 const GM_PROGRAM_ALIASES: &[(&[&str], &str)] = &[
-    (&["piano1", "acousticgrandpiano", "grandpiano", "pf"], "@000"),
+    (
+        &["piano1", "acousticgrandpiano", "grandpiano", "pf"],
+        "@000",
+    ),
     (&["piano2", "brightacousticpiano"], "@001"),
     (&["piano3", "electricgrandpiano"], "@002"),
     (&["honky-tonk", "honky-tonkpiano"], "@003"),
-    (&["e.piano1", "electricpiano1", "rhodes", "wurlitzer"], "@004"),
+    (
+        &["e.piano1", "electricpiano1", "rhodes", "wurlitzer"],
+        "@004",
+    ),
     (&["e.piano2", "electricpiano2", "fmpiano"], "@005"),
     (&["harpsichord"], "@006"),
     (&["clav.", "clavinet"], "@007"),
@@ -392,7 +374,10 @@ const GM_PROGRAM_ALIASES: &[(&[&str], &str)] = &[
     (&["organ1", "drawbarorgan"], "@016"),
     (&["organ2", "percussiveorgan"], "@017"),
     (&["organ3", "rockorgan"], "@018"),
-    (&["churchorg1", "churchorg2", "churchorg3", "churchorgan"], "@019"),
+    (
+        &["churchorg1", "churchorg2", "churchorg3", "churchorgan"],
+        "@019",
+    ),
     (&["reedorgan"], "@020"),
     (&["accordionf", "accordionl", "accordion"], "@021"),
     (&["harmonica"], "@022"),
@@ -404,10 +389,19 @@ const GM_PROGRAM_ALIASES: &[(&[&str], &str)] = &[
     (&["mutedgt.", "electricguitar(muted)"], "@028"),
     (&["overdrivegt", "electricguitar(overdrive)"], "@029"),
     (
-        &["dist.gt.", "dist.gt", "distortiongt.", "distortiongt", "electricguitar(distortion)"],
+        &[
+            "dist.gt.",
+            "dist.gt",
+            "distortiongt.",
+            "distortiongt",
+            "electricguitar(distortion)",
+        ],
         "@030",
     ),
-    (&["gt.harmonix", "gt.harmonics", "electricguitar(harmonics)"], "@031"),
+    (
+        &["gt.harmonix", "gt.harmonics", "electricguitar(harmonics)"],
+        "@031",
+    ),
     (&["acousticbass"], "@032"),
     (&["electricbass(finger)"], "@033"),
     (&["electricbass(picked)"], "@034"),
@@ -572,9 +566,7 @@ fn parse_quality_node(quality_node: &CSTNode) -> Result<String> {
 
 /// Normalize a modifier token to its comma-prefixed JS quality-string form.
 fn normalize_modifier(modifier_str: &str) -> Result<String> {
-    let inner = modifier_str
-        .trim_start_matches('(')
-        .trim_end_matches(')');
+    let inner = modifier_str.trim_start_matches('(').trim_end_matches(')');
 
     match inner {
         "b5" | "-5" => return Ok(",flatted fifth".to_string()),
@@ -747,8 +739,7 @@ mod tests {
             ("aug", "aug"),
             ("7", "7"),
         ] {
-            let events =
-                cst_to_ast(&source(vec![chord_node("C", &[], Some(token))])).unwrap();
+            let events = cst_to_ast(&source(vec![chord_node("C", &[], Some(token))])).unwrap();
             match &events[0] {
                 Event::Chord(c) => assert_eq!(c.quality, expected, "token {}", token),
                 _ => panic!("Expected Chord"),
@@ -767,10 +758,9 @@ mod tests {
         ];
         for (expected, base, modifiers) in cases {
             let mut chord = chord_node("C", &[], None);
-            chord.fields.insert(
-                "quality".to_string(),
-                vec![quality_node(base, modifiers)],
-            );
+            chord
+                .fields
+                .insert("quality".to_string(), vec![quality_node(base, modifiers)]);
             let events = cst_to_ast(&source(vec![chord])).unwrap();
             match &events[0] {
                 Event::Chord(c) => assert_eq!(c.quality, expected),
@@ -822,19 +812,15 @@ mod tests {
             events[0],
             Event::ChangeSlashChordMode(SlashChordMode::Polychord)
         );
-        assert_eq!(
-            events[2],
-            Event::ChangeInversionMode("1st inv".to_string())
-        );
+        assert_eq!(events[2], Event::ChangeInversionMode("1st inv".to_string()));
     }
 
     #[test]
     fn test_caret_inversion() {
         let mut chord = chord_node("C", &[], None);
-        chord.fields.insert(
-            "inversion".to_string(),
-            vec![leaf("chord_inversion", "^2")],
-        );
+        chord
+            .fields
+            .insert("inversion".to_string(), vec![leaf("chord_inversion", "^2")]);
         let events = cst_to_ast(&source(vec![chord])).unwrap();
         match &events[0] {
             Event::Chord(c) => assert_eq!(c.inversion, Some("2nd inv".to_string())),

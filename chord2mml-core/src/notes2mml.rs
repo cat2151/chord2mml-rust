@@ -42,14 +42,12 @@ pub(crate) fn notes_to_mml(events: &[OutEvent]) -> Result<String> {
             }
             OutEvent::Key { offset } => {
                 key_offset = *offset;
-                is_sharp =
-                    is_sharp_by_key_and_scale(key_offset, &scale_offsets, &twelve_ionians)?;
+                is_sharp = is_sharp_by_key_and_scale(key_offset, &scale_offsets, &twelve_ionians)?;
                 continue;
             }
             OutEvent::Scale { offsets } => {
                 scale_offsets = offsets.clone();
-                is_sharp =
-                    is_sharp_by_key_and_scale(key_offset, &scale_offsets, &twelve_ionians)?;
+                is_sharp = is_sharp_by_key_and_scale(key_offset, &scale_offsets, &twelve_ionians)?;
                 continue;
             }
             OutEvent::Notes(notes_event) => notes_event,
@@ -200,8 +198,7 @@ mod tests {
     #[test]
     fn test_bar_marker() {
         assert_eq!(
-            notes_to_mml(&[notes(vec![0, 4, 7]), OutEvent::Bar, notes(vec![0, 4, 7])])
-                .unwrap(),
+            notes_to_mml(&[notes(vec![0, 4, 7]), OutEvent::Bar, notes(vec![0, 4, 7])]).unwrap(),
             "v11'ceg'/*|*/'ceg'"
         );
     }

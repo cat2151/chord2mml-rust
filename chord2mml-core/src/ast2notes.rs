@@ -33,7 +33,7 @@ pub(crate) fn ast_to_notes(events: Vec<Event>) -> Result<Vec<OutEvent>> {
                 result.push(OutEvent::Notes(NotesEvent {
                     notes,
                     note_length: chord.note_length,
-                    }));
+                }));
             }
             Event::ChordOverBassNote(slash) => {
                 let inversion = slash.upper_inversion.as_deref().unwrap_or(&inversion_mode);
@@ -49,7 +49,7 @@ pub(crate) fn ast_to_notes(events: Vec<Event>) -> Result<Vec<OutEvent>> {
                 result.push(OutEvent::Notes(NotesEvent {
                     notes,
                     note_length: slash.note_length,
-                    }));
+                }));
             }
             Event::Inversion(slash) => {
                 let notes = get_notes_by_inversion_chord(
@@ -62,13 +62,11 @@ pub(crate) fn ast_to_notes(events: Vec<Event>) -> Result<Vec<OutEvent>> {
                 result.push(OutEvent::Notes(NotesEvent {
                     notes,
                     note_length: slash.note_length,
-                    }));
+                }));
             }
             Event::Polychord(slash) => {
-                let upper_inversion =
-                    slash.upper_inversion.as_deref().unwrap_or(&inversion_mode);
-                let lower_inversion =
-                    slash.lower_inversion.as_deref().unwrap_or(&inversion_mode);
+                let upper_inversion = slash.upper_inversion.as_deref().unwrap_or(&inversion_mode);
+                let lower_inversion = slash.lower_inversion.as_deref().unwrap_or(&inversion_mode);
                 let notes = get_notes_by_polychord(
                     slash.upper_root,
                     &slash.upper_quality,
@@ -82,7 +80,7 @@ pub(crate) fn ast_to_notes(events: Vec<Event>) -> Result<Vec<OutEvent>> {
                 result.push(OutEvent::Notes(NotesEvent {
                     notes,
                     note_length: slash.note_length,
-                    }));
+                }));
             }
             Event::Bar => result.push(OutEvent::Bar),
             // Bar slashes were consumed by ast2ast's note-length pass
@@ -495,7 +493,12 @@ mod tests {
         })
     }
 
-    fn slash(upper_root: i32, upper_quality: &str, lower_root: i32, lower_quality: &str) -> SlashChordEvent {
+    fn slash(
+        upper_root: i32,
+        upper_quality: &str,
+        lower_root: i32,
+        lower_quality: &str,
+    ) -> SlashChordEvent {
         SlashChordEvent {
             upper_root,
             upper_quality: upper_quality.to_string(),
@@ -597,6 +600,3 @@ mod tests {
         assert!(ast_to_notes(vec![chord(0, "xyz")]).is_err());
     }
 }
-
-
-

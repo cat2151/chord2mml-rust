@@ -165,10 +165,7 @@ mod tests {
             // already parses thanks to the first-class unspaced-hyphen
             // separator. Both convert to the same MML.
             assert_eq!(preprocess_chord("ii-V-I"), "IIm-V-I");
-            assert_eq!(
-                convert("IIm-V-I").unwrap(),
-                convert("IIm・V・I").unwrap()
-            );
+            assert_eq!(convert("IIm-V-I").unwrap(), convert("IIm・V・I").unwrap());
         }
 
         #[test]

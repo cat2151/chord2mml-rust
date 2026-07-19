@@ -22,10 +22,7 @@ fn replace_hyphen_to_dot(s: &str) -> String {
             out.push(c);
             continue;
         }
-        let left = chars[..i]
-            .iter()
-            .rev()
-            .find(|ch| !ch.is_whitespace());
+        let left = chars[..i].iter().rev().find(|ch| !ch.is_whitespace());
         let keep = matches!(
             left,
             Some('A'..='G') | Some('#') | Some('＃') | Some('♯') | Some('b') | Some('♭')
@@ -81,8 +78,7 @@ fn replace_word(s: &str, pattern: &str, replacement: &str) -> String {
     out
 }
 
-const TRANSFORMS: [fn(&str) -> String; 2] =
-    [replace_hyphen_to_dot, replace_minor_roman_numerals];
+const TRANSFORMS: [fn(&str) -> String; 2] = [replace_hyphen_to_dot, replace_minor_roman_numerals];
 
 /// All candidate rewrites of the input, in the JS trial order: the
 /// original first, then every subset of the transforms in every order

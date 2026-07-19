@@ -175,7 +175,13 @@ mod tests {
     fn test_parse_progression_separators() {
         // Whitespace / spaced hyphen / → / ・ per the JS spec, plus the
         // legacy unspaced hyphen (until `-` becomes minor in a later wave)
-        for input in ["C F G C", "C - F - G - C", "C→F→G→C", "C・F・G・C", "C-F-G-C"] {
+        for input in [
+            "C F G C",
+            "C - F - G - C",
+            "C→F→G→C",
+            "C・F・G・C",
+            "C-F-G-C",
+        ] {
             let events = parse_to_ast(input).unwrap();
             assert_eq!(events.len(), 4, "input {}", input);
             let roots: Vec<i32> = events
