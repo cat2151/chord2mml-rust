@@ -27,7 +27,6 @@ tree-sitter = ["dep:tree-sitter", "dep:tree-sitter-chord"]
 
 [dependencies]
 anyhow.workspace = true
-thiserror.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 tree-sitter = { version = "0.26.11", optional = true }
