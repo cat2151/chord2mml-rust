@@ -18,6 +18,7 @@ use serde::Deserialize;
 use std::collections::HashMap;
 
 use crate::ast::{ChordEvent, Event, SlashChordEvent, SlashChordMode};
+use crate::{ParsedInput, ParsedItem};
 
 /// A Tree-sitter CST node in the JSON shape emitted by web-tree-sitter
 /// serialization (same shape as tonejs-mml-to-json's `nodeToCSTJson`):
@@ -37,13 +38,23 @@ pub struct CSTNode {
 
 /// Convert a CST serialized as JSON into the event-array AST.
 pub fn cst_json_to_ast(cst_json: &str) -> Result<Vec<Event>> {
+    Ok(cst_json_to_parsed_input(cst_json)?.into_events())
+}
+
+/// Convert a CST serialized as JSON into a structured parsed input.
+pub fn cst_json_to_parsed_input(cst_json: &str) -> Result<ParsedInput> {
     let root: CSTNode =
         serde_json::from_str(cst_json).map_err(|e| anyhow!("Failed to parse CST JSON: {}", e))?;
-    cst_to_ast(&root)
+    cst_to_parsed_input(&root)
 }
 
 /// Convert a CST node tree into the event-array AST.
 pub fn cst_to_ast(root: &CSTNode) -> Result<Vec<Event>> {
+    Ok(cst_to_parsed_input(root)?.into_events())
+}
+
+/// Convert a CST node tree into semantic events plus reusable source items.
+pub fn cst_to_parsed_input(root: &CSTNode) -> Result<ParsedInput> {
     if root.node_type != "source_file" {
         return Err(anyhow!(
             "Expected source_file root node, got: {}",
@@ -52,19 +63,33 @@ pub fn cst_to_ast(root: &CSTNode) -> Result<Vec<Event>> {
     }
 
     let mut events = Vec::new();
+    let mut items = Vec::new();
     // The key state transposes subsequent degree roots (JS gKey, mutated
     // while parsing; here resolved sequentially over the event stream)
     let mut g_key: i32 = 0;
     for child in &root.children {
         match child.node_type.as_str() {
-            "chord" => events.push(parse_chord_node(child, g_key)?),
+            "chord" => {
+                let event_index = events.len();
+                events.push(parse_chord_node(child, g_key)?);
+                items.push(ParsedItem::Chord {
+                    text: child.text.clone().unwrap_or_default(),
+                    event_index,
+                });
+            }
             "separator" => {} // progression separators carry no meaning
             "bar" => events.push(Event::Bar),
             "bar_slash" => events.push(Event::BarSlash),
             "key" => {
                 let offset = parse_key_offset(child.text.as_deref().unwrap_or(""))?;
                 g_key = offset;
+                let event_index = events.len();
                 events.push(Event::Key { offset });
+                items.push(ParsedItem::Key {
+                    text: child.text.clone().unwrap_or_default(),
+                    pitch_class: offset.rem_euclid(12) as u8,
+                    event_index,
+                });
             }
             "scale" => {
                 let offsets = parse_scale_offsets(child.text.as_deref().unwrap_or(""))?;
@@ -145,7 +170,11 @@ pub fn cst_to_ast(root: &CSTNode) -> Result<Vec<Event>> {
         return Err(anyhow!("No chords found in input"));
     }
 
-    Ok(events)
+    Ok(ParsedInput::new(
+        root.text.clone().unwrap_or_default(),
+        events,
+        items,
+    ))
 }
 
 fn field_first<'a>(node: &'a CSTNode, name: &str) -> Option<&'a CSTNode> {

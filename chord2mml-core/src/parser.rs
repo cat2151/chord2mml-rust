@@ -15,11 +15,13 @@ use anyhow::{anyhow, Result};
 use std::collections::HashMap;
 use tree_sitter::{Node, Parser};
 
-use crate::ast::Event;
-use crate::cst_to_ast::{cst_to_ast, CSTNode};
+use crate::cst_to_ast::{cst_to_parsed_input, CSTNode};
+#[cfg(test)]
+use crate::Event;
+use crate::ParsedInput;
 
-/// Parse chord notation using Tree-sitter and convert to the event-array AST
-pub(crate) fn parse_to_ast(input: &str) -> Result<Vec<Event>> {
+/// Parse chord notation using Tree-sitter and preserve reusable source items.
+pub(crate) fn parse_to_input(input: &str) -> Result<ParsedInput> {
     let mut parser = Parser::new();
     parser
         .set_language(&tree_sitter_chord::language())
@@ -36,7 +38,15 @@ pub(crate) fn parse_to_ast(input: &str) -> Result<Vec<Event>> {
     }
 
     let cst = node_to_cst(root_node, input.as_bytes())?;
-    cst_to_ast(&cst)
+    cst_to_parsed_input(&cst)
+}
+
+/// Parse chord notation into only the event-array AST.
+///
+/// Kept as the focused helper used by parser unit tests.
+#[cfg(test)]
+pub(crate) fn parse_to_ast(input: &str) -> Result<Vec<Event>> {
+    Ok(parse_to_input(input)?.into_events())
 }
 
 /// Serialize a tree-sitter node into the CSTNode JSON shape shared with

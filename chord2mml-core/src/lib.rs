@@ -24,19 +24,57 @@ mod ast2ast;
 mod ast2notes;
 pub mod cst_to_ast;
 mod notes2mml;
+mod parsed;
 #[cfg(feature = "tree-sitter")]
 mod parser;
 pub mod preprocess;
 
 // Re-export public types for external use
 pub use ast::{ChordEvent, Event, NotesEvent, OutEvent, SlashChordEvent};
+pub use parsed::{ParsedInput, ParsedItem};
 pub use preprocess::preprocess_candidates;
 
 /// Run the shared pipeline stages after parsing.
-fn events_to_mml(events: Vec<Event>) -> Result<String> {
+pub(crate) fn events_to_mml(events: Vec<Event>) -> Result<String> {
     let events = ast2ast::ast_to_ast(events);
     let note_events = ast2notes::ast_to_notes(events)?;
     notes2mml::notes_to_mml(&note_events)
+}
+
+/// Parse chord notation into semantic events and reusable source items.
+///
+/// Musical syntax, key accidentals, degree roots, and chord qualities are all
+/// interpreted by the same Tree-sitter/CST pipeline used by [`convert`]. The
+/// returned key pitch class is therefore not independently parsed by callers.
+#[cfg(feature = "tree-sitter")]
+pub fn parse(input: &str) -> Result<ParsedInput> {
+    let input = validate_native_input(input)?;
+    let mut first_error = None;
+    for candidate in preprocess::preprocess_candidates(input) {
+        match parser::parse_to_input(&candidate) {
+            Ok(parsed) => return Ok(parsed),
+            Err(error) => {
+                if first_error.is_none() {
+                    first_error = Some(error);
+                }
+            }
+        }
+    }
+    Err(first_error.expect("candidates are never empty"))
+}
+
+#[cfg(feature = "tree-sitter")]
+fn validate_native_input(input: &str) -> Result<&str> {
+    let input = input.trim();
+    if input.is_empty() {
+        return Err(anyhow!(
+            "Empty input. Please provide a chord notation (e.g., 'C', 'Dm G7 C')."
+        ));
+    }
+    if input.len() > 1000 {
+        return Err(anyhow!("Input too long (max 1000 characters)."));
+    }
+    Ok(input)
 }
 
 /// Convert a chord notation or chord progression to MML (Music Macro
@@ -58,25 +96,14 @@ fn events_to_mml(events: Vec<Event>) -> Result<String> {
 /// ```
 #[cfg(feature = "tree-sitter")]
 pub fn convert(input: &str) -> Result<String> {
-    let input = input.trim();
-
-    if input.is_empty() {
-        return Err(anyhow!(
-            "Empty input. Please provide a chord notation (e.g., 'C', 'Dm G7 C')."
-        ));
-    }
-
-    // Validate input length to prevent potential issues
-    if input.len() > 1000 {
-        return Err(anyhow!("Input too long (max 1000 characters)."));
-    }
+    let input = validate_native_input(input)?;
 
     // Try the input as written first, then every dialect rewrite
     // (JS chord2mml.parse's brute-force contract); if nothing converts,
     // report the original input's error.
     let mut first_error = None;
     for candidate in preprocess::preprocess_candidates(input) {
-        match parser::parse_to_ast(&candidate).and_then(events_to_mml) {
+        match parser::parse_to_input(&candidate).and_then(|parsed| parsed.to_mml()) {
             Ok(mml) => return Ok(mml),
             Err(e) => {
                 if first_error.is_none() {
@@ -94,23 +121,27 @@ pub fn convert(input: &str) -> Result<String> {
 #[cfg(feature = "tree-sitter")]
 pub fn preprocess_chord(input: &str) -> String {
     for candidate in preprocess::preprocess_candidates(input).into_iter().skip(1) {
-        if parser::parse_to_ast(&candidate).is_ok() {
+        if parser::parse_to_input(&candidate).is_ok() {
             return candidate;
         }
     }
     input.to_string()
 }
 
+/// Parse a CST serialized as JSON into semantic events and reusable source
+/// items. This is the WASM/browser counterpart of [`parse`].
+pub fn parse_cst(cst_json: &str) -> Result<ParsedInput> {
+    if cst_json.trim().is_empty() {
+        return Err(anyhow!("Empty CST JSON input."));
+    }
+    cst_to_ast::cst_json_to_parsed_input(cst_json)
+}
+
 /// Convert a CST serialized as JSON (produced by web-tree-sitter in the
 /// browser) to MML. This is the entry point for WASM builds, where the
 /// parsing happens in JavaScript.
 pub fn convert_cst(cst_json: &str) -> Result<String> {
-    if cst_json.trim().is_empty() {
-        return Err(anyhow!("Empty CST JSON input."));
-    }
-
-    let events = cst_to_ast::cst_json_to_ast(cst_json)?;
-    events_to_mml(events)
+    parse_cst(cst_json)?.to_mml()
 }
 
 #[cfg(test)]
@@ -120,6 +151,57 @@ mod tests {
     #[cfg(feature = "tree-sitter")]
     mod native {
         use super::super::*;
+
+        #[test]
+        fn parse_exposes_key_pitch_class_and_chord_source_text() {
+            let parsed = parse("key:G Isus4-I").unwrap();
+
+            assert_eq!(parsed.normalized_input(), "key:G Isus4-I");
+            assert_eq!(
+                parsed.items(),
+                &[
+                    ParsedItem::Key {
+                        text: "key:G".to_string(),
+                        pitch_class: 7,
+                        event_index: 0,
+                    },
+                    ParsedItem::Chord {
+                        text: "Isus4".to_string(),
+                        event_index: 1,
+                    },
+                    ParsedItem::Chord {
+                        text: "I".to_string(),
+                        event_index: 2,
+                    },
+                ]
+            );
+            assert!(matches!(parsed.events()[0], Event::Key { offset: 7 }));
+            assert!(matches!(
+                parsed.events()[1],
+                Event::Chord(ChordEvent { root: 7, .. })
+            ));
+            assert_eq!(parsed.to_mml().unwrap(), convert("key:G Isus4-I").unwrap());
+        }
+
+        #[test]
+        fn parse_normalizes_accidentals_to_twelve_pitch_classes() {
+            for (input, pitch_class) in [("KEY:G♭ I", 6), ("Key:C♭ I", 11), ("key:B♯ I", 0)] {
+                let parsed = parse(input).unwrap();
+                assert!(matches!(
+                    parsed.items().first(),
+                    Some(ParsedItem::Key {
+                        pitch_class: actual,
+                        ..
+                    }) if *actual == pitch_class
+                ));
+            }
+        }
+
+        #[test]
+        fn parse_reports_the_dialect_candidate_that_succeeded() {
+            let parsed = parse("ii-V-I").unwrap();
+            assert_eq!(parsed.normalized_input(), "IIm-V-I");
+        }
 
         #[test]
         fn test_convert_c_major() {
@@ -200,5 +282,62 @@ mod tests {
     #[test]
     fn test_convert_cst_empty_input() {
         assert!(convert_cst("").is_err());
+    }
+
+    #[test]
+    fn parse_cst_exposes_the_same_key_and_chord_source_items() {
+        let cst = r#"{
+            "type": "source_file",
+            "text": "key:G I-I",
+            "children": [
+                { "type": "key", "text": "key:G" },
+                { "type": "separator", "text": " " },
+                {
+                    "type": "chord",
+                    "text": "I",
+                    "fields": {
+                        "root": [{
+                            "type": "root",
+                            "text": "I",
+                            "fields": { "degree": [{ "type": "degree", "text": "I" }] }
+                        }]
+                    }
+                },
+                { "type": "separator", "text": "-" },
+                {
+                    "type": "chord",
+                    "text": "I",
+                    "fields": {
+                        "root": [{
+                            "type": "root",
+                            "text": "I",
+                            "fields": { "degree": [{ "type": "degree", "text": "I" }] }
+                        }]
+                    }
+                }
+            ]
+        }"#;
+
+        let parsed = parse_cst(cst).unwrap();
+        assert_eq!(parsed.normalized_input(), "key:G I-I");
+        assert_eq!(
+            parsed.items(),
+            &[
+                ParsedItem::Key {
+                    text: "key:G".to_string(),
+                    pitch_class: 7,
+                    event_index: 0,
+                },
+                ParsedItem::Chord {
+                    text: "I".to_string(),
+                    event_index: 1,
+                },
+                ParsedItem::Chord {
+                    text: "I".to_string(),
+                    event_index: 2,
+                },
+            ]
+        );
+        assert_eq!(parsed.to_mml().unwrap(), convert_cst(cst).unwrap());
     }
 }
