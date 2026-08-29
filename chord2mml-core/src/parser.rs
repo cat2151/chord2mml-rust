@@ -82,6 +82,7 @@ fn node_to_cst(node: Node, source: &[u8]) -> Result<CSTNode> {
     Ok(CSTNode {
         node_type: node.kind().to_string(),
         text: Some(text),
+        source_range: Some(node.start_byte()..node.end_byte()),
         children,
         fields,
     })

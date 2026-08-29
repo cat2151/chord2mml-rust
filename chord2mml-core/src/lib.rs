@@ -50,8 +50,11 @@ pub(crate) fn events_to_mml(events: Vec<Event>) -> Result<String> {
 pub fn parse(input: &str) -> Result<ParsedInput> {
     let input = validate_native_input(input)?;
     let mut first_error = None;
-    for candidate in preprocess::preprocess_candidates(input) {
-        match parser::parse_to_input(&candidate) {
+    for candidate in preprocess::preprocess_candidates_with_source_map(input) {
+        match parser::parse_to_input(candidate.as_str()).and_then(|mut parsed| {
+            parsed.remap_source_ranges(|range| candidate.map_source_range(range))?;
+            Ok(parsed)
+        }) {
             Ok(parsed) => return Ok(parsed),
             Err(error) => {
                 if first_error.is_none() {
@@ -65,8 +68,7 @@ pub fn parse(input: &str) -> Result<ParsedInput> {
 
 #[cfg(feature = "tree-sitter")]
 fn validate_native_input(input: &str) -> Result<&str> {
-    let input = input.trim();
-    if input.is_empty() {
+    if input.trim().is_empty() {
         return Err(anyhow!(
             "Empty input. Please provide a chord notation (e.g., 'C', 'Dm G7 C')."
         ));
@@ -162,15 +164,18 @@ mod tests {
                 &[
                     ParsedItem::Key {
                         text: "key:G".to_string(),
+                        source_range: Some(0..5),
                         pitch_class: 7,
                         event_index: 0,
                     },
                     ParsedItem::Chord {
                         text: "Isus4".to_string(),
+                        source_range: Some(6..11),
                         event_index: 1,
                     },
                     ParsedItem::Chord {
                         text: "I".to_string(),
+                        source_range: Some(12..13),
                         event_index: 2,
                     },
                 ]
@@ -201,6 +206,65 @@ mod tests {
         fn parse_reports_the_dialect_candidate_that_succeeded() {
             let parsed = parse("ii-V-I").unwrap();
             assert_eq!(parsed.normalized_input(), "IIm-V-I");
+        }
+
+        fn chord_ranges(input: &str) -> Vec<std::ops::Range<usize>> {
+            parse(input)
+                .unwrap()
+                .items()
+                .iter()
+                .filter_map(|item| match item {
+                    ParsedItem::Chord {
+                        source_range: Some(range),
+                        ..
+                    } => Some(range.clone()),
+                    ParsedItem::Chord {
+                        source_range: None, ..
+                    } => panic!("native parse omitted a source range for {input:?}"),
+                    ParsedItem::Key { .. } => None,
+                })
+                .collect()
+        }
+
+        #[test]
+        fn parse_chord_ranges_slice_the_original_input() {
+            let ranges = chord_ranges("II");
+            assert_eq!(ranges.len(), 1);
+            assert_eq!(ranges[0], 0..2);
+
+            let ranges = chord_ranges("  II  ");
+            assert_eq!(ranges.len(), 1);
+            assert_eq!(ranges[0], 2..4);
+
+            for (input, expected) in [
+                ("I-II", vec![0..1, 2..4]),
+                ("I・II", vec![0..1, 4..6]),
+                ("C♯ II", vec![0..4, 5..7]),
+            ] {
+                let ranges = chord_ranges(input);
+                assert_eq!(ranges, expected, "input {input:?}");
+                for range in ranges {
+                    assert!(input.is_char_boundary(range.start));
+                    assert!(input.is_char_boundary(range.end));
+                    assert!(!input[range].is_empty());
+                }
+            }
+        }
+
+        #[test]
+        fn parse_maps_length_changing_dialect_ranges_to_original_input() {
+            let input = "ii-V-I";
+            let parsed = parse(input).unwrap();
+            assert_eq!(parsed.normalized_input(), "IIm-V-I");
+            assert_eq!(chord_ranges(input), vec![0..2, 3..4, 5..6]);
+            assert!(matches!(
+                parsed.items().first(),
+                Some(ParsedItem::Chord {
+                    text,
+                    source_range: Some(range),
+                    ..
+                }) if text == "IIm" && &input[range.clone()] == "ii"
+            ));
         }
 
         #[test]
@@ -325,19 +389,55 @@ mod tests {
             &[
                 ParsedItem::Key {
                     text: "key:G".to_string(),
+                    source_range: None,
                     pitch_class: 7,
                     event_index: 0,
                 },
                 ParsedItem::Chord {
                     text: "I".to_string(),
+                    source_range: None,
                     event_index: 1,
                 },
                 ParsedItem::Chord {
                     text: "I".to_string(),
+                    source_range: None,
                     event_index: 2,
                 },
             ]
         );
         assert_eq!(parsed.to_mml().unwrap(), convert_cst(cst).unwrap());
+    }
+
+    #[test]
+    fn parse_cst_preserves_optional_source_ranges() {
+        let cst = r#"{
+            "type": "source_file",
+            "text": "C♯",
+            "source_range": { "start": 0, "end": 4 },
+            "children": [{
+                "type": "chord",
+                "text": "C♯",
+                "source_range": { "start": 0, "end": 4 },
+                "fields": {
+                    "root": [{
+                        "type": "root",
+                        "text": "C♯",
+                        "fields": {
+                            "note": [{ "type": "note", "text": "C" }],
+                            "accidental": [{ "type": "accidental", "text": "♯" }]
+                        }
+                    }]
+                }
+            }]
+        }"#;
+
+        let parsed = parse_cst(cst).unwrap();
+        assert!(matches!(
+            parsed.items(),
+            [ParsedItem::Chord {
+                source_range: Some(range),
+                ..
+            }] if range == &(0..4)
+        ));
     }
 }

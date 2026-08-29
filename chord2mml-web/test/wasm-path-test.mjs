@@ -8,9 +8,11 @@
 // (chord2mml-core/tests/corpus/*.json), guaranteeing both paths agree.
 import { readFile, readdir } from 'fs/promises';
 import { fileURLToPath } from 'url';
+import assert from 'node:assert/strict';
 import { Parser, Language } from 'web-tree-sitter';
 import init, { convert_cst, preprocess_candidates } from '../public/wasm/chord2mml_wasm.js';
 import { convertWithPreprocess } from '../src/convert.js';
+import { nodeToCSTJson } from '../src/cst-serializer.js';
 
 const corpusDir = new URL('../../chord2mml-core/tests/corpus/', import.meta.url);
 const corpusFiles = (await readdir(corpusDir)).filter((f) => f.endsWith('.json')).sort();
@@ -37,6 +39,24 @@ async function main() {
   );
   const parser = new Parser();
   parser.setLanguage(language);
+
+  const unicodeInput = 'C♯ II';
+  const unicodeTree = parser.parse(unicodeInput);
+  assert.ok(unicodeTree && !unicodeTree.rootNode.hasError);
+  const unicodeCst = nodeToCSTJson(unicodeTree.rootNode);
+  const chordRanges = unicodeCst.children.map((child) => child.source_range);
+  assert.deepEqual(unicodeCst.source_range, { start: 0, end: 7 });
+  assert.deepEqual(chordRanges, [
+    { start: 0, end: 4 },
+    { start: 5, end: 7 }
+  ]);
+  const unicodeBytes = Buffer.from(unicodeInput, 'utf8');
+  assert.deepEqual(
+    chordRanges.map(({ start, end }) => unicodeBytes.subarray(start, end).toString('utf8')),
+    ['C♯', 'II']
+  );
+  assert.equal(convert_cst(JSON.stringify(unicodeCst)), "v11'c+1fg+''d1f+a'");
+  console.log('UTF-8 source ranges passed on the Node/WASM path');
 
   let failed = 0;
   let passed = 0;

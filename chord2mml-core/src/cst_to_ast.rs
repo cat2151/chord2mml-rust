@@ -16,6 +16,7 @@
 use anyhow::{anyhow, Result};
 use serde::Deserialize;
 use std::collections::HashMap;
+use std::ops::Range;
 
 use crate::ast::{ChordEvent, Event, SlashChordEvent, SlashChordMode};
 use crate::{ParsedInput, ParsedItem};
@@ -30,6 +31,9 @@ pub struct CSTNode {
     pub node_type: String,
     #[serde(default)]
     pub text: Option<String>,
+    /// UTF-8 byte range in the text serialized by the Tree-sitter frontend.
+    #[serde(default)]
+    pub source_range: Option<Range<usize>>,
     #[serde(default)]
     pub children: Vec<CSTNode>,
     #[serde(default)]
@@ -74,6 +78,7 @@ pub fn cst_to_parsed_input(root: &CSTNode) -> Result<ParsedInput> {
                 events.push(parse_chord_node(child, g_key)?);
                 items.push(ParsedItem::Chord {
                     text: child.text.clone().unwrap_or_default(),
+                    source_range: child.source_range.clone(),
                     event_index,
                 });
             }
@@ -87,6 +92,7 @@ pub fn cst_to_parsed_input(root: &CSTNode) -> Result<ParsedInput> {
                 events.push(Event::Key { offset });
                 items.push(ParsedItem::Key {
                     text: child.text.clone().unwrap_or_default(),
+                    source_range: child.source_range.clone(),
                     pitch_class: offset.rem_euclid(12) as u8,
                     event_index,
                 });
@@ -655,6 +661,7 @@ mod tests {
         CSTNode {
             node_type: node_type.to_string(),
             text: Some(text.to_string()),
+            source_range: None,
             children: Vec::new(),
             fields: HashMap::new(),
         }
@@ -667,6 +674,7 @@ mod tests {
         CSTNode {
             node_type: "root".to_string(),
             text: Some(text),
+            source_range: None,
             children: Vec::new(),
             fields,
         }
@@ -689,6 +697,7 @@ mod tests {
         CSTNode {
             node_type: "quality".to_string(),
             text: None,
+            source_range: None,
             children: Vec::new(),
             fields,
         }
@@ -703,6 +712,7 @@ mod tests {
         CSTNode {
             node_type: "chord".to_string(),
             text: None,
+            source_range: None,
             children: Vec::new(),
             fields,
         }
@@ -712,6 +722,7 @@ mod tests {
         CSTNode {
             node_type: "source_file".to_string(),
             text: None,
+            source_range: None,
             children,
             fields: HashMap::new(),
         }
@@ -808,6 +819,7 @@ mod tests {
             vec![CSTNode {
                 node_type: "bass".to_string(),
                 text: Some("/C".to_string()),
+                source_range: None,
                 children: Vec::new(),
                 fields: bass_fields,
             }],
